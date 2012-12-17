@@ -1,6 +1,6 @@
 <?php 
 
-class supermodlr_framework_kohana extends supermodlr_framework_default {
+class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
 	
 	public function find_file($file) 
 	{
@@ -36,7 +36,7 @@ class supermodlr_framework_kohana extends supermodlr_framework_default {
 		return HTML::chars($value);
 	}
 	
-	public function supermodlr_root()
+	public function Supermodlr_root()
 	{
 		return MODPATH.'supermodlr'.DIRECTORY_SEPARATOR;
 	}

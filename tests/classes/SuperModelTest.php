@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct access allowed!');
  
-class supermodlrTest extends Kohana_UnitTest_TestCase
+class SupermodlrTest extends Kohana_UnitTest_TestCase
 {
 	public static $test_entry = array();
 
@@ -8,7 +8,7 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
 	public function testInit() 
 	{
 		//get all models to be tested
-        $models = supermodlr_core::get_models();
+        $models = Supermodlr::get_models();
  
 		//loop through all model files
 		foreach ($models as $model) 
@@ -26,7 +26,7 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
     public function testConnection()
     {
 		//get all models to be tested
-        $models = supermodlr_core::get_models();
+        $models = Supermodlr::get_models();
 		foreach ($models as $model) 
 		{	
 			//attempt to create the object, expect auto loading to load the file
@@ -53,7 +53,7 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
     public function testCreate()
     {
 		//get all models to be tested
-        $models = supermodlr_core::get_models();
+        $models = Supermodlr::get_models();
 		foreach ($models as $model) 
 		{
 			//create a new blank object
@@ -72,10 +72,10 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
 			$pk = $model_obj->cfg('pk_name');
 			
 			//save this data so we can remove the test entry
-			supermodlrTest::$test_entry[$model['model_class']]['data'] = $model_obj->to_array();
+			SupermodlrTest::$test_entry[$model['model_class']]['data'] = $model_obj->to_array();
 			
 			//save the pk name
-			supermodlrTest::$test_entry[$model['model_class']]['pk_name'] = $pk;
+			SupermodlrTest::$test_entry[$model['model_class']]['pk_name'] = $pk;
 		}
 		
     }
@@ -84,7 +84,7 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
     public function testDefaults()
     {
 		//get all models to be tested
-        $models = supermodlr_core::get_models();
+        $models = Supermodlr::get_models();
 		foreach ($models as $model) 
 		{
 			//create a new blank object
@@ -157,7 +157,7 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
     public function testFilters()
     {
 		//get all models to be tested
-        $models = supermodlr_core::get_models();
+        $models = Supermodlr::get_models();
 		foreach ($models as $model) 
 		{
 			//create a new blank object
@@ -266,14 +266,14 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
 	public function testReadById() 
 	{
 		//get all models to be tested
-        $models = supermodlr_core::get_models();
+        $models = Supermodlr::get_models();
 		foreach ($models as $model) 
 		{
 			//get pk field key from obj cfg
-			$pk = supermodlrTest::$test_entry[$model['model_class']]['pk_name'];
+			$pk = SupermodlrTest::$test_entry[$model['model_class']]['pk_name'];
 			
 			//save this id so we can remove the test entry
-			$pk_value = supermodlrTest::$test_entry[$model['model_class']]['data'][$pk];
+			$pk_value = SupermodlrTest::$test_entry[$model['model_class']]['data'][$pk];
 			
 			//attempt to load the object that was created in the testCreate method
 			$model_obj = new $model['model_class']($pk_value);
@@ -308,14 +308,14 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
 	public function testUpdate() 
 	{
 		//get all models to be tested
-        $models = supermodlr_core::get_models();
+        $models = Supermodlr::get_models();
 		foreach ($models as $model) 
 		{
 			//get pk field key from obj cfg
-			$pk = supermodlrTest::$test_entry[$model['model_class']]['pk_name'];
+			$pk = SupermodlrTest::$test_entry[$model['model_class']]['pk_name'];
 			
 			//get pk value from test entry
-			$pk_value = supermodlrTest::$test_entry[$model['model_class']]['data'][$pk];
+			$pk_value = SupermodlrTest::$test_entry[$model['model_class']]['data'][$pk];
 			
 			//attempt to load the object that was created in the testCreate method
 			$model_obj = new $model['model_class']($pk_value);
@@ -337,7 +337,7 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
 					$rand = substr(uniqid(),0,4);
 					$model_obj->set($field_key,$rand);
 					$model_obj->filter();
-					supermodlrTest::$test_entry[$model['model_class']]['updated_fields'][$field_key] = $model_obj->$field_key;
+					SupermodlrTest::$test_entry[$model['model_class']]['updated_fields'][$field_key] = $model_obj->$field_key;
 					
 				}
 				
@@ -375,14 +375,14 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
 	public function testQuery() 
 	{
 		//get all models to be tested
-        $models = supermodlr_core::get_models();
+        $models = Supermodlr::get_models();
 		foreach ($models as $model) 
 		{
 			//get pk field key from obj cfg
-			$pk = supermodlrTest::$test_entry[$model['model_class']]['pk_name'];
+			$pk = SupermodlrTest::$test_entry[$model['model_class']]['pk_name'];
 			
 			//get pk value from test entry
-			$pk_value = supermodlrTest::$test_entry[$model['model_class']]['data'][$pk];
+			$pk_value = SupermodlrTest::$test_entry[$model['model_class']]['data'][$pk];
 			
 			$model_obj = new $model['model_class']();
 			
@@ -392,8 +392,8 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
 			//loop through all drivers
 			foreach ($drivers as $i => $Driver)
 			{
-				$updated_field_keys = array_keys(supermodlrTest::$test_entry[$model['model_class']]['updated_fields']);
-				$updated_field_values = array_values(supermodlrTest::$test_entry[$model['model_class']]['updated_fields']);
+				$updated_field_keys = array_keys(SupermodlrTest::$test_entry[$model['model_class']]['updated_fields']);
+				$updated_field_values = array_values(SupermodlrTest::$test_entry[$model['model_class']]['updated_fields']);
 				$updated_field_key = $updated_field_keys[0];
 				$updated_field_value = $updated_field_values[0];
 				
@@ -418,14 +418,14 @@ class supermodlrTest extends Kohana_UnitTest_TestCase
 	public function testDelete() 
 	{
 		//get all models to be tested
-        $models = supermodlr_core::get_models();
+        $models = Supermodlr::get_models();
 		foreach ($models as $model) 
 		{
 			//get pk field key from obj cfg
-			$pk = supermodlrTest::$test_entry[$model['model_class']]['pk_name'];
+			$pk = SupermodlrTest::$test_entry[$model['model_class']]['pk_name'];
 			
 			//get pk value from test entry
-			$pk_value = supermodlrTest::$test_entry[$model['model_class']]['data'][$pk];
+			$pk_value = SupermodlrTest::$test_entry[$model['model_class']]['data'][$pk];
 			
 			//attempt to load the object that was created in the testCreate method
 			$model_obj = new $model['model_class']($pk_value);

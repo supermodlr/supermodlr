@@ -1,7 +1,7 @@
 <?php
 
 
-class supermodlr_framework_default {
+class Supermodlr_Framework_Default {
 
 	protected $drivers = array();
 	public $template_ext = '.php';

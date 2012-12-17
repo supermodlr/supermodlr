@@ -5,12 +5,12 @@
 //	includes all files related to all fields and datatypes so that autoload isn't needed
 
 
-abstract class supermodlr extends supermodlr_core {
+abstract class Supermodlr extends Supermodlr_Core {
 	public static $__scfg = array(
 		'drivers_config' => array(
 				array(
 						'name'     => 'mongo',
-						'driver'   => 'supermodlr_mongodb',
+						'driver'   => 'Supermodlr_Mongodb',
 						'host'     => '127.0.0.1',
 						'port'     => '27017',
 						'user'     => '',
@@ -21,7 +21,7 @@ abstract class supermodlr extends supermodlr_core {
 						'fsync'    => FALSE,
 				)
 		),		
-		'framework_name' => 'kohana',
+		'framework_name' => 'Kohana',
 		
 	);
 

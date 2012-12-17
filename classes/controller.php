@@ -8,13 +8,13 @@ class Controller extends Kohana_Controller {
 	public function init_req_model()
 	{
 		//get model name from url
-		$this->model_name = $this->request->param('model');
+		$this->model_name = ucfirst(strtolower($this->request->param('model')));
 
 		//if model name was in url
 		if ($this->model_name !== NULL)
 		{
 			//check if model exists
-			if (!$this->model_class = supermodlr::model_exists($this->model_name))
+			if (!$this->model_class = Supermodlr::model_exists($this->model_name))
 			{
 				//404 if model doesn't exist
 				throw new HTTP_Exception_404('The requested URL :uri was not found on this server.',
@@ -26,7 +26,7 @@ class Controller extends Kohana_Controller {
 
     /**
      * returns input or display html
-	 * @param string $Model required Instance of supermodlr_Core   
+	 * @param string $Model required Instance of Supermodlr_Core   
 	 * @param string $type required (input|display)     
 	 * @param string $action required (create|read|update|delete)     
 	 * @param string $theme = 'default' theme template folder to look for the form template and field templates 
@@ -240,7 +240,7 @@ class Controller extends Kohana_Controller {
 
     /**
      * returns array of paths used to search for model templates
-	 * @param string $Model required Instance of supermodlr_Core       
+	 * @param string $Model required Instance of Supermodlr_Core       
 	 * @param string $template (input|display) the type of template we are looking for     
 	 * @param string $type (input|display) the type of template we are looking for
 	 * @param string $sub_type (''|wrapper) an additional level to look under for template files.
@@ -353,7 +353,7 @@ class Controller extends Kohana_Controller {
 	public static function get_rel_labels($field_id_array) {
 		$label_array = array();
 		foreach ($field_id_array as $_id) {
-			$Field = new model_field($_id);
+			$Field = new Model_Field($_id);
 			if ($Field->loaded()) {
 				$label_array[$_id] = $Field->name; //@todo change this to label once field labels are added				
 			}
@@ -397,6 +397,6 @@ class Controller extends Kohana_Controller {
 	 */	
 	public function api_path()
 	{
-		return '/supermodlr/api/';
+		return '/Supermodlr/api/';
 	}	
 }

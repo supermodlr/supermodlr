@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-class model_field extends supermodlr {
+class Model_Field extends Supermodlr {
 	public static $__scfg = array(
 		'field.field_keys'  => array(
 		    '_id',
@@ -63,7 +63,7 @@ class model_field extends supermodlr {
 			'multilingual',
 			'unique',
 		),
-		'core_prefix'=> 'supermodlrcore',		
+		'core_prefix'=> 'Supermodlrcore',		
 	);
 
 	/*choices
@@ -440,15 +440,15 @@ EOF;
 		$Framework = $this->get_framework();
 		if ($this->is_core())
 		{
-			$supermodlr_path = $Framework->supermodlr_root().'classes'.DIRECTORY_SEPARATOR;
+			$Supermodlr_path = $Framework->Supermodlr_root().'classes'.DIRECTORY_SEPARATOR;
 		}
 		else 
 		{
-			$supermodlr_path = $Framework->saved_classes_root();
+			$Supermodlr_path = $Framework->saved_classes_root();
 		}
 		
 		$field_file_name = str_replace('_',DIRECTORY_SEPARATOR,$field_file_name);
-		return $supermodlr_path.$field_file_name.'.php';
+		return $Supermodlr_path.$field_file_name.'.php';
 	}	
 	
 	public function save_class_file($full_file_path, $file_contents)

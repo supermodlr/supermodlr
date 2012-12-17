@@ -1,7 +1,7 @@
 <?php
 
 
-class supermodlr_pdomysql extends supermodlr_db {
+class Supermodlr_Pdomysql extends Supermodlr_Db {
 
 	protected $port = '3306';
 	protected $use_prepared = TRUE;
@@ -44,7 +44,6 @@ class supermodlr_pdomysql extends supermodlr_db {
 	}
 
 	/**
-
 	  * @returns bool	  
 	  */
 	public function driver_close($params = array()) {

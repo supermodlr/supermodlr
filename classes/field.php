@@ -12,9 +12,9 @@ storage=keyed_array dataype=scalar:
 storage=keyed_array dataype=object:
 {k1: {p1: "v1",p2: "v2"}, k2: {p1: "v3",p2: "v4"}}
 */
-class field {
+class Field {
 
-	const NOT_SET = 'supermodlr_FIELD_VALUE_NOT_SET';
+	const NOT_SET = 'Supermodlr_FIELD_VALUE_NOT_SET';
 
 	public $name = NULL; //app name of field (alpha-numeric)
 	public $description = NULL;
@@ -89,7 +89,7 @@ class field {
 			{
 				//set the model property
 				$this->model = $model;
-				$this->model_name = model_model::get_name_from_class($model['_id']);
+				$this->model_name = Model_Model::get_name_from_class($model['_id']);
 			}
 		}
 
@@ -116,9 +116,10 @@ class field {
 			//if the class name is field_[{$model}_]{$field}
 			if (preg_match("/^field_([^_]+)_/i",$called_class,$matches))
 			{
-				if ($matches[1] !== model_field::scfg('core_prefix')) 
+				if ($matches[1] !== Model_Field::scfg('core_prefix')) 
 				{
-					return array("model"=> "model", "_id"=> 'model_'.$matches[1]);
+					$name = ucfirst(strtolower($matches[1]));
+					return array("model"=> "Model", "_id"=> 'Model_'.$name);
 				}
 				else
 				{
@@ -486,7 +487,7 @@ class field {
     			continue;
     		}
     		//convert basic mongo query to raw js
- 			$Query_parser = new mongodbQuery2js($logic);
+ 			$Query_parser = new MongodbQuery2js($logic);
  			$Query_parser->set_var_prefix($data_prefix);
 			$js_bool = $Query_parser->parse();   
     		if ($cmd == '$showif')

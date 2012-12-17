@@ -129,7 +129,7 @@ class View extends Kohana_View {
 		{
 			$paths = $this->controller->get_field_template_paths($object,$this->type,$path, $template);
 		} 
-		else if ($object instanceof supermodlr_core)
+		else if ($object instanceof Supermodlr_Core)
 		{
 			$paths = $this->controller->get_model_template_paths($object,$this->type,$path, $template);
 		}

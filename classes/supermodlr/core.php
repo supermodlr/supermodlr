@@ -1,7 +1,7 @@
 <?php
 
 
-abstract class supermodlr_core {
+abstract class Supermodlr_Core {
 
 
 	//static config for vars that apply to all data types and can be loaded once
@@ -55,7 +55,7 @@ abstract class supermodlr_core {
 			else 
 			{
 				$this->cfg('loaded',FALSE);
-				//@todo create custom supermodlr exceptions
+				//@todo create custom Supermodlr exceptions
 				//throw new Exception('Cannot load object using Id: '.var_export($id,TRUE));
 			}
         }
@@ -86,7 +86,7 @@ abstract class supermodlr_core {
      */	
 	public static function get_name() 
 	{
-		return preg_replace('/^model_/','',strtolower(get_called_class()));
+		return preg_replace('/^Model_/','',ucfirst(strtolower(get_called_class())));
 	}
 	
     /**
@@ -370,23 +370,23 @@ abstract class supermodlr_core {
 	public static function load_framework() 
 	{
 		
-		//look for framework property set by custom supermodlr file
+		//look for framework property set by custom Supermodlr file
 		if (!is_null(self::scfg('framework_name'))) 
 		{
 			$framework = self::scfg('framework_name');
-		// look for supermodlr_framework.ini
+		// look for Supermodlr_framework.ini
 		} 
-		else if (file_exists('supermodlr_framework.ini')) 
+		else if (file_exists('Supermodlr_framework.ini')) 
 		{
-			$framework = file_get_contents('supermodlr_framework.ini');
+			$framework = file_get_contents('Supermodlr_framework.ini');
 		//fallback on default
 		} 
 		else 
 		{
-			$framework = 'default';
+			$framework = 'Default';
 		}
 		//create class name
-		$class = 'supermodlr_framework_'.$framework;
+		$class = 'Supermodlr_Framework_'.$framework;
 
 		//return new instance
 		return new $class();
@@ -483,7 +483,8 @@ abstract class supermodlr_core {
 			//loop through all field keys
 			foreach ($field_keys as $field_name) 
 			{
-				$class = 'field_'.$model_name.'_'.$field_name;
+				$field_name = ucfirst(strtolower($field_name));
+				$class = 'Field_'.$model_name.'_'.$field_name;
 				$fields[$field_name] = new $class();
 			}
 			//store created fields once for each model
@@ -1185,7 +1186,7 @@ abstract class supermodlr_core {
 			{
 				$set_value = TRUE;
 				$field_key = strtolower(str_ireplace('field__','',$key));
-				$field_class = 'field_'.$model_name.'_'.$field_key;
+				$field_class = 'field_'.$model_name.'_'.ucfirst($field_key);
 				//ensure this field class exists
 				if (!class_exists($field_class) || !isset($fields[$field_key]))
 				{
@@ -1271,7 +1272,7 @@ abstract class supermodlr_core {
 				//if a checkbox exists for this field, but no post value exists for it, assume 'off'
 				if (!isset($post['field__'.$field_key])) 
 				{
-					$field_class = 'field__'.$model_name.'__'.$field_key;
+					$field_class = 'field__'.$model_name.'__'.ucfirst($field_key);
 					//ensure this field class exists
 					if (!class_exists($field_class) || !isset($fields[$field_key]))
 					{
@@ -1672,7 +1673,7 @@ abstract class supermodlr_core {
 				$this->$key = NULL;
 			}
 			$position = &$this->$key;
-			$field_class = 'field_'.$model_name.'_'.$key;
+			$field_class = 'field_'.$model_name.'_'.ucfirst($key);
 		}
 
 		$set_value = TRUE;
@@ -2144,7 +2145,8 @@ abstract class supermodlr_core {
 
 	public static function model_exists($model)
 	{
-		return (class_exists('model_'.$model)) ? 'model_'.$model : FALSE ;
+		$model = ucfirst(strtolower($model));
+		return (class_exists('Model_'.$model)) ? 'Model_'.$model : FALSE ;
 	}
 	
 
@@ -2154,7 +2156,7 @@ abstract class supermodlr_core {
 		$model_info = pathinfo($model_file);
 		
 		//build expected class name
-		$model_class_name = 'model_'.$model_info['filename'];
+		$model_class_name = 'Model_'.ucfirst(strtolower($model_info['filename']));
 		
 		return array('model_file'=> $model_file, 'model_class'=> $model_class_name, 'model_name'=> $model_info['filename']);
 	}	
@@ -2167,9 +2169,9 @@ abstract class supermodlr_core {
 			$models = array();
 			
 			//check module path
-			if (is_dir(MODPATH.'supermodlr/classes/model/'))
+			if (is_dir(MODPATH.'supermodlr/classes/Model/'))
 			{
-				$model_dir = scandir(MODPATH.'supermodlr/classes/model/');
+				$model_dir = scandir(MODPATH.'supermodlr/classes/Model/');
 				foreach ($model_dir as $model) 
 				{
 					//skip directories
@@ -2180,9 +2182,9 @@ abstract class supermodlr_core {
 			}
 			
 			//check app path
-			if (is_dir(APPPATH.'classes/model/'))
+			if (is_dir(APPPATH.'classes/Model/'))
 			{			
-				$model_dir = scandir(APPPATH.'classes/model/');
+				$model_dir = scandir(APPPATH.'classes/Model/');
 				foreach ($model_dir as $model) 
 				{
 					//skip directories

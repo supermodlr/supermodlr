@@ -1,7 +1,7 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class field_supermodlrcore_singletext extends field 
+class Field_Supermodlrcore_Singletext extends Field 
 {
-	public $name = 'singletext';
+	public $name = 'Singletext';
 	public $datatype = 'string';
 	public $multilingual = FALSE;
 	public $charset = 'UTF-8';

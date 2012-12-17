@@ -2,7 +2,7 @@
 
 Route::set('supermodlr_api', 'supermodlr/api/<model>(/<action>(/<id>(/<id_action>)))', array('model' => '[a-zA-Z0-9_]+', 'action' => '[a-zA-Z0-9_]+', 'id' => '\*|[a-zA-Z0-9_]+', 'id_action' => '[a-zA-Z0-9_]+'))
 	->defaults(array(
-		'controller' => 'supermodlr_api',
+		'controller' => 'Supermodlr_Api',
 		'action'     => 'index',
 	));
 

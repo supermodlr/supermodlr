@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-class Controller_supermodlr_Api extends Controller {
+class Controller_Supermodlr_Api extends Controller {
 
 	public function before()
 	{

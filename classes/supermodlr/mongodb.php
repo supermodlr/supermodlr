@@ -1,7 +1,7 @@
 <?php
 
 
-class supermodlr_mongodb extends supermodlr_db {
+class Supermodlr_Mongodb extends Supermodlr_Db {
 
 	protected $port = '27017';
 	protected $replset = FALSE;	
@@ -70,7 +70,6 @@ class supermodlr_mongodb extends supermodlr_db {
 	}
 
 	/**
-
 	  * @returns bool	  
 	  */
 	public function driver_close($params = array()) {
@@ -134,7 +133,6 @@ class supermodlr_mongodb extends supermodlr_db {
 	  * @param int $limit = NULL
 	  * @param int $skip = 0
 	  * @param bool $slaveOkay = $this->slaveOkay
-
 	  * @returns resource
 	  */
 	public function driver_read($params = array()) 

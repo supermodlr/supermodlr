@@ -1,7 +1,7 @@
 <?php
 
 
-class supermodlr_db {
+class Supermodlr_Db {
 
 	protected $connection = NULL;
 	protected $error = NULL;	

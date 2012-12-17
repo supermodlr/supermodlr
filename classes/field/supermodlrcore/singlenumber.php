@@ -1,7 +1,7 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class field_supermodlrcore_singlenumber extends field 
+class Field_Supermodlrcore_Singlenumber extends Field 
 {
-	public $name = 'singlenumber';
+	public $name = 'Singlenumber';
 	public $datatype = 'int';
 	public $multilingual = FALSE;
 	public $storage = 'single';
