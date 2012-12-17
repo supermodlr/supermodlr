@@ -8,11 +8,14 @@ class Controller extends Kohana_Controller {
 	public function init_req_model()
 	{
 		//get model name from url
-		$this->model_name = ucfirst(strtolower($this->request->param('model')));
+		$this->model_name = $this->request->param('model');
 
 		//if model name was in url
 		if ($this->model_name !== NULL)
 		{
+
+			$this->model_name = ucfirst(strtolower($this->model_name));
+
 			//check if model exists
 			if (!$this->model_class = Supermodlr::model_exists($this->model_name))
 			{

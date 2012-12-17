@@ -15,7 +15,7 @@ abstract class Supermodlr extends Supermodlr_Core {
 						'port'     => '27017',
 						'user'     => '',
 						'pass'     => '',
-						'dbname'   => '',
+						'dbname'   => 'supermodlr',
 						'replset'  => FALSE,
 						'safe'     => TRUE,
 						'fsync'    => FALSE,
