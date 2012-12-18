@@ -18,9 +18,9 @@ class Model_Model extends Supermodlr {
                 'model.field_keys'  => array(
                     '_id',
                     'name',
-					     'description',
+					'description',
                     'fields',//this is an array of all field objects included in the saved model.  the field object would only contain key/value pairs for field properties that are changed
-					     'extends',//what model file does this model extend.  should have a special auto-completer that searchs on all available models (except self). defaults to 'Supermodlr'
+					'extends',//what model file does this model extend.  should have a special auto-completer that searchs on all available models (except self). defaults to 'Supermodlr'
 					     //'drivers OR cfg??',
                 ),
 				'core_models' => array('model','field'), 
@@ -32,10 +32,10 @@ class Model_Model extends Supermodlr {
 		//write _id field file if it doesn't exist
 		$PK_Field = new Model_Field();
 		$pk_name = $this->cfg('pk_name');
-		$PK_Field->extends = array("model"=> "Field", "_id"=> 'Field_Supermodlrcore_'.$pk_name);
+		$PK_Field->extends = array("model"=> "field", "_id"=> 'Field_Supermodlrcore_'.$pk_name);
 		$PK_Field->$pk_name = 'Field_'.$this->name.'_'.$pk_name;
 		$PK_Field->name = $pk_name;
-		$PK_Field->model = array("model"=> "Model", "_id"=> $this->name);
+		$PK_Field->model = array("model"=> "model", "_id"=> $this->name);
 		$PK_Field->save();
 
 		//get changes
@@ -69,7 +69,7 @@ class Model_Model extends Supermodlr {
 
 			//remove pk field
 			$pk_name = $this->cfg('pk_name');			
-			$PK_Field = new Model_Field('field_'.$this->name.'_'.$pk_name);
+			$PK_Field = new Model_Field('Field_'.ucfirst(strtolower($this->name)).'_'.$pk_name);
 			$PK_Field->delete();
 
 
@@ -218,27 +218,27 @@ EOF;
 		//if a parent field is set, include the parent field name and the parent model name in the class name
 		if (isset($this->parentfield) && is_array($this->parentfield))
 		{
-			$parentfield = Model_Field::get_name_from_class($this->parentfield['_id']).'_';
-			$parentmodel = Model_Field::get_modelname_from_class($this->parentfield['_id']).'_';
+			$parentfield = ucfirst(strtolower(Model_Field::get_name_from_class($this->parentfield['_id']))).'_';
+			$parentmodel = ucfirst(strtolower(Model_Field::get_modelname_from_class($this->parentfield['_id']))).'_';
 		}
 		else
 		{
 			$parentfield = '';
 		}		
-		return 'Model_'.$parentmodel.$parentfield.$this->name;
+		return 'Model_'.$parentmodel.$parentfield.ucfirst(strtolower($this->name));
 	}
 
 	//returns just the model name given a model class name
 	public static function get_name_from_class($class)
 	{
 		//return everything after 'model_'
-		return substr($class, 6);
+		$parts = explode('_',$class);
+		return strtolower(array_pop($parts));
 	}	
-
 }
 
 
-class Field_Model__id extends field {
+class Field_Model__Id extends Field {
 	public $name = '_id'; 
     public $datatype = 'string'; 
     public $multilingual = FALSE; 
@@ -253,9 +253,8 @@ class Field_Model__id extends field {
 	public $hidden = TRUE; 
 	public $pk = TRUE;	
 }
-
-class Field_Model_Name extends field {
-	public $name = 'Name'; 
+class Field_Model_Name extends Field {
+	public $name = 'name'; 
     public $datatype = 'string'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
@@ -278,8 +277,8 @@ class Field_Model_Name extends field {
 	public $invalidtestvalues = NULL; 
 }
 
-class Field_Model_Description extends field {
-	public $name = 'Description'; 
+class Field_Model_Description extends Field {
+	public $name = 'description'; 
     public $datatype = 'string'; 
     public $multilingual = TRUE; 
     public $charset = 'UTF-8'; 
@@ -294,8 +293,8 @@ class Field_Model_Description extends field {
 	public $hidden = FALSE; 
 }
 
-class Field_Model_Fields extends field {
-	public $name = 'Fields'; 
+class Field_Model_Fields extends Field {
+	public $name = 'fields'; 
     public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'field','search_field'=> 'name', 'where'=> array('model'=> NULL)));
     public $multilingual = FALSE; 
@@ -312,8 +311,8 @@ class Field_Model_Fields extends field {
 	public $filters = array('model_model::filter_fields');
 }
 
-class Field_Model_Extends extends field {
-    public $name = 'Extends';
+class Field_Model_Extends extends Field {
+    public $name = 'extends';
     public $datatype = 'relationship';
     public $source = array(array('model'=> 'model','search_field'=> 'name'));
     public $multilingual = FALSE;
@@ -330,8 +329,8 @@ class Field_Model_Extends extends field {
 }
 
 
-class Field_Model_Parentfield extends field {
-	public $name = 'Parentfield'; 
+class Field_Model_Parentfield extends Field {
+	public $name = 'parentfield'; 
 	public $description = 'If this model is assigned to a model via an "object" field and this is the "model" specific copy, this field stores the relationship to that field.';
     public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'field','search_field'=> 'name'));

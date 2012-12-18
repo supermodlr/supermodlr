@@ -141,7 +141,7 @@ class Model_Field extends Supermodlr {
 	public function event__model_field__validate_end($params)
 	{
 		//do not run this event if validate was called from this method
-		if ($params['self'] === 'model_field::event__model_field__validate_end')
+		if ($params['self'] === 'Model_Field::event__model_field__validate_end')
 		{
 			return ;
 		}
@@ -185,7 +185,7 @@ class Model_Field extends Supermodlr {
 			
 		}
 		
-		$Status = $this->validate($data,$fields,'model_field::event__model_field__validate_end');
+		$Status = $this->validate($data,$fields,'Model_Field::event__model_field__validate_end');
 		
 		$params['result'] = $Status->ok();
 		$params['messages'] = $Status->messages();
@@ -250,9 +250,9 @@ class Model_Field extends Supermodlr {
 			$submodel_class = $params['data'][0]['_id']; //address
 
 			//create a new company_address model that extends address
-			$Submodel = new model_model();
+			$Submodel = new Model_Model();
 
-			$Submodel->name = model_model::get_name_from_class($submodel_class);
+			$Submodel->name = Model_Model::get_name_from_class($submodel_class);
 
 			$Submodel->parentfield = array('model'=> 'field', '_id'=> $this->get_class_name()); //link to "company" parent field
 			$Submodel->extends = array('model'=> 'model', '_id'=> $submodel_class);//extends address
@@ -297,12 +297,12 @@ class Model_Field extends Supermodlr {
 		//if there is no model
 		if ($this->is_core())
 		{
-			$model = self::scfg('core_prefix').'_';
+			$model = ucfirst(strtolower(self::scfg('core_prefix'))).'_';
 		}
 		//if this field is for a specific model, get the model name from its class name
 		else
 		{
-			$model = model_model::get_name_from_class($this->model['_id']).'_';
+			$model = ucfirst(strtolower(Model_Model::get_name_from_class($this->model['_id']))).'_';
 		}
 		$field = '';
 		//@todo convet below code to use submodels
@@ -357,7 +357,7 @@ class Model_Field extends Supermodlr {
 			$field = '';
 		}*/		
 
-		return 'field_'.$model.$field.$this->name;
+		return 'Field_'.$model.ucfirst(strtolower($this->name));
 	}
 
 	public function write_class_file()
@@ -383,7 +383,7 @@ class Model_Field extends Supermodlr {
 		//if we are generating a direct field class
 		if ($this->is_core() && (!isset($this->extends) || $this->extends === NULL))
 		{
-			$extends = 'field';
+			$extends = 'Field';
 		}
 		//if we are generating a field class for a specific model, than we are extending an existing core model
 		else
@@ -394,13 +394,13 @@ class Model_Field extends Supermodlr {
 				$extends = $this->extends['_id'];	
 			}
 			//extend a core field by the same name
-			else if (class_exists('field_'.self::scfg('core_prefix').'_'.$this->name))
+			else if (class_exists('Field_'.self::scfg('core_prefix').'_'.$this->name))
 			{
-				$extends = 'field_'.self::scfg('core_prefix').'_'.$this->name;
+				$extends = 'Field_'.self::scfg('core_prefix').'_'.$this->name;
 			}
 			else
 			{
-				$extends = 'field';
+				$extends = 'Field';
 			}
 		}
 		return $extends;
@@ -484,7 +484,7 @@ EOF;
 			while ($has_parent)
 			{
 				//get parent field model from db
-				$Parent_Model_Field = new model_field($parent_class);
+				$Parent_Model_Field = new Model_Field($parent_class);
 				//if this model has the var, return it
 				if (isset($Parent_Model_Field->$var))
 				{
@@ -512,8 +512,7 @@ EOF;
 	public static function get_name_from_class($class) 
 	{
 		$parts = explode('_',$class);
-		return array_pop($parts);
-
+		return strtolower(array_pop($parts));
 	}
 
 	//returns the name of a model on a field from a field class name
@@ -523,7 +522,7 @@ EOF;
 		//if a field has at least field_{$model}_{$field}
 		if (count($parts) >= 3) 
 		{
-			return $parts[1];
+			return strtolower($parts[1]);
 		}
 		//if this class name only has 2 parts, it doesn't have a model
 		else
@@ -534,7 +533,7 @@ EOF;
 }
 
 
-class field_field__id extends field {
+class Field_Field__Id extends Field {
 	public $name = '_id'; 
     public $datatype = 'string'; 
     public $multilingual = FALSE; 
@@ -551,7 +550,7 @@ class field_field__id extends field {
 	public $readonly = TRUE;
 }
 
-class field_field_label extends field {
+class Field_Field_Label extends Field {
 	public $name = 'label'; 
     public $datatype = 'string'; 
     public $multilingual = FALSE; 
@@ -573,7 +572,7 @@ class field_field_label extends field {
 	public $readonly = FALSE;
 }
 
-class field_field_name extends field {
+class Field_Field_Name extends Field {
 	public $name = 'name'; 
     public $datatype = 'string'; 
     public $multilingual = FALSE; 
@@ -597,7 +596,7 @@ class field_field_name extends field {
 	public $readonly = TRUE;
 }
 
-class field_field_description extends field {
+class Field_Field_Description extends Field {
 	public $name = 'description'; 
 	public $description = 'This text is displayed as help text on data entry forms.';
     public $datatype = 'string'; 
@@ -614,7 +613,7 @@ class field_field_description extends field {
 	public $nullvalue = FALSE; 
 }
 
-class field_field_datatype extends field {
+class Field_Field_Datatype extends Field {
 	public $name = 'datatype'; 
 	public $description = 'Controls how the data is stored.';
     public $datatype = 'string'; 
@@ -630,7 +629,7 @@ class field_field_datatype extends field {
 	public $nullvalue = FALSE; 
 }
 
-class field_field_storage extends field {
+class Field_Field_Storage extends Field {
 	public $name = 'storage'; 
 	public $description = 'Single means one value per object (per language if multilingual).  Array means multiple values are stored ordered in a numerical index array. keyed_array means multiple values are stored and keyed with numbers or strings';
     public $datatype = 'string'; 
@@ -646,7 +645,7 @@ class field_field_storage extends field {
 	public $nullvalue = FALSE; 
 }
 
-class field_field_multilingual extends field {
+class Field_Field_Multilingual extends Field {
 	public $name = 'multilingual'; 
 	public $description = 'Enables string storage for more than one language value';
     public $datatype = 'boolean'; 
@@ -659,7 +658,7 @@ class field_field_multilingual extends field {
 	public $conditions = array('$hidden'=> TRUE, '$showif'=> array('datatype'=> 'string'));	
 }
 
-class field_field_charset extends field {
+class Field_Field_Charset extends Field {
 	public $name = 'charset'; 
 	public $description = 'Controls how this string is stored.';
     public $datatype = 'string'; 
@@ -747,7 +746,7 @@ when a model extends another model ( modelB extends modelA)
 
 */
 
-class field_field_submodel extends field {
+class Field_Field_Submodel extends Field {
 	public $name = 'submodel'; 
 	public $description = 'If datatype = "object", this is a relationship to the model that should be included as a sub/embedded model';
     public $datatype = 'relationship'; 
@@ -771,7 +770,7 @@ class field_field_submodel extends field {
     */
 }
 
-class field_field_submodeladd extends field {
+class Field_Field_Submodeladd extends Field {
 	public $name = 'submodeladd'; 
 	public $description = 'If datatype = "object", this is a relationship to the parent of the model that should be included as a sub/embedded model. This field can be set even if the field is not saved.  It tells the save_end event to create the submodel class based on the details of the saved field.';
     public $datatype = 'relationship'; 
@@ -787,7 +786,7 @@ class field_field_submodeladd extends field {
 	public $conditions = array('$hidden'=> TRUE, '$showif'=> array('datatype'=> 'object', 'submodel'=> NULL));		
 }
 
-class field_field_required extends field {
+class Field_Field_Required extends Field {
 	public $name = 'required'; 
 	public $description = 'The model will not save if this field is not populated and valid.';
     public $datatype = 'mixed'; 
@@ -801,7 +800,7 @@ class field_field_required extends field {
 	public $conditions = array('$hideif'=> array('storage'=> 'false'));		
 }
 
-class field_field_unique extends field {
+class Field_Field_Unique extends Field {
 	public $name = 'unique'; 
 	public $description = 'The model will not save if the value matches an existing entry';
     public $datatype = 'boolean'; 
@@ -814,7 +813,7 @@ class field_field_unique extends field {
 	public $conditions = array('$hideif'=> array('storage'=> 'false'));		
 }
 
-class field_field_searchable extends field {
+class Field_Field_Searchable extends Field {
 	public $name = 'searchable'; 
 	public $description = 'If true, this field will be indexed in the text search provider (solr by default) and used in text queries.';
     public $datatype = 'boolean'; 
@@ -827,7 +826,7 @@ class field_field_searchable extends field {
 	public $conditions = array('$hidden'=> TRUE, '$hideif'=> array('storage'=> 'false'), '$showif'=> array('datatype'=> 'string'));			 	
 }
 
-class field_field_filterable extends field {
+class Field_Field_Filterable extends Field {
 	public $name = 'filterable'; 
 	public $description = 'If true, this field will be indexed in all database providers (mongo and mysql by default).';
     public $datatype = 'boolean'; 
@@ -840,7 +839,7 @@ class field_field_filterable extends field {
 	public $conditions = array('$hideif'=> array('storage'=> 'false'));			 	
 }
 
-class field_field_values extends field {
+class Field_Field_Values extends Field {
 	public $name = 'values'; 
 	public $description = 'A list of possible values.  A sent value must exist in this list if it is set.';
     public $datatype = 'mixed'; 
@@ -854,7 +853,7 @@ class field_field_values extends field {
 	public $nullvalue = FALSE; 
 }
 
-class field_field_filters extends field {
+class Field_Field_Filters extends Field {
 	public $name = 'filters'; 
 	public $description = 'A list of functions to call to modify the value before it is saved.';
     public $datatype = 'string'; 
@@ -870,7 +869,7 @@ class field_field_filters extends field {
 	public $conditions = array('$hideif'=> array('storage'=> 'false'));			 
 }
 
-class field_field_defaultvalue extends field {
+class Field_Field_Defaultvalue extends Field {
 	public $name = 'defaultvalue'; 
 	public $description = 'This value is initially displayed on entry forms and/or stored if no value is sent for this field.';
     public $datatype = 'mixed'; 
@@ -885,7 +884,7 @@ class field_field_defaultvalue extends field {
 }
 
 
-class field_field_nullvalue extends field {
+class Field_Field_Nullvalue extends Field {
 	public $name = 'nullvalue'; 
 	public $description = 'Means null is a valid value for this field.  If set to false and there is no default value set, and no value is sent for this field, it will not be set at all.';
     public $datatype = 'boolean'; 
@@ -899,7 +898,7 @@ class field_field_nullvalue extends field {
 }
 
 
-class field_field_validation extends field {
+class Field_Field_Validation extends Field {
 	public $name = 'validation'; 
 	public $description = 'A list of validation rules that must pass before this field will be allowed to be saved.';
     public $datatype = 'object'; 
@@ -916,7 +915,7 @@ class field_field_validation extends field {
 }
 
 
-class field_field_messages extends field {
+class Field_Field_Messages extends Field {
 	public $name = 'messages'; 
 	public $description = 'A lit of custom messages for the custom validation rules.';
     public $datatype = 'string'; 
@@ -932,7 +931,7 @@ class field_field_messages extends field {
 }
 
 
-class field_field_templates extends field {
+class Field_Field_Templates extends Field {
 	public $name = 'templates'; 
 	public $description = 'A list of templates that this field should use for display and input forms.';
     public $datatype = 'string'; 
@@ -951,7 +950,7 @@ class field_field_templates extends field {
 }
 
 
-class field_field_hidden extends field {
+class Field_Field_Hidden extends Field {
 	public $name = 'hidden'; 
 	public $description = 'If true, this field will be hidden on all entry forms and will not be displayed on display views.';
     public $datatype = 'boolean'; 
@@ -964,7 +963,7 @@ class field_field_hidden extends field {
 	public $nullvalue = FALSE; 
 }
 
-class field_field_extends extends field {
+class Field_Field_Extends extends Field {
 	public $name = 'extends'; 
 	public $description = 'A list of fields that this field extends.  The first in the list is the direct parent and any not set options on this field will be inheireted from that parent field.';
     public $datatype = 'relationship'; 
@@ -979,7 +978,7 @@ class field_field_extends extends field {
 }
 
 
-class field_field_validtestvalue extends field {
+class Field_Field_Validtestvalue extends Field {
 	public $name = 'validtestvalue'; 
 	public $description = 'Enter a valid test value which will be used for automated testing.';
     public $datatype = 'mixed'; 
@@ -994,7 +993,7 @@ class field_field_validtestvalue extends field {
 }
 
 
-class field_field_invalidtestvalues extends field {
+class Field_Field_Invalidtestvalues extends Field {
 	public $name = 'invalidtestvalues'; 
 	public $description = 'Enter a list of invalid test values which will be used for automated testing.';	
     public $datatype = 'mixed'; 
@@ -1009,7 +1008,7 @@ class field_field_invalidtestvalues extends field {
     public $hidden = TRUE;	
 }
 
-class field_field_model extends field {
+class Field_Field_Model extends Field {
 	public $name = 'model'; 
 	public $description = 'Assigns this field to a specific model.  If not set, this field will be a global field available to assign to any model.';	
     public $datatype = 'relationship'; 
@@ -1025,7 +1024,7 @@ class field_field_model extends field {
 	public $readonly = TRUE;
 }
 
-class field_field_access extends field {
+class Field_Field_Access extends Field {
 	public $name = 'access'; 
 	public $description = 'A list of actions and user/group/everyone permissions for each action.';	
     public $datatype = 'string'; 
@@ -1039,7 +1038,7 @@ class field_field_access extends field {
     public $hidden = TRUE;	
 }
 
-class field_field_private extends field {
+class Field_Field_Private extends Field {
 	public $name = 'private'; 
 	public $description = 'If true, this field will never be viewable on display views and will not be on entry forms, unless within a admin interface.  Example: password, salt.';	
     public $datatype = 'boolean'; 
@@ -1052,7 +1051,7 @@ class field_field_private extends field {
 	public $nullvalue = FALSE; 
 }
 
-class field_field_maxlength extends field {
+class Field_Field_Maxlength extends Field {
 	public $name = 'maxlength'; 
 	public $description = 'The max length for this field.  For strings, it is the max number of single byte characters (1,max).  For int, it controls the size of the integer field in bytes (1,2,3,4,8).  For float, it controls precision (1 to 18). ';	
     public $datatype = 'int'; 
@@ -1066,7 +1065,7 @@ class field_field_maxlength extends field {
 	public $conditions = array('$hideif'=> array('storage'=> 'false'));			 
 }
 
-class field_field_conditions extends field {
+class Field_Field_Conditions extends Field {
 	public $name = 'conditions'; 
 	public $description = 'A list of rules that can control if this field is displayed on views and forms. (Example: only display this field if field1=value1.  The first matched condistion takes precidence';	
     public $datatype = 'array'; 
@@ -1080,7 +1079,7 @@ class field_field_conditions extends field {
     public $hidden = TRUE;	
 }
 
-class field_field_readonly extends field {
+class Field_Field_Readonly extends Field {
 	public $name = 'readonly'; 
 	public $description = 'If true, this field cannot be changed once it has been set once, except by an admin';	
     public $datatype = 'boolean'; 
@@ -1094,7 +1093,7 @@ class field_field_readonly extends field {
 }
 
 //format array('models'=> array(array('model'=> 'model1', where'=> array([conditions used to select an entry for this model]),'search_field'=> 'name')]) )
-class field_field_source extends field {
+class Field_Field_Source extends Field {
 	public $name = 'source'; 
 	public $description = 'If datatype == "relationship", this field describes how to select a valid value.';	
     public $datatype = 'object'; 

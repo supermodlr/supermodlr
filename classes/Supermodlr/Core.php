@@ -78,7 +78,7 @@ abstract class Supermodlr_Core {
      */
 	public static function get_model_class() 
 	{
-		return strtolower(get_called_class());
+		return ucfirst(strtolower(get_called_class()));
 	}	
 
     /**
@@ -86,7 +86,7 @@ abstract class Supermodlr_Core {
      */	
 	public static function get_name() 
 	{
-		return preg_replace('/^Model_/','',ucfirst(strtolower(get_called_class())));
+		return preg_replace('/^model_/i','',strtolower(get_called_class()));
 	}
 	
     /**
@@ -149,7 +149,7 @@ abstract class Supermodlr_Core {
         if (is_null($this->cfg('pk_field'))) 
 		{
 			//default field class name for pk field 
-		    $pk_class = 'field_'.$name.'__id';
+		    $pk_class = 'Field_'.ucfirst(strtolower($name)).'__Id';
 			if (class_exists($pk_class)) {
                 $this->scfg($name.'.pk_field',$pk_class);
 			}
@@ -483,8 +483,8 @@ abstract class Supermodlr_Core {
 			//loop through all field keys
 			foreach ($field_keys as $field_name) 
 			{
-				$field_name = ucfirst(strtolower($field_name));
-				$class = 'Field_'.$model_name.'_'.$field_name;
+				$field_class_name = ucfirst(strtolower($field_name));
+				$class = 'Field_'.$model_name.'_'.$field_class_name;
 				$fields[$field_name] = new $class();
 			}
 			//store created fields once for each model

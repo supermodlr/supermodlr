@@ -222,6 +222,8 @@ class Controller_Supermodlr_Api extends Controller {
 		
 		//get the fields
 		$fields = $Model->get_fields();
+		fbl($fields);
+		fbl($field_name);
 		$single_field_array = array($fields[$field_name]);
 		
 		$Validate_status = $Model->validate(NULL,$single_field_array);
