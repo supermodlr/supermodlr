@@ -212,14 +212,22 @@ class Controller extends Kohana_Controller {
 			{
 				$rel_class = 'model_'.$item['model'];
 				$rel = new $rel_class($item['_id']);
+				$label_field_key = 'name';
 				foreach ($Field->source as $source) {
 					if ($source['model'] == $item['model']) {
 						$label_field_key = $source['search_field'];
 						break;
 					}
 				}
+				if (isset($rel->$label_field_key))
+				{
+					$labels[$item['model'].$item['_id']] = $rel->$label_field_key;
+				}
+				else
+				{
+					$labels[$item['model'].$item['_id']] = $rel_class;
+				}
 				
-				$labels[$item['model'].$item['_id']] = $rel->$label_field_key;
 			}
 			$Field->source['labels'] = json_encode($labels);					
 		}
@@ -400,6 +408,6 @@ class Controller extends Kohana_Controller {
 	 */	
 	public function api_path()
 	{
-		return '/Supermodlr/api/';
+		return '/supermodlr/api/';
 	}	
 }

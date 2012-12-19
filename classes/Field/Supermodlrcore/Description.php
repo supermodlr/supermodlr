@@ -1,7 +1,7 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 class Field_Supermodlrcore_Description extends Field 
 {
-	public $name = 'Description';
+	public $name = 'description';
 	public $datatype = 'string';
 	public $multilingual = TRUE;
 	public $charset = 'UTF-8';

@@ -32,10 +32,19 @@ class Model_Model extends Supermodlr {
 		//write _id field file if it doesn't exist
 		$PK_Field = new Model_Field();
 		$pk_name = $this->cfg('pk_name');
-		$PK_Field->extends = array("model"=> "field", "_id"=> 'Field_Supermodlrcore_'.$pk_name);
-		$PK_Field->$pk_name = 'Field_'.$this->name.'_'.$pk_name;
+		//@todo this is an ugly hack, fix me
+		if ($pk_name == '_id') 
+		{
+			$pk_name_case = '_Id';
+		}
+		else 
+		{
+			$pk_name_case = ucfirst(strtolower($pk_name));
+		}
+		$PK_Field->extends = array("model"=> "field", "_id"=> 'Field_Supermodlrcore_'.$pk_name_case);
+		$PK_Field->$pk_name = 'Field_'.ucfirst(strtolower($this->name)).'_'.$pk_name_case;
 		$PK_Field->name = $pk_name;
-		$PK_Field->model = array("model"=> "model", "_id"=> $this->name);
+		$PK_Field->model = array("model"=> "model", "_id"=> $this->get_class_name());
 		$PK_Field->save();
 
 		//get changes
@@ -68,8 +77,17 @@ class Model_Model extends Supermodlr {
 			}
 
 			//remove pk field
-			$pk_name = $this->cfg('pk_name');			
-			$PK_Field = new Model_Field('Field_'.ucfirst(strtolower($this->name)).'_'.$pk_name);
+			$pk_name = $this->cfg('pk_name');		
+			//@todo this is an ugly hack, fix me
+			if ($pk_name == '_id') 
+			{
+				$pk_name_case = '_Id';
+			}
+			else 
+			{
+				$pk_name_case = ucfirst(strtolower($pk_name));
+			}
+			$PK_Field = new Model_Field('Field_'.ucfirst(strtolower($this->name)).'_'.$pk_name_case);
 			$PK_Field->delete();
 
 
@@ -223,6 +241,7 @@ EOF;
 		}
 		else
 		{
+			$parentmodel = '';
 			$parentfield = '';
 		}		
 		return 'Model_'.$parentmodel.$parentfield.ucfirst(strtolower($this->name));
@@ -247,7 +266,6 @@ class Field_Model__Id extends Field {
     public $unique = TRUE;
     public $searchable = TRUE;
     public $filterable = TRUE;
-    public $filters = array('strtolower');
 	public $nullvalue = FALSE; 
     public $templates = array('input'=> 'hidden');		
 	public $hidden = TRUE; 

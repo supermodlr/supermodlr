@@ -1,5 +1,5 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore__id extends Field 
+class Field_Supermodlrcore__Id extends Field 
 {
 	public $name = '_id';
 	public $datatype = 'string';

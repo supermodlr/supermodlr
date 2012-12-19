@@ -13,8 +13,8 @@ class Model_Field extends Supermodlr {
 		    'storage',
 		    'multilingual',
 		    'charset',
-		    'submodel',
-		    'submodeladd',
+		    //'submodel',
+		    //'submodeladd',
 		    'required',
 		    'unique',
 		    'searchable',
@@ -243,7 +243,7 @@ class Model_Field extends Supermodlr {
 
 
 	//if we want to "auto-add" the submodel based on the parent model stored in submodeladd
-	public function event__model_field__submodeladd__added($params) {
+	/*public function event__model_field__submodeladd__added($params) {
 		//if a sub model isn't already set
 		if (!isset($this->sudmodel) || $this->sudmodel === NULL)
 		{
@@ -264,7 +264,7 @@ class Model_Field extends Supermodlr {
 			$this->save();
 		}
 
-	}
+	}*/
 
 	//when a field is created/updated/deleted, we need to re-create/delete the generated class file
 	public function event__model_field__save_end($params)
@@ -411,6 +411,7 @@ class Model_Field extends Supermodlr {
 	{
 
 		$field_class = $this->get_class_name();
+		fbl($field_class);
 		$extends = $this->get_extends();
 		
 		$Field = new Field();
@@ -461,7 +462,7 @@ EOF;
 			$dir_created = mkdir($file_info['dirname'],'0777',TRUE);//@todo fix permissions issues on server level
 
 		}
-
+fbl($full_file_path);
 		$saved = file_put_contents($full_file_path,$file_contents);
 
 		if (!$saved)
@@ -542,7 +543,6 @@ class Field_Field__Id extends Field {
     public $unique = TRUE;
     public $searchable = TRUE;
     public $filterable = TRUE;
-    public $filters = array('strtolower');
 	public $nullvalue = FALSE; 
     public $templates = array('input'=> 'hidden');		
 	public $hidden = TRUE; 
@@ -746,7 +746,7 @@ when a model extends another model ( modelB extends modelA)
 
 */
 
-class Field_Field_Submodel extends Field {
+/*class Field_Field_Submodel extends Field {
 	public $name = 'submodel'; 
 	public $description = 'If datatype = "object", this is a relationship to the model that should be included as a sub/embedded model';
     public $datatype = 'relationship'; 
@@ -768,9 +768,9 @@ class Field_Field_Submodel extends Field {
     		- add a field that only stores the parent model _id relationship and is used to auto-create the submodel relationship if populated on-save end
 
     */
-}
+//}
 
-class Field_Field_Submodeladd extends Field {
+/*class Field_Field_Submodeladd extends Field {
 	public $name = 'submodeladd'; 
 	public $description = 'If datatype = "object", this is a relationship to the parent of the model that should be included as a sub/embedded model. This field can be set even if the field is not saved.  It tells the save_end event to create the submodel class based on the details of the saved field.';
     public $datatype = 'relationship'; 
@@ -784,7 +784,7 @@ class Field_Field_Submodeladd extends Field {
     public $filterable = TRUE;
 	public $nullvalue = FALSE; 	
 	public $conditions = array('$hidden'=> TRUE, '$showif'=> array('datatype'=> 'object', 'submodel'=> NULL));		
-}
+}*/
 
 class Field_Field_Required extends Field {
 	public $name = 'required'; 
@@ -1106,3 +1106,102 @@ class Field_Field_Source extends Field {
 	public $nullvalue = FALSE; 
 	public $conditions = array('$hidden'=> TRUE, '$showif'=> array('datatype'=> 'relationship'));			
 }
+
+
+
+/*
+
+db.getCollection("field").insert({
+  "_id": "Field_Supermodlrcore_Singlenumber",
+  "datatype": "int",
+  "filterable": true,
+  "hidden": false,
+  "maxlength": 4,
+  "multilingual": false,
+  "name": "singlenumber",
+  "nullvalue": false,
+  "private": false,
+  "readonly": false,
+  "required": false,
+  "searchable": false,
+  "storage": "single",
+  "unique": false,
+  "validation": [
+    [
+      "numeric",
+      [
+        
+      ]
+    ]
+  ]
+});
+db.getCollection("field").insert({
+  "_id": "Field_Supermodlrcore_Singletext",
+  "name": "singletext",
+  "datatype": "string",
+  "multilingual": false,
+  "storage": "single",
+  "required": false,
+  "unique": false,
+  "searchable": true,
+  "filterable": true,
+  "maxlength": 255,
+  "nullvalue": false,
+  "hidden": false,
+  "private": false,
+  "readonly": false
+});
+db.getCollection("field").insert({
+  "_id": "Field_Supermodlrcore_Name",
+  "name": "name",
+  "datatype": "string",
+  "multilingual": true,
+  "charset": "UTF-8",
+  "storage": "single",
+  "required": false,
+  "unique": false,
+  "searchable": true,
+  "filterable": false,
+  "maxlength": 255,
+  "nullvalue": false,
+  "hidden": false,
+  "private": false,
+  "readonly": false
+});
+db.getCollection("field").insert({
+  "_id": "Field_Supermodlrcore_Description",
+  "name": "description",
+  "datatype": "string",
+  "multilingual": true,
+  "charset": "UTF-8",
+  "storage": "single",
+  "required": false,
+  "unique": false,
+  "searchable": true,
+  "filterable": false,
+  "maxlength": 1000,
+  "nullvalue": false,
+  "hidden": false,
+  "private": false,
+  "readonly": false
+});
+db.getCollection("field").insert({
+  "_id": "Field_Supermodlrcore__Id",
+  "name": "_id",
+  "datatype": "string",
+  "multilingual": false,
+  "charset": "UTF-8",
+  "storage": "single",
+  "required": true,
+  "unique": true,
+  "searchable": false,
+  "filterable": true,
+  "maxlength": 1000,
+  "nullvalue": false,
+  "hidden": true,
+  "private": false,
+  "readonly": true
+});
+
+
+*/
