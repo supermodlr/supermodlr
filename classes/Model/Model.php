@@ -13,7 +13,7 @@ when a model is created
 	* write the model class
 */
 
-class Model_Model extends Supermodlr {
+class Model_Model extends Supermodlr_Core {
         public static $__scfg = array(
                 'model.field_keys'  => array(
                     '_id',
@@ -177,6 +177,9 @@ class Model_Model extends Supermodlr {
 		$pk_name = $this->cfg('pk_name');
 		$file_contents = <<<EOF
 <?php defined('SYSPATH') or die('No direct script access.');
+/**
+  * FileDescription: {$this->description}
+  */
 class {$model_class} extends {$extends} {
         public static \$__scfg = array(
                 '{$this->name}.field_keys' => array(
@@ -195,6 +198,19 @@ EOF;
 
 		$file_contents .= "                )".PHP_EOL;
 		$file_contents .= "	);".PHP_EOL;
+
+		//loop through all stored methods
+		if (isset($this->methods) && is_array($this->methods))
+		{
+			foreach ($this->methods as $method)
+			{
+				$file_contents .= PHP_EOL."    ".$method['comment'];
+				$file_contents .= $method['source'].PHP_EOL;
+
+			}
+
+		}
+
 		$file_contents .= "}".PHP_EOL;
 
 		return $file_contents;
@@ -328,6 +344,22 @@ class Field_Model_Fields extends Field {
 	public $hidden = FALSE; 
 	public $filters = array('model_model::filter_fields');
 }
+
+class Field_Model_Methods extends Field {
+	public $name = 'methods'; 
+    public $datatype = 'object'; 
+    public $multilingual = FALSE; 
+    public $charset = 'UTF-8'; 
+    public $storage = 'array';
+    public $unique = FALSE;
+    public $searchable = TRUE;
+    public $filterable = FALSE;
+    public $defaultvalue = NULL;
+	public $nullvalue = FALSE;
+    public $validation = NULL;
+	public $hidden = TRUE; 
+}
+
 
 class Field_Model_Extends extends Field {
     public $name = 'extends';

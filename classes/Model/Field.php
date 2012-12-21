@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-class Model_Field extends Supermodlr {
+class Model_Field extends Supermodlr_Core {
 	public static $__scfg = array(
 		'field.field_keys'  => array(
 		    '_id',

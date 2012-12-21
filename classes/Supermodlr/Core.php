@@ -5,7 +5,23 @@ abstract class Supermodlr_Core {
 
 
 	//static config for vars that apply to all data types and can be loaded once
-    protected static $__scfg = array();
+    protected static $__scfg = array(
+		'drivers_config' => array(
+				array(
+						'name'     => 'coremongo',
+						'driver'   => 'Supermodlr_Mongodb',
+						'host'     => '127.0.0.1',
+						'port'     => '27017',
+						'user'     => '',
+						'pass'     => '',
+						'dbname'   => 'supermodlr',
+						'replset'  => FALSE,
+						'safe'     => TRUE,
+						'fsync'    => FALSE,
+				)
+		),		
+		'framework_name' => 'Kohana',
+    );
 	
 	//object config
     protected $__cfg = array();
