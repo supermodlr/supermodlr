@@ -222,8 +222,7 @@ class Controller_Supermodlr_Api extends Controller {
 		
 		//get the fields
 		$fields = $Model->get_fields();
-		fbl($fields);
-		fbl($field_name);
+
 		$single_field_array = array($fields[$field_name]);
 		
 		$Validate_status = $Model->validate(NULL,$single_field_array);
@@ -299,7 +298,7 @@ class Controller_Supermodlr_Api extends Controller {
 		$field_name = $this->request->param('id');
 
 		//build field class name
-		$field_class = 'field_'.$this->model_name.'_'.$field_name;
+		$field_class = 'Field_'.ucfirst(strtolower($this->model_name)).'_'.ucfirst(strtolower($field_name));
 
 		//get the field
 		$Field = new $field_class();
