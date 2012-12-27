@@ -502,7 +502,8 @@ abstract class Supermodlr_Core {
 			foreach ($field_keys as $field_name) 
 			{
 				$field_class_name = ucfirst(strtolower($field_name));
-				$class = 'Field_'.$model_name.'_'.$field_class_name;
+				$model_class_name = ucfirst(strtolower($model_name));
+				$class = 'Field_'.$model_class_name.'_'.$field_class_name;
 				$fields[$field_name] = new $class();
 			}
 			//store created fields once for each model
