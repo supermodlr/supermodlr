@@ -323,7 +323,7 @@ class Controller_Supermodlr_Api extends Controller {
 		{
 
 			//build model class
-			$model_class = 'model_'.$source['model'];
+			$model_class = 'Model_'.ucfirst(strtolower($source['model']));
 
 			$model_label = $model_class::scfg('label');
 
