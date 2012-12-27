@@ -14,7 +14,8 @@ class Supermodlr_Db {
 	protected $transactions = FALSE;
 	protected $use_prepared = FALSE;
 	
-	public function __construct($params = array()) {
+	public function __construct($params = array()) 
+	{
 		foreach ($params as $key => $value)
 		{
 			$this->$key = $value;
@@ -25,7 +26,8 @@ class Supermodlr_Db {
 	  * 
 	  * @returns bool
 	  */
-	public function connect($params = array()) {
+	public function connect($params = array()) 
+	{
 	   return $this->driver_connect($params);
 	}
 
@@ -33,7 +35,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns bool	  
 	  */
-	public function close($params = array()) {
+	public function close($params = array()) 
+	{
 	   return $this->driver_close($params);
 	}	
 	
@@ -41,7 +44,26 @@ class Supermodlr_Db {
 	  *
 	  * @returns mixed (bool === FALSE on failure, mixed insert_id() on success)	  
 	  */
-	public function create($params = array()) {
+	public function create($params = array()) 
+	{
+
+		if (isset($params['fields']) && isset($params['model']))
+		{
+			foreach ($params['fields'] as $field_key => $Field)
+			{
+				if (isset($params['set'][$field_key]) && method_exists($this, $Field->datatype.'_todb'))
+				{
+					$method = $Field->datatype.'_todb';
+					$this->$method(array(
+						'value'=> &$params['set'][$field_key],
+						'set'  => &$params['set'],
+						'field'=> $Field,
+						'model'=> $params['model'],
+					));
+
+				}
+			}
+		}
 		$create = $this->driver_create($params);
 	    return $create;
 	}
@@ -50,16 +72,58 @@ class Supermodlr_Db {
 	  *
 	  * @returns array || resource
 	  */
-	public function read($params = array()) {
+	public function read($params = array()) 
+	{
 		//@todo handle standard caching here
-	   return $this->driver_read($params);
+
+		$result = $this->driver_read($params);
+
+		if (isset($params['fields']) && isset($params['model']))
+		{
+			foreach ($result as $i => $row) {
+				foreach ($params['fields'] as $field_key => $Field)
+				{
+					if (method_exists($this, $Field->datatype.'_fromdb'))
+					{
+						$method = $Field->datatype.'_fromdb';
+						$this->$method(array(
+							'value'  => &$result[$i][$field_key],
+							'result' => &$result[$i],
+							'field'  => $Field,
+							'model'  => $params['model'],
+						));
+					}
+				}
+			}
+
+		}		
+
+	   	return $result;
 	}	
 	
 	/**
 	  *
 	  * @returns mixed (bool === FALSE if failed || int of affected records)
 	  */
-	public function update($params = array()) {
+	public function update($params = array()) 
+	{
+		if (isset($params['fields']) && isset($params['model']))
+		{
+			foreach ($params['fields'] as $field_key => $Field)
+			{
+				if (isset($params['set'][$field_key]) && method_exists($this, $Field->datatype.'_todb'))
+				{
+					$method = $Field->datatype.'_todb';
+					$this->$method(array(
+						'value'=> &$params['set'][$field_key],
+						'set'  => &$params['set'],
+						'field'=> $Field,
+						'model'=> $params['model'],
+					));
+
+				}
+			}
+		}		
 	   return $this->driver_update($params);
 	}	
 	
@@ -67,7 +131,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns mixed (bool === FALSE if failed || int of affected records)	  
 	  */
-	public function delete($params = array()) {
+	public function delete($params = array()) 
+	{
 	   return $this->driver_delete($params);
 	}	
 	
@@ -75,7 +140,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns mixed (bool === FALSE if failed || int of affected records)	  
 	  */
-	public function affected_rows($result) {
+	public function affected_rows($result) 
+	{
 	   return $this->driver_affected_rows($result);
 	}		
 	
@@ -83,7 +149,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns statement	  
 	  */
-	public function prepare($params = array()) {
+	public function prepare($params = array()) 
+	{
 	   return $this->driver_prepare($params);
 	}
 	
@@ -91,7 +158,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns mixed (bool === FALSE if failed || mixed value if id was retrieved)	  
 	  */
-	public function insert_id($params = array()) {
+	public function insert_id($params = array()) 
+	{
 	   return $this->driver_insert_id($params);
 	}
 	
@@ -99,7 +167,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns array('code'=> $code, 'message'=> $message)	  
 	  */
-	public function set_error($Error) {
+	public function set_error($Error) 
+	{
 		$this->error = $Error;
 		$this->errors[] = $Error;
 		throw new Exception($Error->getMessage());
@@ -109,7 +178,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns Exception $Error	  
 	  */
-	public function error($params = array()) {
+	public function error($params = array()) 
+	{
 		return $this->error;
 	}	
 	
@@ -117,7 +187,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns all Exception $Error	  
 	  */
-	public function errors($params = array()) {
+	public function errors($params = array()) 
+	{
 		return $this->errors;
 	}	
 	
@@ -125,7 +196,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns mixed (value is used to insert a datetime value into a db.  can be string, int, or object) 
 	  */
-	public function datetime_todb($params = array()) {
+	public function datetime_todb($params) 
+	{
 	   return $this->driver_datetime_todb($params);
 	}
 
@@ -133,7 +205,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns unix timestamp of a datetime from the db
 	  */
-	public function datetime_fromdb($params = array()) {
+	public function datetime_fromdb($params) 
+	{
 	   return $this->driver_datetime_fromdb($params);
 	}
 	
@@ -142,7 +215,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns mixed (value is used to insert a microtime value into a db.  can be string, int, or object) 
 	  */
-	public function microtime_todb($params = array()) {
+	public function microtime_todb($params) 
+	{
 	   return $this->driver_microtime_todb($params);
 	}	
 	
@@ -150,7 +224,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns unix micro timestamp of a microtime from the db
 	  */
-	public function microtime_fromdb($params = array()) {
+	public function microtime_fromdb($params) 
+	{
 	   return $this->driver_microtime_fromdb($params);
 	}	
 	
@@ -158,7 +233,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns bool 	  
 	  */
-	public function start_transaction($params = array()) {
+	public function start_transaction($params = array()) 
+	{
 	   return $this->driver_start_transaction($params);
 	}
 	
@@ -167,7 +243,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns bool 	  
 	  */
-	public function in_transaction($params = array()) {
+	public function in_transaction($params = array()) 
+	{
 	   return $this->driver_in_transaction($params);
 	}
 	
@@ -175,7 +252,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns bool 		  
 	  */
-	public function commit_transaction($params = array()) {
+	public function commit_transaction($params = array()) 
+	{
 	   return $this->driver_commit_transaction($params);
 	}	
 	
@@ -183,7 +261,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns bool 		  
 	  */
-	public function rollback_transaction($params = array()) {
+	public function rollback_transaction($params = array()) 
+	{
 	   return $this->driver_rollback_transaction($params);
 	}	
 
@@ -191,7 +270,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns bool 		  
 	  */
-	public function transaction_status() {
+	public function transaction_status() 
+	{
 	   return $this->driver_transaction_status();
 	}	
 	
@@ -200,7 +280,8 @@ class Supermodlr_Db {
 	  *
 	  * @returns bool 		  
 	  */
-	public function supports_transactions() {
+	public function supports_transactions() 
+	{
 	   return $this->transactions;
 	}	
 }

@@ -451,7 +451,9 @@ abstract class Supermodlr_Core {
 		$row = $Driver->read(array(
 			'from'=> $db_name,
 			'where'=> array($pk_name => $id),
-			'limit' => 1
+			'limit' => 1,
+			'model'=> $this,
+			'fields'=> $this->get_fields(),			
 		));
 		if ($row)
 		{
@@ -1354,7 +1356,9 @@ abstract class Supermodlr_Core {
 			//search primary db for this pk
 			$exists = $drivers[0]->read(array(
 				'from'=> $this->cfg('db_name'),
-				'where'=> array($pk => $this->$pk)
+				'where'=> array($pk => $this->$pk),
+				'model'=> $this,
+				'fields'=> $this->get_fields(),				
 			));
 
 			//if this entry is already in the db
@@ -1423,7 +1427,9 @@ abstract class Supermodlr_Core {
 				$update = array(
 					'into'=> $this->cfg('db_name'),
 					'set'=> $set,
-					'where'=> array($pk => $this->$pk)
+					'where'=> array($pk => $this->$pk),
+					'model'=> $this,
+					'fields'=> $this->get_fields(),					
 				);
 
 				//call events to modify update
@@ -1455,6 +1461,8 @@ abstract class Supermodlr_Core {
 				$create = array(
 					'into'=> $this->cfg('db_name'),
 					'set'=> $set,
+					'model'=> $this,
+					'fields'=> $this->get_fields(),
 				);
 
 				//call events to modify create array
@@ -1697,6 +1705,9 @@ abstract class Supermodlr_Core {
 		if (!class_exists($field_class) || !isset($fields[$key]))
 		{
 			//@todo throw error, cannot set a property if it is not part of a field assigned to this model
+			$this->cfg('meta.'.$key,$value);
+			return ;
+
 		}
 		//@todo check field permissions for create/update/delete
 		
@@ -1751,7 +1762,7 @@ abstract class Supermodlr_Core {
 				}	
 				else if ($Field->datatype === 'datetime')
 				{
-					if ($value === '' || !strtotime($value))
+					if ($value === '' || (is_string($value) && !strtotime($value)))
 					{
 						$set_value = FALSE;
 					}
@@ -1885,6 +1896,8 @@ abstract class Supermodlr_Core {
 			$delete_result = $Driver->delete(array(
 				'from'=> $this->cfg('db_name'),
 				'where'=> $where,
+				'model'=> $this,
+				'fields'=> $this->get_fields(),				
 			));
 			//if returned affected rows is not one and remove result is not true (for drivers that don't support 'affected rows')
 			if ($delete_result !== 1 && $delete_result !== TRUE)
@@ -2022,9 +2035,12 @@ abstract class Supermodlr_Core {
 	    //default to primary db
 	    if (!isset($params['driver'])) $params['driver'] = 0;
 		if (!isset($params['count'])) $params['count'] = FALSE;
-		if (!isset($params['limit'])) $params['limit'] = 0;
+		if (!isset($params['limit'])) $params['limit'] = NULL;
         if (!isset($params['from'])) $params['from'] = $o->cfg('db_name');
 		if (!isset($params['array'])) $params['array'] = FALSE;
+		if (!isset($params['fields'])) $params['fields'] = self::get_fields();
+		if (!isset($params['model'])) $params['model'] = $o;
+		
         //if (!isset($params['cache'])) $params['cache'] = $o->cfg('read_cache');
 
 		//get driver @todo add support to select driver by driver.id stored in driver_config
@@ -2213,4 +2229,37 @@ abstract class Supermodlr_Core {
 		}
 		return self::scfg('models');
 	}	
+
+	public function rel($field,$rel_field = NULL)
+	{
+		if (isset($this->$field) && is_array($this->$field) && !empty($this->$field))
+		{
+			//first check to see if this rel has been resolved
+			
+			if ($this->cfg('rel.'.$field) !== NULL)
+			{
+				$Rel = $this->cfg('rel.'.$field);
+			}
+			//resolve the relationship
+			else 
+			{
+				$rel = $this->$field;	
+				$rel_class = 'Model_'.ucfirst($rel['model']);
+
+				$Rel = new $rel_class($rel['_id']);				
+			}
+			//if no specific field was requested, return the entire rel object
+			if ($rel_field === NULL)
+			{
+				return $Rel;
+			}
+			// return the requested field value
+			else
+			{
+				return $Rel->$rel_field;
+			}
+			
+		}
+		return NULL;
+	}
 }

@@ -363,7 +363,7 @@ class Field {
 		{
 			return TRUE;
 		} 
-		else if ($datatype == 'date' && strtotime($value) !== FALSE) 
+		else if ($datatype == 'datetime' && ((is_object($value) && $value InstanceOf DateTime) || (is_numeric($value)) || (is_string($value) && strtotime($value) !== FALSE))) 
 		{
 			return TRUE;
 		} 

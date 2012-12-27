@@ -26,6 +26,44 @@ class Controller extends Kohana_Controller {
 		}
 	}
 
+	public function model_list($Result_Set, $model_name, $type, $action, $theme = 'default', $template = 'default', $media = 'web', $ilang = 'en', $field_keys = NULL)
+	{
+
+		$entity_templates = array();
+
+		foreach ($Result_Set as $Model)
+		{
+			$entity_templates[] = $this->model_view($Model, $type, $action, $theme, $template, $media, $ilang, $field_keys)->render();
+		}
+
+		//get model wrapper template paths
+		$list_wrapper_template_paths = $this->get_list_template_paths($Model,$type,'wrapper',$template);
+		
+		//get template for model
+		$list_Wrapper_View = $this->get_template($model_wrapper_template_paths, $theme, $media);
+
+		//bind rendered fields
+		$List_Wrapper_View->bind('entity_templates',$entity_templates);		
+		
+		//bind the model name
+		$List_Wrapper_View->bind('model_name',$model_name);	
+
+		//bind type, theme, template, media, ilang
+		$List_Wrapper_View->bind('type',$type);		
+		$List_Wrapper_View->bind('action',$action);		
+		$List_Wrapper_View->bind('theme',$theme);	
+		$List_Wrapper_View->bind('template',$template);	
+		$List_Wrapper_View->bind('media',$media);			
+		$List_Wrapper_View->bind('ilang',$ilang);		
+		
+		//bind the controller
+		$List_Wrapper_View->bind('controller',$this);				
+	
+		//return view
+		return $List_Wrapper_View;
+
+	}
+
 
     /**
      * returns input or display html
@@ -36,9 +74,10 @@ class Controller extends Kohana_Controller {
 	 * @param string $template = 'default' template folder to look for the form template and field templates. path looks like $theme/$media/$template
 	 * @param string $media = 'web' media name used to look up this template.  possible values are currently web, tablet, or moble
 	 * @param string $ilang = 'en' language used to generate interface
+	 * @param array $field_keys = all.  An array of field names to be used
 	 * @return string $form html returns the html used to display the entry/update form for this model based on the sent template and media
      */	
-	public function model_view($Model, $type, $action, $theme = 'default', $template = 'default', $media = 'web', $ilang = 'en') 
+	public function model_view($Model, $type, $action, $theme = 'default', $template = 'default', $media = 'web', $ilang = 'en', $field_keys = NULL) 
 	{	
 		$model_name = $Model->get_name();
 		//assign a random id to this form generation (must start with a character though, so 'a' is added)
@@ -47,9 +86,22 @@ class Controller extends Kohana_Controller {
 		//get fields
 		$fields = $Model->get_fields();
 		
+		//if a custom list of fields to use was sent
+		if ($field_keys !== NULL && is_array($field_keys))
+		{
+			//loop through all fields
+			foreach ($fields as $i => $Field)
+			{
+				//remove all fields not in sent list
+				if (!in_array($Field->name, $field_keys)) 
+				{
+					unset($fields[$i]);
+				}
+			}
+
+		}
+
 		$field_templates = array();
-
-
 		
 		//loop through all fields
 		foreach ($fields as $Field)
@@ -137,7 +189,7 @@ class Controller extends Kohana_Controller {
 		$model_wrapper_template_paths = $this->get_model_template_paths($Model,$type,'wrapper',$template);
 		
 		//get template for model
-		$Model_Wrapper_View = $this->get_model_template($model_wrapper_template_paths, $theme, $media);
+		$Model_Wrapper_View = $this->get_template($model_wrapper_template_paths, $theme, $media);
 
 		//bind rendered fields
 		//$Framework->bind($Model_View,'fields',$field_templates);
@@ -162,7 +214,7 @@ class Controller extends Kohana_Controller {
 		$Model_Wrapper_View->bind('controller',$this);				
 	
 
-		//return rendered form
+		//return model view
 		return $Model_Wrapper_View;
 	}
 
@@ -241,7 +293,7 @@ class Controller extends Kohana_Controller {
 	 * @param string $media = 'web' media name used to look up this template.  possible values are currently web, tablet, or moble
 	 * @return View $View returns the unrendered view class returned by the framework
      */		
-	public function get_model_template(array $template_paths,$theme,$media) {
+	public function get_template(array $template_paths,$theme,$media) {
 
 		//get field template for the sent theme and media
 		$View = View::factory()->get_view($template_paths,$theme, $media);
@@ -249,13 +301,50 @@ class Controller extends Kohana_Controller {
 		return $View;
 	}
 
+
     /**
      * returns array of paths used to search for model templates
-	 * @param string $Model required Instance of Supermodlr_Core       
+	 * @param string $model_name required name of the model of which this list will consist   
 	 * @param string $template (input|display) the type of template we are looking for     
 	 * @param string $type (input|display) the type of template we are looking for
 	 * @param string $sub_type (''|wrapper) an additional level to look under for template files.
-	 * @return array $model_template_paths returns the unrendered view class returned by the framework
+	 * @return array $list_template_paths returns an array of paths to search in for a list template
+     */	
+	public function get_list_template_paths($model_name,$type,$sub_type = '', $template = 'default') 
+	{
+		if ($sub_type !== '')
+		{
+			$sub_type = '/'.$sub_type;
+		}
+
+		$list_template_paths = array();
+		
+		//if sent template is not default
+		if ($template !== 'default') 
+		{
+			//look first for template by sent name
+			$list_template_paths[] = $type.$sub_type.'/list/'.$model_name.'/'.$template;
+			$list_template_paths[] = $type.$sub_type.'/list/'.$template;			
+		}
+
+	
+		//add in field name key
+		$list_template_paths[] = $type.$sub_type.'/list/'.$model_name.'/default';
+		$list_template_paths[] = $type.$sub_type.'/list/'.$model_name;
+		
+		//add in default template
+		$list_template_paths[] = $type.$sub_type.'/list/default';
+
+		return $list_template_paths;
+	}
+
+    /**
+     * returns array of paths used to search for model templates
+	 * @param Object $Model required Instance of Supermodlr_Core       
+	 * @param string $template (input|display) the type of template we are looking for     
+	 * @param string $type (input|display) the type of template we are looking for
+	 * @param string $sub_type (''|wrapper) an additional level to look under for template files.
+	 * @return array $model_template_paths returns an array of paths to search in for a model template
      */	
 	public function get_model_template_paths($Model,$type,$sub_type = '', $template = 'default') 
 	{
@@ -301,11 +390,11 @@ class Controller extends Kohana_Controller {
 
     /**
      * returns array of template paths to search for field templates
-	 * @param string $Field required Instance of Field          
+	 * @param Object $Field required Instance of Field          
 	 * @param string $template (input|display) the type of template we are looking for     
 	 * @param string $type (input|display) the type of template we are looking for
 	 * @param string $sub_type (''|wrapper) an additional level to look under for template files.
-	 * @return array $field_template_paths returns the unrendered view class returned by the framework
+	 * @return array $field_template_paths returns an array of paths to search in for a field template
      */	
 	public function get_field_template_paths($Field,$type,$sub_type = '',$template = 'default') 
 	{

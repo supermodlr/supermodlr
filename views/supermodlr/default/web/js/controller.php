@@ -60,7 +60,16 @@ function form_submit() {
 			$scope.$emit('saved',save_response);
 			if (!$scope.modal_form) {
 				//redirect user to previous page (@todo or close modal window)
-				window.location.href = document.referrer;
+				<?php
+				if (isset($controller->form_redirect))
+				{
+?>					window.location.href = '<?=$controller->form_redirect ?>';<?php
+				} 
+				else
+				{
+?>					window.location.href = document.referrer;<?php
+				} ?>
+
 			}
 		//if save failed
 		} else {

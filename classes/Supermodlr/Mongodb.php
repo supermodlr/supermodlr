@@ -423,18 +423,27 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
 	  *
 	  * @returns mixed (value is used to insert a datetime value into a db.  can be string, int, or object) 
 	  */
-	public function driver_datetime_todb($params = array()) 
+	public function driver_datetime_todb($params) 
 	{
-	
+		if (is_object($params['value']) && $params['value'] instanceOf DateTime)
+		{
+			$datetime = $params['value']->getTimestamp();
+		}
+		else if (is_string($params['value']) && !is_numeric($params['value'])) 
+		{
+			$datetime = strtotime($params['value']);
+			if (!$datetime) $params['value'] = NULL;
+		}
+		$params['value'] = new MongoDate($datetime);
 	}
 
 	/**
 	  *
 	  * @returns unix timestamp of a datetime from the db
 	  */
-	public function driver_datetime_fromdb($params = array()) 
+	public function driver_datetime_fromdb($params) 
 	{
-	
+		$params['value'] = new DateTime($params['value']->sec);
 	}
 	
 	
@@ -442,7 +451,7 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
 	  *
 	  * @returns mixed (value is used to insert a microtime value into a db.  can be string, int, or object) 
 	  */
-	public function driver_microtime_todb($params = array()) 
+	public function driver_microtime_todb($microtime) 
 	{
 	
 	}	
@@ -451,7 +460,7 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
 	  *
 	  * @returns unix micro timestamp of a microtime from the db
 	  */
-	public function driver_microtime_fromdb($params = array()) 
+	public function driver_microtime_fromdb($microtime) 
 	{
 	
 	}	

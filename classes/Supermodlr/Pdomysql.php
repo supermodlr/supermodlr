@@ -148,7 +148,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 
 	/**
 	  * @param string $from required table name
-	  * @param array $fields = '*' field names to return. can be formatted array('col1','col2') or array(array('column'=> 'col1','alias'=> 'column1'),
+	  * @param array $columns = '*' field names to return. can be formatted array('col1','col2') or array(array('column'=> 'col1','alias'=> 'column1'),
 	  * @param array $where = NULL format: array($col => $val)
 	  * @param array|string $order = NULL
 	  * @param int $limit = NULL
@@ -173,45 +173,67 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 			$params['prepared'] = $this->use_prepared;
 		}
 	
+		//run raw sql
+		if (isset($params['sql'])) 
+		{
+			if ($params['prepared'] && isset($params['values']))
+			{
+				$sql = $params['sql'];
+
+				//generate sql hash
+				$sql_hash = md5($sql);
+				//if statment hasn't been prepared yet
+				if (!isset($this->statements[$sql_hash])) 
+				{
+					//prepare the statement
+					$this->statements[$sql_hash] = $this->connection->prepare($sql);
+				}
+				//execute the statement
+				$result = $this->statements[$sql_hash]->execute($params['values']);
+				if ($result) 
+				{
+					$data = $this->statements[$sql_hash]->fetchAll(PDO::FETCH_ASSOC);
+				}
+				else 
+				{
+					$data = FALSE;
+				}		
+				return $data;		
+			}
+
+		}
 		//from
 		
-		//fields
-		$fields_sql = '*';
-		if (isset($params['fields']) && is_array($params['fields']) && !empty($params['fields'])) {
-			$field_sql_set = array();
-			foreach ($params['fields'] as $field) {
-				if (is_string($field)) {
-					$field_sql_set[] = $field;
-				} else if (is_array($field)) {
-					$field_sql_set[] = $field['column'].' as '.$field['alias'];
+		//columns
+		$columns_sql = '*';
+		if (isset($params['columns']) && is_array($params['columns']) && !empty($params['columns'])) {
+			$columns_sql_set = array();
+			foreach ($params['columns'] as $columns) {
+				if (is_string($columns)) {
+					$columns_sql_set[] = $columns;
+				} else if (is_array($columns)) {
+					$columns_sql_set[] = $columns['column'].' as '.$columns['alias'];
 				}
 			}
-			if (!empty($field_sql_set)) {
-				$fields_sql = implode(', ',$field_sql_set);
+			if (!empty($columns_sql_set)) {
+				$columns_sql = implode(', ',$columns_sql_set);
 			} else {
-				$fields_sql = '*';
+				$columns_sql = '*';
 			}
 			
-		//select all fields if none are specified			
+		//select all columns if none are specified			
 		} else {
-			$fields_sql = '*';
+			$columns_sql = '*';
 		}
 		
 		//where
-		$where_sql = $this->where_to_sql($params);
-		
-		if ($params['prepared'] == TRUE) 
-		{
-			if (isset($params['where']) && count($params['where']) > 0)
-			{
-				$where_values = array_values($params['where']);
-			}
-			else
-			{
-				$where_values = array();
-			}
-			
-		}
+		$where_sql_params = $params;
+		$where_values = array();
+		//assign 'where' by reference so it can be modified inside 'where_to_sql'
+		$where_sql_params['where'] = &$params['where'];
+
+		$where_sql_params['where_values'] = &$where_values;
+		$where_sql = $this->where_to_sql($where_sql_params);
 		
 		//order
 		$order_sql = '';
@@ -242,7 +264,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 			}			
 		}
 		
-		$sql = 'select '.$fields_sql.' from '.$params['from'].' '.$where_sql.' '.$order_sql.' '.$limit_sql.';';
+		$sql = 'select '.$columns_sql.' from '.$params['from'].' '.$where_sql.' '.$order_sql.' '.$limit_sql.';';
 
 		//if this is not a prepared statement, execute it
 		if ($params['prepared'] === FALSE) {
@@ -253,7 +275,8 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 			//generate sql hash
 			$sql_hash = md5($sql);
 			//if statment hasn't been prepared yet
-			if (!isset($this->statements[$sql_hash])) {
+			if (!isset($this->statements[$sql_hash])) 
+			{
 				//prepare the statement
 				$this->statements[$sql_hash] = $this->connection->prepare($sql);
 			}
@@ -411,6 +434,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 	public function where_to_sql($params = array()) 
 	{
 		$where_sql = '';
+		$where_values = array();
 		//if where conditions were sent
 		if (isset($params['where']) && is_array($params['where']) && !empty($params['where'])) 
 		{
@@ -426,7 +450,26 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 				//raw sql statements
 				else 
 				{
-					$where_set[] = $col." = ?";
+
+					//regexp
+					if (is_array($val) && isset($val['$regex']))
+					{
+						//skip the first '/'
+						$mysql_regexp = substr($val['$regex'], 1);
+						
+						//remove the end '/' and any operators that were set
+						$mysql_regexp = preg_replace('/\/[a-z]*$/i','',$mysql_regexp);
+
+						$where_set[] = $col." REGEXP '".$mysql_regexp."'";
+						
+					}
+					else
+					{
+						$where_set[] = $col." = ?";
+						$params['where_values'][] = $val;
+					}
+
+					
 				}
 			}
 			//generate sql where fragment
@@ -436,8 +479,97 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 		{
 			$where_sql = '';
 		}
+
 		return $where_sql;
 	}	
+
+	/**
+	  * Converts arrays and keyed arrays, objects, and relationships to expected table column format
+	  * @param array $model required format: array($col => $val)	  	  
+	  * @param array $fields required format: array($col => $val)
+	  * @param array $values required format: array($col => $val)	  
+	  * @returns array returns array of values flattened for an sql table
+	  */
+	/*public function fields_to_sql($params = array()) 
+	{
+		$new_values = array();
+		foreach ($values as $field_key => $value)
+		{
+			$Field = $fields[$field_key];
+			//convert single storage relationships
+			if ($Field->datatype == 'relationship' && $Field->storage == 'single')
+			{
+				if (isset($value['model']) && isset($value['_id']))
+				{
+					$new_values[$field_key.'__'] = $value['model'];
+					$new_values[$field_key.'__'] = $value['_id'];
+				}
+				else
+				{
+					$new_values[$field_key.'__model'] = NULL;
+					$new_values[$field_key.'__id'] = NULL;
+				}
+				
+			}
+			//@todo convert any datatype == 'objects' fields
+
+			//@todo convert any storage == 'array' fields
+
+			//@todo convert any storage == 'keyed_array' fields
+
+			//no conversion needed
+			else
+			{
+				$new_values[$field_key] = $value;
+			}
+		}
+		return $new_values;
+	}*/
+
+	/**
+	  * Converts datatype == 'relationship' to expected table column format
+	  * @param Object Model $model required format: array($col => $val)	  	  
+	  * @param Object Field $field required format: array($col => $val)
+	  * @param mixed $value required reference  
+	  * @param mixed $set required reference
+	  * @returns 
+	  */
+	public function relationship_todb($params = array()) 
+	{
+		$field_key = $params['field']->name;
+		if (isset($params['value']['model']) && isset($params['value']['_id']))
+		{
+			$params['set'][$field_key.'__model'] = $params['value']['model'];
+			$params['set'][$field_key.'__id'] = $params['value']['_id'];
+		}
+		else
+		{
+			$params['set'][$field_key.'__model'] = NULL;
+			$params['set'][$field_key.'__id'] = NULL;
+		}
+		//unset the direct value
+		unset($params['set'][$field_key]);		
+	}
+
+	/**
+	  * Converts datatype == 'relationship' to expected table column format
+	  * @param Object Model $model required format: array($col => $val)	  	  
+	  * @param Object Field $field required format: array($col => $val)
+	  * @param mixed $value required reference  
+	  * @param mixed $set required reference
+	  * @returns 
+	  */
+	public function relationship_fromdb($params = array()) 
+	{
+		$field_key = $params['field']->name;
+		if (isset($params['result'][$field_key.'__model']) && isset($params['result'][$field_key.'__model']))
+		{
+			$params['result'][$field_key] = array('model'=> $params['result'][$field_key.'__model'], '_id'=> $params['result'][$field_key.'__id']);
+			unset($params['result'][$field_key.'__model']);
+			unset($params['result'][$field_key.'__id']);
+		}
+	
+	}
 
 	/**
 	  * @param PDOStatement $result required Pass an executed pdo statement
@@ -469,18 +601,40 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 	  *
 	  * @returns mixed (value is used to insert a datetime value into a db.  can be string, int, or object) 
 	  */
-	public function driver_datetime_todb($params = array()) 
+	public function driver_datetime_todb($params) 
 	{
-	
+		if (is_object($params['value']) && $params['value'] instanceOf DateTime)
+		{
+			$datetime = $params['value']->getTimestamp();
+		}
+		else if (is_string($params['value']) && !is_numeric($params['value'])) 
+		{
+			$datetime = strtotime($params['value']);
+			if (!$datetime) $params['value'] = NULL;
+		}
+		else
+		{
+			$datetime = $params['value'];
+		}
+		$params['value'] = date("Y-m-d H:i:s", $datetime);
+		
 	}
 
 	/**
 	  *
-	  * @returns unix timestamp of a datetime from the db
+	  * @returns a DateTime object from a datetime column in the db
 	  */
-	public function driver_datetime_fromdb($params = array()) 
+	public function driver_datetime_fromdb($params)
 	{
-	
+		try {
+			$datetime = new DateTime($timestamp);
+			$params['value'] = $datetime;
+		}
+		catch(Exception $e)
+		{
+			$params['value'] = NULL;
+		}
+		
 	}
 	
 	
@@ -488,7 +642,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 	  *
 	  * @returns mixed (value is used to insert a microtime value into a db.  can be string, int, or object) 
 	  */
-	public function driver_microtime_todb($params = array()) 
+	public function driver_microtime_todb($microtime) 
 	{
 	
 	}	
@@ -497,7 +651,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 	  *
 	  * @returns unix micro timestamp of a microtime from the db
 	  */
-	public function driver_microtime_fromdb($params = array()) 
+	public function driver_microtime_fromdb($microtime) 
 	{
 	
 	}	
