@@ -126,7 +126,7 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
 
 	/**
 	  * @param string $from required table name
-	  * @param array $fields = '*' field names to return. can be formatted array('col1','col2') or array(array('column'=> 'col1','alias'=> 'column1'),
+	  * @param array $columns = '*' field names to return. can be formatted array('col1','col2') or array(array('column'=> 'col1','alias'=> 'column1'),
 	  * @param array $where = NULL format: array($col => $val)
 	  * @param array|string $order = NULL
 	  * @param bool $count = FALSE only return the count of found items	  
@@ -150,7 +150,7 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
 		//select collection
 		$this->set_coll($params['from']);			
 		
-		$params['fields'] = (isset($params['fields'])) ? $params['fields'] : array();
+		$params['columns'] = (isset($params['columns'])) ? $params['columns'] : array();
 		$params['where'] = (isset($params['where'])) ? $params['where'] : array();		
 		$params['safe'] = (isset($params['safe'])) ? $params['safe'] : $this->safe;
 		$params['count'] = (isset($params['count'])) ? $params['count'] : FALSE;
@@ -201,22 +201,22 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
 			{
 				if ($params['limit'] > 0) 
 				{
-					$data = $this->mongocoll->find($params['where'], $params['fields'])->sort($dbsort)->limit($params['limit'])->skip($params['skip'])->slaveOkay($params['slaveOkay']);
+					$data = $this->mongocoll->find($params['where'], $params['columns'])->sort($dbsort)->limit($params['limit'])->skip($params['skip'])->slaveOkay($params['slaveOkay']);
 				} 
 				else 
 				{
-					$data = $this->mongocoll->find($params['where'], $params['fields'])->sort($dbsort)->skip($params['skip'])->slaveOkay($params['slaveOkay']);
+					$data = $this->mongocoll->find($params['where'], $params['columns'])->sort($dbsort)->skip($params['skip'])->slaveOkay($params['slaveOkay']);
 				}
 			} 
 			else 
 			{
 				if ($params['limit'] > 0) 
 				{
-					$data = $this->mongocoll->find($params['where'], $params['fields'])->limit($params['limit'])->skip($params['skip'])->slaveOkay($params['slaveOkay']);
+					$data = $this->mongocoll->find($params['where'], $params['columns'])->limit($params['limit'])->skip($params['skip'])->slaveOkay($params['slaveOkay']);
 				} 
 				else 
 				{
-					$data = $this->mongocoll->find($params['where'], $params['fields'])->skip($params['skip'])->slaveOkay($params['slaveOkay']);
+					$data = $this->mongocoll->find($params['where'], $params['columns'])->skip($params['skip'])->slaveOkay($params['slaveOkay']);
 				}
 			}
 			$data_arry = iterator_to_array($data);

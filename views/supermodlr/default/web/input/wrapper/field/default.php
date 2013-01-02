@@ -1,5 +1,5 @@
 <div id="<?php echo $field->model_name; ?>__field__<?php echo $field->name; ?>__container"<?php 
-if ($field->hidden || (isset($field->conditions) && is_array($field->conditions) && $field->conditions['$hidden'])) 
+if ($field->hidden || (isset($field->conditions) && is_array($field->conditions) && isset($field->conditions['$hidden']) && $field->conditions['$hidden'])) 
 { 
 	?> style="display:none"<?php } 
 ?>>
