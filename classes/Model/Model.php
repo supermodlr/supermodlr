@@ -13,7 +13,7 @@ when a model is created
 	* write the model class
 */
 
-class Model_Model extends Supermodlr_Core {
+class Model_Model extends Supermodlr {
         public static $__scfg = array(
                 'model.field_keys'  => array(
                     '_id',

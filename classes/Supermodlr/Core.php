@@ -5,30 +5,14 @@ abstract class Supermodlr_Core {
 
 
 	//static config for vars that apply to all data types and can be loaded once
-    protected static $__scfg = array(
-		'drivers_config' => array(
-				array(
-						'name'     => 'coremongo',
-						'driver'   => 'Supermodlr_Mongodb',
-						'host'     => '127.0.0.1',
-						'port'     => '27017',
-						'user'     => '',
-						'pass'     => '',
-						'dbname'   => 'supermodlr',
-						'replset'  => FALSE,
-						'safe'     => TRUE,
-						'fsync'    => FALSE,
-				)
-		),		
-		'framework_name' => 'Kohana',
-    );
+   protected static $__scfg = array();
 	
 	//object config
-    protected $__cfg = array();
+   protected $__cfg = array();
 
-    /**
-     * 
-     */
+   /**
+    * 
+    */
 	public function __construct($id = NULL, $data = NULL) 
 	{
 		//init framework
@@ -74,40 +58,40 @@ abstract class Supermodlr_Core {
 				//@todo create custom Supermodlr exceptions
 				//throw new Exception('Cannot load object using Id: '.var_export($id,TRUE));
 			}
-        }
-        //we are creating a new entry for this object		
+      }
+      //we are creating a new entry for this object		
 		else 
 		{
-            $this->cfg('loaded',FALSE);
-            $this->cfg('new_object',TRUE);
-        }
+         $this->cfg('loaded',FALSE);
+         $this->cfg('new_object',TRUE);
+      }
 
-        //init all traits.  loads traits from model and from data (if stored)
-        //$this->init_traits();
+      //init all traits.  loads traits from model and from data (if stored)
+      //$this->init_traits();
 
 		//call event for construct end
-        $this->model_event('construct_end',$this);
-    }
+      $this->model_event('construct_end',$this);
+   }
    
-    /**
-     * return lower cased called class name of this model
-     */
+   /**
+    * return lower cased called class name of this model
+    */
 	public static function get_model_class() 
 	{
 		return ucfirst(strtolower(get_called_class()));
 	}	
 
-    /**
-     * return lower cased called class name of this model
-     */	
+   /**
+    * return lower cased called class name of this model
+    */	
 	public static function get_name() 
 	{
 		return preg_replace('/^model_/i','',strtolower(get_called_class()));
 	}
 	
-    /**
-     * gets or sets static config. used to store variables that are static and apply to all objects
-     */	
+   /**
+    * gets or sets static config. used to store variables that are static and apply to all objects
+    */	
    public static function scfg($key,$value = NULL) 
    {
 		//if we are not setting a value, retrieve it
@@ -123,10 +107,11 @@ abstract class Supermodlr_Core {
         }
    }
 
-    /**
+   /**
      * gets or sets config. used to store variables that apply to an instantiated object
      */   
-    public function cfg($key,$value = NULL) {
+    public function cfg($key,$value = NULL) 
+    {
         if (is_null($value)) {
 			if (isset($this->__cfg[$key])) {
 				return $this->__cfg[$key];
@@ -139,40 +124,46 @@ abstract class Supermodlr_Core {
     }
 
 
-    /**
+   /**
      * sets up all initial cfg parameters
-	 * 		field objects are stored staticly per datatype
-	 * 		driver keys are stored staticly per datatype
-	 * 		driver objects are stored by key staticly once on the core model
+	  * 		field objects are stored staticly per datatype
+	  * 		driver keys are stored staticly per datatype
+	  * 		driver objects are stored by key staticly once on the core model
      */
-    public function init_cfg() {
+   public function init_cfg() 
+   {
 
-        //call events to init config for the datatype	
-        $this->model_event('init_cfg');
+      //call events to init config for the datatype	
+      $this->model_event('init_cfg');
 		
+      //get framework
+      $Framework = $this->cfg('framework');
+
 		$name = $this->get_name();
 
-        //setup default name config
-        $this->cfg('name',$name);
+      //setup default name config
+      $this->cfg('name',$name);
         
-        //setup default db_name config (table or collection name for this datatype)
-        if (is_null($this->cfg('db_name'))) {
-            $this->scfg($name.'.db_name',$name);
-        }
+      //setup default db_name config (table or collection name for this datatype)
+      if (is_null($this->cfg('db_name'))) 
+      {
+         $this->scfg($name.'.db_name',$name);
+      }
 
 
-        //setup default primary_key (pk) column config
-        if (is_null($this->cfg('pk_field'))) 
+      //setup default primary_key (pk) column config
+      if (is_null($this->cfg('pk_field'))) 
 		{
 			//default field class name for pk field 
-		    $pk_class = 'Field_'.ucfirst(strtolower($name)).'__Id';
-			if (class_exists($pk_class)) {
-                $this->scfg($name.'.pk_field',$pk_class);
+		   $pk_class = 'Field_'.ucfirst(strtolower($name)).'__Id';
+			if (class_exists($pk_class)) 
+			{
+            $this->scfg($name.'.pk_field',$pk_class);
 			}
-        }
+      }
 
-        //setup default primary_key (pk) column config
-        if ($this->cfg('pk_name') === NULL) 
+      //setup default primary_key (pk) column config
+      if ($this->cfg('pk_name') === NULL) 
 		{		
 
 			$pk = '_id';
@@ -180,13 +171,13 @@ abstract class Supermodlr_Core {
 			$this->scfg($name.'.pk_name',$pk);
 		}
 			
-        //setup default cache setting
-        if (is_null($this->cfg('read_cache'))) {
-            $this->scfg($name.'.read_cache',FALSE);
-        }
+      //setup default cache setting
+      if (is_null($this->cfg('read_cache'))) {
+         $this->scfg($name.'.read_cache',FALSE);
+      }
 
-        //setup driver names for this datatype
-        if (is_null($this->cfg('drivers'))) 
+      //setup driver names for this datatype
+      if (is_null($this->cfg('drivers'))) 
 		{
 			//default drivers setup in the app model class file generated on install
 			$drivers_config = $this->cfg('drivers_config');
@@ -207,13 +198,13 @@ abstract class Supermodlr_Core {
 					if (isset($driver['primary']) && $driver['primary'] == TRUE)
 					{
 						//store driver object in primary driver var
-						$primary_driver = $this->cfg('framework')->get_driver($driver['driver'],$driver);
+						$primary_driver = $Framework->get_driver($driver['driver'],$driver);
 					}
 					//this is not marked as the primary driver
 					else 
 					{
 						//store this db object in a non primary var
-						$non_primary[] = $this->cfg('framework')->get_driver($driver['driver'],$driver);
+						$non_primary[] = $Framework->get_driver($driver['driver'],$driver);
 					}
 				}
 				
@@ -251,7 +242,7 @@ abstract class Supermodlr_Core {
 			}
 			
 			//@todo add in config option for additional drivers (that are added after any drivers set by the parent) instead of overridding the parent driver_config OR make a way to make conf options on multiple levels merge (if they are an array)
-        }
+      }
 				
 
         //setup stored_traits default
@@ -351,6 +342,7 @@ abstract class Supermodlr_Core {
 			{
 				return $class::$__scfg[$key];
 			}
+
 		}
 		
 		//loop through all traits
@@ -366,20 +358,15 @@ abstract class Supermodlr_Core {
 		
 		//store framework class
 		self::scfg('framework',$Framework);
-		/*
-		//check for config file
-		$config = $Framework->get_config();
-		if ($config) {
-			//load config file
-			foreach ($config as $k => $v) {
-				self::scfg($k,$v);
-			}
-			
-		//init install			
-		} else {
-			
+
+		//get config array
+		$config = $Framework->load_config('supermodlr');
+
+		//merge config into existing scfg
+		if (is_array($config) && !empty($config)) 
+		{
+			self::$__scfg = array_merge_recursive(self::$__scfg,$config);
 		}
-		*/
 	}
 
 	// looks for a framework ini file.  defaults to kohana
@@ -387,14 +374,10 @@ abstract class Supermodlr_Core {
 	{
 		
 		//look for framework property set by custom Supermodlr file
-		if (!is_null(self::scfg('framework_name'))) 
+		if (self::scfg('framework_name') !== NULL) 
 		{
 			$framework = self::scfg('framework_name');
-		// look for Supermodlr_framework.ini
-		} 
-		else if (file_exists('Supermodlr_framework.ini')) 
-		{
-			$framework = file_get_contents('Supermodlr_framework.ini');
+
 		//fallback on default
 		} 
 		else 
@@ -402,10 +385,12 @@ abstract class Supermodlr_Core {
 			$framework = 'Default';
 		}
 		//create class name
-		$class = 'Supermodlr_Framework_'.$framework;
+		$class = 'Supermodlr_Framework_'.ucfirst(strtolower($framework));
 
 		//return new instance
-		return new $class();
+		$Framework = new $class();
+
+		return $Framework;
 	}
 
 	/**
@@ -2170,12 +2155,6 @@ abstract class Supermodlr_Core {
 		}
 	}
 	
-
-	public function get_view($template)
-	{
-
-	}
-
 	public static function model_exists($model)
 	{
 		$model = ucfirst(strtolower($model));

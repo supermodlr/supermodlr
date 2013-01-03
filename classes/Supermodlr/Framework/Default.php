@@ -4,12 +4,13 @@
 class Supermodlr_Framework_Default {
 
 	protected $drivers = array();
-	public $template_ext = '.php';
-	
 	
 	//loads a config file
-	public function load_config($file) {
-		return unserialize(file_get_contents($file));
+	public function load_config($file = NULL) {
+		if ($file !== NULL && file_exists($file)) {
+			return unserialize(file_get_contents($file));
+		}
+		
 		
 	}
 	
@@ -49,32 +50,6 @@ class Supermodlr_Framework_Default {
 		}
 	}
 	
-	public function find_file($file) {
-		if (file_exists($file)) 
-		{
-			require_once $driver.'.php';
-			return TRUE;
-		} 
-		else 
-		{
-			return FALSE;
-		}
-	}
-	
-	public function get_view($template = 'default', $theme = 'default', $media = 'web')
-	{
-	
-	}
-	
-	public function render($View)
-	{
-	
-	}
-	
-	public function bind($View,$name,$value)
-	{
-	
-	}
 
 	public function prepare_input_value($value)
 	{

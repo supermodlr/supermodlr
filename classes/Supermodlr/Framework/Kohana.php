@@ -2,35 +2,17 @@
 
 class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
 	
-	public function find_file($file) 
+	private $config = NULL;
+
+	public function load_config($file = NULL) 
 	{
-		$path = Kohana::find_file('classes/supermodlr', $file);
-		if (file_exists($path)) 
+		if ($this->config === NULL) 
 		{
-			require_once $path;
-			return TRUE;
-		} 
-		else 
-		{
-			return FALSE;
+				$this->config = Kohana::$config->load('supermodlr');
 		}
+		return (array) $this->config;
 	}
-	
-	public function get_view($template = 'default',$theme = 'default',$media = 'web')
-	{
-		return View::factory()->get_view($template,$theme, $media);
-	}
-	
-	public function render($View)
-	{ 
-		return $View->render();
-	}
-	
-	public function bind($View,$name,$value)
-	{
-		$View->bind($name,$value);
-	}	
-	
+
 	public function prepare_input_value($value) 
 	{
 		return HTML::chars($value);
@@ -45,4 +27,8 @@ class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
 	{
 		return APPPATH.'classes'.DIRECTORY_SEPARATOR;
 	}	
+
+	//config file
+
+	//bind access tags
 }
