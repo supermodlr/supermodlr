@@ -324,6 +324,9 @@ abstract class Supermodlr_Core {
 		//get all classes in extension tree
 		$classes = self::get_class_tree();
 
+		//get model name
+		$name = self::get_name();
+
 		//loop through all classes
 		foreach ($classes as $class) 
 		{
@@ -337,7 +340,12 @@ abstract class Supermodlr_Core {
 			{
 				return $class::$__scfg['env']['default'][$key];
 			} 
-			//check cfg
+			//check model scfg
+			else if (isset($class::$__scfg[$name.'.'.$key])) 
+			{
+				return $class::$__scfg[$name.'.'.$key];
+			}
+			//check scfg
 			else if (isset($class::$__scfg[$key])) 
 			{
 				return $class::$__scfg[$key];
@@ -353,20 +361,25 @@ abstract class Supermodlr_Core {
 	
 	// loads config for connected database(s) and framework specific functions
 	public static function init_framework() {
-		//choose framework
-		$Framework = self::load_framework();
-		
-		//store framework class
-		self::scfg('framework',$Framework);
-
-		//get config array
-		$config = $Framework->load_config('supermodlr');
-
-		//merge config into existing scfg
-		if (is_array($config) && !empty($config)) 
+		//if the framework hasn't already been loaded
+		if (self::scfg('framework') === NULL)
 		{
-			self::$__scfg = array_merge_recursive(self::$__scfg,$config);
+			//choose framework
+			$Framework = self::load_framework();
+			
+			//store framework class
+			self::scfg('framework',$Framework);
+
+			//get config array
+			$config = $Framework->load_config('supermodlr');
+
+			//merge config into existing scfg
+			if (is_array($config) && !empty($config)) 
+			{
+				self::$__scfg = array_merge_recursive(self::$__scfg,$config);
+			}
 		}
+
 	}
 
 	// looks for a framework ini file.  defaults to kohana
@@ -1336,6 +1349,7 @@ abstract class Supermodlr_Core {
 
 		//get db drivers
 		$drivers = $this->cfg('drivers');	
+		
         //detect if this is an insert or an update.  if a pk is set but we didn't load the object from the db.
         if (isset($this->$pk) && ($this->loaded() === NULL || $this->loaded() === FALSE)) 
 		{

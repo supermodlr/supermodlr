@@ -6,6 +6,7 @@ class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
 
 	public function load_config($file = NULL) 
 	{
+
 		if ($this->config === NULL) 
 		{
 				$this->config = Kohana::$config->load('supermodlr');
