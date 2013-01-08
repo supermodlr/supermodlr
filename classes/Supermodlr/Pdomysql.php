@@ -199,6 +199,19 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 					$data = FALSE;
 				}		
 				return $data;		
+			} 
+			else
+			{
+				$result = $this->connection->query($params['sql']);
+				if ($result) 
+				{
+					$data = $result->fetchAll(PDO::FETCH_ASSOC);
+				}
+				else 
+				{
+					$data = FALSE;
+				}
+				return $data;	
 			}
 
 		}

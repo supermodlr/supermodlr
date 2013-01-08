@@ -236,9 +236,15 @@ class Supermodlr_Field {
 				{ 
 					if (is_array($rule)) 
 					{
+						//if there are no arguments
 						if ($rule[1] === array())
 						{
 							$rule[1] = NULL;
+						}
+						//if there are validate arguments, prepend the value
+						else
+						{
+							$rule[1] = array_merge(array(':value'),$rule[1]);
 						}
 						$validation[] = $rule;
 					}

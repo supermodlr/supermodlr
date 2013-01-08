@@ -76,9 +76,27 @@ class Supermodlr_Db {
 	{
 		//@todo handle standard caching here
 
+		if (isset($params['fields']) && isset($params['model']))
+		{
+			foreach ($params['fields'] as $field_key => $Field)
+			{
+				if (isset($params['where'][$field_key]) && method_exists($this, $Field->datatype.'_todb'))
+				{
+					$method = $Field->datatype.'_todb';
+					$this->$method(array(
+						'value'=> &$params['where'][$field_key],
+						'set'  => &$params['where'],
+						'field'=> $Field,
+						'model'=> $params['model'],
+					));
+
+				}
+			}
+		}
+
 		$result = $this->driver_read($params);
 
-		if (isset($params['fields']) && isset($params['model']))
+		if (isset($params['fields']) && isset($params['model']) && is_array($result))
 		{
 			foreach ($result as $i => $row) {
 				foreach ($params['fields'] as $field_key => $Field)

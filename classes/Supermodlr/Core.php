@@ -1975,7 +1975,7 @@ abstract class Supermodlr_Core {
 		$class_tree = $this->get_class_tree();
 		foreach ($class_tree as $class)
 		{
-			$event_method = 'event__'.$class.'__'.$key;
+			$event_method = strtolower('event__'.$class.'__'.$key);
 			if (method_exists($this,$event_method)) 
 			{
 				$this->$event_method($args);
