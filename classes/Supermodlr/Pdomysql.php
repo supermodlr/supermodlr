@@ -216,7 +216,30 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 
 		}
 		//from
-		
+
+		//columns init
+		if (!isset($params['columns']) || empty($params['columns']))
+		{
+			$params['columns'] = array($params['from'].'.*');
+		}
+
+
+		//joins
+		if (isset($params['join']) && !empty($params['join']))
+		{
+			$join_sql = $this->join_to_sql(array(
+				'model'=> $params['model'],
+				'fields' => $params['fields'],
+				'join' => $params['join'],
+				'columns' => &$params['columns'],
+				'prepared'=> $params['prepared'],
+			));			
+		}
+		else
+		{
+			$join_sql = '';
+		}
+
 		//columns
 		$columns_sql = '*';
 		if (isset($params['columns']) && is_array($params['columns']) && !empty($params['columns'])) {
@@ -250,9 +273,20 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 		
 		//order
 		$order_sql = '';
-		if (isset($params['order']) && !empty($params['order'])) {
-			if (is_string($params['order'])) {
+		if (isset($params['order']) && !empty($params['order'])) 
+		{
+			if (is_string($params['order'])) 
+			{
 				$order_sql = ' order by '.$params['order'];
+			}
+			else if (is_array($params['order']))
+			{
+				$order_str_arry = array();
+				foreach ($params['order'] as $key => $order)
+				{
+					$order_str_arry[] = $key.' '.(($order) ? 'ASC' : 'DESC');
+				}
+				$order_sql = ' order by '.implode(', ',$order_str_arry);
 			}
 		} else {
 			$order_sql = '';
@@ -260,7 +294,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 		
 		//limit
 		if (isset($params['limit'])) {
-		   $limit_sql = 'limit '.$params['limit'];		
+		   $limit_sql = ' limit '.$params['limit'];		
 		
 			//skip 
 			if (isset($params['skip'])) {
@@ -271,14 +305,14 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 		} else {
 			//skip 
 			if (isset($params['skip'])) {
-				$limit_sql = 'limit 0,'.$params['skip'];
+				$limit_sql = ' limit 0,'.$params['skip'];
 			} else {
 				$limit_sql = '';
 			}			
 		}
 		
-		$sql = 'select '.$columns_sql.' from '.$params['from'].' '.$where_sql.' '.$order_sql.' '.$limit_sql.';';
-
+		$sql = 'select '.$columns_sql.' from '.$params['from'].$join_sql.$where_sql.$order_sql.$limit_sql.';';
+fbl($sql);
 		//if this is not a prepared statement, execute it
 		if ($params['prepared'] === FALSE) {
 		
@@ -458,27 +492,55 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 				//if we are using prepared statements
 				if ($params['prepared'] === FALSE) 
 				{
-					$where_set[] = $col." = '".$val."'";
+					$where_set[] = $params['from'].'.'.$col." = '".$val."'";
 				}
 				//raw sql statements
 				else 
 				{
-
-					//regexp
-					if (is_array($val) && isset($val['$regex']))
+					//detect commands
+					if (is_array($val))
 					{
-						//skip the first '/'
-						$mysql_regexp = substr($val['$regex'], 1);
-						
-						//remove the end '/' and any operators that were set
-						$mysql_regexp = preg_replace('/\/[a-z]*$/i','',$mysql_regexp);
+						$keys = array_keys($val);
+						//if the first key starts with '$', then we assume it is a command
+						if (substr($keys[0], 0,1) === '$')
+						{
+							//regexp
+							if (isset($val['$regex']))
+							{
+								//skip the first '/'
+								$mysql_regexp = substr($val['$regex'], 1);
+								
+								//remove the end '/' and any operators that were set
+								$mysql_regexp = preg_replace('/\/[a-z]*$/i','',$mysql_regexp);
 
-						$where_set[] = $col." REGEXP '".$mysql_regexp."'";
-						
+								$where_set[] = $params['from'].'.'.$col." REGEXP '".$mysql_regexp."'";
+								
+							}
+							else if (isset($val['$lte']))
+							{
+								$where_set[] = $params['from'].'.'.$col." <= ?";
+								$params['where_values'][] = $val['$lte'];
+							}
+							else if (isset($val['$lt']))
+							{
+								$where_set[] = $params['from'].'.'.$col." < ?";
+								$params['where_values'][] = $val['$lt'];
+							}
+							else if (isset($val['$gte']))
+							{
+								$where_set[] = $params['from'].'.'.$col." >= ?";
+								$params['where_values'][] = $val['$gte'];			
+							}			
+							else if (isset($val['$gt']))
+							{
+								$where_set[] = $params['from'].'.'.$col." > ?";
+								$params['where_values'][] = $val['$gt'];			
+							}
+						}
 					}
 					else
 					{
-						$where_set[] = $col." = ?";
+						$where_set[] = $params['from'].'.'.$col." = ?";
 						$params['where_values'][] = $val;
 					}
 
@@ -495,6 +557,96 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 
 		return $where_sql;
 	}	
+
+	/**
+	  * @param Supermodlr $model required 
+	  * @param array $fields required 
+	  * @param array $join required format: array($rel_field => array('$alias'=> '', '$fields=> array($field_keys_to_select))).  you can specify sub-models by using the dot (.) to seperate the field keys (field1.subfield1 => array())
+	  * @param array $columns reference to columns to select
+	  * @param bool $prepared required true if this should return a sql string fragment for a prepared statement
+	  * @returns string returns sql string	  
+	  */
+	public function join_to_sql($params = array()) 
+	{
+		$join_sql = '';
+		foreach ($params['join'] as $rel_field => $join)
+		{
+			//if the field key is a direct reference to a field on this object
+			if (strpos($rel_field, '.') === FALSE)
+			{
+				$Join_On_Field = $params['fields'][$rel_field];
+
+				$join_model_table = $params['model']->cfg('db_name');
+				$join_model_pk = $params['model']->cfg('pk_name');
+
+			}
+			//this rel_field references a field on a model related by rel_field[0] (split by '.')
+			//@todo make this support more than 1 extra level of joins
+			else
+			{
+				//split by .  first key is the field key for a relationship field on $model.  second key is the field key on the related model
+				$rel_list = explode('.', $rel_field);
+
+				$Rel_Field = $params['fields'][$rel_list[0]];
+
+				$rel_model_class = $params['model']::name_to_class_name($Rel_Field->source[0]['model']);
+
+				$rel_fields = $rel_model_class::get_fields();
+
+				$Join_On_Field = $rel_fields[$rel_list[1]];
+
+				$join_model_table = $rel_model_class::scfg('db_name');
+				$join_model_pk = $rel_model_class::scfg('pk_name');				
+
+			}
+
+			//if this relationship has only one related resource
+			if (count($Join_On_Field->source) == 1)
+			{
+				$rel_model_class = $params['model']::name_to_class_name($Join_On_Field->source[0]['model']);
+fbl($rel_model_class,'$rel_model_class');
+
+				$table = $rel_model_class::scfg('db_name');		
+fbl($table,'$table');
+				$pk = $rel_model_class::scfg('pk_name');
+
+				//if an alias was sent
+				if (isset($join['$alias']) && !empty($join['$alias']))
+				{
+					$alias_sql = ' as '.$join['$alias'];
+				}
+				else
+				{
+					$alias_sql = '';	
+					$join['$alias'] = $table;
+				}
+
+				$join_sql .= ' inner join '.$table.$alias_sql.' on '.$join['$alias'].'.'.$pk.' = '.$join_model_table.'.'.$join_model_pk.' ';
+				if (isset($join['$fields']) && is_array($join['$fields']))
+				{
+					foreach ($join['$fields'] as $field_key)
+					{
+						$params['columns'][] = $join['$alias'].'.'.$field_key.' as '.$join['$alias'].'__'.$field_key;
+					}
+					
+				}
+				//select all columns if none are specified
+				else
+				{
+					$params['columns'][] = $join['$alias'].'.*';
+				}
+
+			}
+			//@todo figure out what to do about relationship fields that have multiple sources
+			else
+			{
+
+			}	
+
+
+		}
+		return $join_sql;
+	}
 
 	/**
 	  * Converts arrays and keyed arrays, objects, and relationships to expected table column format

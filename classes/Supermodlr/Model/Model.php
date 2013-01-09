@@ -257,13 +257,6 @@ EOF;
 		return 'Model_'.$parentmodel.$parentfield.ucfirst(strtolower($this->name));
 	}
 
-	//returns just the model name given a model class name
-	public static function get_name_from_class($class)
-	{
-		//return everything after 'model_'
-		$parts = explode('_',$class);
-		return strtolower(array_pop($parts));
-	}	
 }
 
 

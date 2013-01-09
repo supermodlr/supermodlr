@@ -89,6 +89,24 @@ abstract class Supermodlr_Core {
 		return preg_replace('/^model_/i','',strtolower(get_called_class()));
 	}
 	
+	//given a name, return the expeted model name (uppercase all words seperated by '_' and lowercase everything else. prefix with 'Model_')
+	public static function name_to_class_name($name)
+	{
+		$name = strtolower($name);
+		$name = str_replace('_', ' ', $name);
+		$name = ucwords($name);
+		$name = str_replace(' ', '_', $name);
+		return 'Model_'.$name;
+	}
+
+	//returns just the model name given a model class name
+	public static function get_name_from_class($class)
+	{
+		//return everything after 'model_'
+		$parts = explode('_',$class);
+		return strtolower(array_pop($parts));
+	}	
+
    /**
     * gets or sets static config. used to store variables that are static and apply to all objects
     */	
@@ -270,7 +288,7 @@ abstract class Supermodlr_Core {
 	/**
 	  * returns a cfg value based on env, class, and static vs obj
 	  */
-	public function get_cfg_value($key) 
+	public function get_cfg_value($key,$check_scfg = TRUE) 
 	{
 		//get env
 		$env = $this->get_env();
@@ -292,12 +310,11 @@ abstract class Supermodlr_Core {
 			return $this->__cfg[$key];
 		} 
 		//not found on obj		
-		else 
+		else if ($check_scfg)
 		{ 
-			$name = $this->get_name();
-
+			$name = $this->get_name();	
 			//look for name specific value
-			$value = $this->get_scfg_value($name.'.'.$key);
+			$value = $this->get_scfg_value($name.'.'.$key,FALSE);
 			
 			//if found
 			if ($value !== NULL) 
@@ -307,16 +324,20 @@ abstract class Supermodlr_Core {
 			//look for raw key in static config			
 			else 
 			{
-				return $this->get_scfg_value($key);
+				return $this->get_scfg_value($key,FALSE);
 			}
 			
+		}
+		else
+		{
+			return NULL;
 		}
 	}
 
 	/**
 	  * returns a scfg value based on env, class, and static 
 	  */
-	public static function get_scfg_value($key) 
+	public static function get_scfg_value($key,$check_cfg = TRUE) 
 	{
 		//get env
 		$env = self::get_env();
@@ -355,7 +376,32 @@ abstract class Supermodlr_Core {
 		
 		//loop through all traits
 		
-		return NULL;
+		//check for this key on an instance to force init_cfg to run
+		if ($check_cfg && (!isset(self::$__scfg[$name.'.__instance_create']) || self::$__scfg[$name.'.__instance_create'] === FALSE))
+		{
+			//construct a temp object for this class and check cfg
+			if (!isset(self::$__scfg[$name.'.__instance']) || self::$__scfg[$name.'.__instance'] === NULL)
+			{
+				$class = get_called_class();
+				fbl($class);
+				self::$__scfg[$name.'.__instance_create'] = TRUE;
+				self::$__scfg[$name.'.__instance'] = new $class();
+				self::$__scfg[$name.'.__instance_create'] = FALSE;
+			}			
+			//fbl(var_export(isset(self::$__scfg[$name.'.__instance']),TRUE),' isset '.$name.'.__instance');
+			//fbl(self::$__scfg[$name.'.__instance']->get_cfg_value($key,FALSE),'scfg check cfg for: '.$key);
+			//first re-check get_scfg_value
+			$value = self::get_scfg_value($key,FALSE);
+			if ($value === NULL)
+			{
+				$value = self::$__scfg[$name.'.__instance']->get_cfg_value($key,FALSE);
+			}
+			return $value;
+		}
+		else
+		{
+			return NULL;
+		}
 	}
 
 	
@@ -517,11 +563,9 @@ abstract class Supermodlr_Core {
 	public static function get_class_tree() 
 	{
 		$called_class = get_called_class();
-		
 		$classes = array();
 		$classes[] = $called_class;
 		$classes = array_merge($classes,class_parents($called_class));
-		
 		return $classes;
 	}
 	
