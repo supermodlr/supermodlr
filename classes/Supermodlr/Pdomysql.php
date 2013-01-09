@@ -313,6 +313,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 		
 		$sql = 'select '.$columns_sql.' from '.$params['from'].$join_sql.$where_sql.$order_sql.$limit_sql.';';
 fbl($sql);
+fbl($where_values);
 		//if this is not a prepared statement, execute it
 		if ($params['prepared'] === FALSE) {
 		
@@ -338,6 +339,7 @@ fbl($sql);
 				$data = FALSE;
 			}
 		}
+		fbl($data);
 		return $data;
 	}	
 	
@@ -480,6 +482,11 @@ fbl($sql);
 	  */
 	public function where_to_sql($params = array()) 
 	{
+		//@todo change this to a generice $table var or something
+		if (!isset($params['from']) && isset($params['into']))
+		{
+			$params['from'] = $params['into'];
+		}
 		$where_sql = '';
 		$where_values = array();
 		//if where conditions were sent
@@ -577,7 +584,7 @@ fbl($sql);
 				$Join_On_Field = $params['fields'][$rel_field];
 
 				$join_model_table = $params['model']->cfg('db_name');
-				$join_model_pk = $params['model']->cfg('pk_name');
+				$join_model_pk = $rel_field.'_'.$params['model']->cfg('pk_name');
 
 			}
 			//this rel_field references a field on a model related by rel_field[0] (split by '.')
@@ -596,7 +603,7 @@ fbl($sql);
 				$Join_On_Field = $rel_fields[$rel_list[1]];
 
 				$join_model_table = $rel_model_class::scfg('db_name');
-				$join_model_pk = $rel_model_class::scfg('pk_name');				
+				$join_model_pk = $rel_list[1].'_'.$rel_model_class::scfg('pk_name');				
 
 			}
 
@@ -604,10 +611,10 @@ fbl($sql);
 			if (count($Join_On_Field->source) == 1)
 			{
 				$rel_model_class = $params['model']::name_to_class_name($Join_On_Field->source[0]['model']);
-fbl($rel_model_class,'$rel_model_class');
+
 
 				$table = $rel_model_class::scfg('db_name');		
-fbl($table,'$table');
+
 				$pk = $rel_model_class::scfg('pk_name');
 
 				//if an alias was sent
