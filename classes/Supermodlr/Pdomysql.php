@@ -582,8 +582,9 @@ fbl($where_values);
 			if (strpos($rel_field, '.') === FALSE)
 			{
 				$Join_On_Field = $params['fields'][$rel_field];
-
+fbl($params['model']);
 				$join_model_table = $params['model']->cfg('db_name');
+				fbl($join_model_table,'$join_model_table');
 				$join_model_pk = $rel_field.'_'.$params['model']->cfg('pk_name');
 
 			}
@@ -601,8 +602,9 @@ fbl($where_values);
 				$rel_fields = $rel_model_class::get_fields();
 
 				$Join_On_Field = $rel_fields[$rel_list[1]];
-
+fbl($rel_model_class,'$rel_model_class');
 				$join_model_table = $rel_model_class::scfg('db_name');
+fbl($join_model_table,'$join_model_table');
 				$join_model_pk = $rel_list[1].'_'.$rel_model_class::scfg('pk_name');				
 
 			}
@@ -611,10 +613,9 @@ fbl($where_values);
 			if (count($Join_On_Field->source) == 1)
 			{
 				$rel_model_class = $params['model']::name_to_class_name($Join_On_Field->source[0]['model']);
-
-
+fbl($rel_model_class,'$rel_model_class');
 				$table = $rel_model_class::scfg('db_name');		
-
+fbl($table,'table');
 				$pk = $rel_model_class::scfg('pk_name');
 
 				//if an alias was sent

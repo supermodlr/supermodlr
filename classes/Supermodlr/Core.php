@@ -26,7 +26,7 @@ abstract class Supermodlr_Core {
       $this->init_cfg();
       
       //get primary id field
-        $pk_name = $this->cfg('pk_name');    
+      $pk_name = $this->cfg('pk_name');    
       
       //if an id was sent
       if (!is_null($id)) 
@@ -116,16 +116,18 @@ abstract class Supermodlr_Core {
     */   
    public static function scfg($key,$value = NULL) 
    {
+      $class = get_called_class();
       //if we are not setting a value, retrieve it
-        if (is_null($value)) {
-         if (isset(self::$__scfg[$key])) {
-            return self::$__scfg[$key];
+        if ($value === NULL) {
+          if ($key == 'db_name') fbl($class::$__scfg,'db_name scfg');
+         if (isset($class::$__scfg[$key])) {
+            return $class::$__scfg[$key];
          } else {
-            return self::get_scfg_value($key);;
+            return $class::get_scfg_value($key);;
          }
       //store this config value
         } else {
-         self::$__scfg[$key] = $value;
+         $class::$__scfg[$key] = $value;
         }
    }
 
@@ -165,7 +167,7 @@ abstract class Supermodlr_Core {
       $env = $Framework->get_environment();
       if ($env === NULL)
       {
-        $env = self::DEVELOPMENT;
+        $env = Supermodlr::DEVELOPMENT;
       }
       $this->scfg('environment',$env);
 
@@ -175,14 +177,14 @@ abstract class Supermodlr_Core {
       $this->cfg('name',$name);
         
       //setup default db_name config (table or collection name for this datatype)
-      if (is_null($this->cfg('db_name'))) 
+      if (!isset($this->__cfg['db_name']) || $this->__cfg['db_name'] === NULL) 
       {
          $this->scfg($name.'.db_name',$name);
       }
 
 
       //setup default primary_key (pk) column config
-      if (is_null($this->cfg('pk_field'))) 
+      if (!isset($this->__cfg['pk_field']) || $this->__cfg['pk_field'] === NULL) 
       {
          //default field class name for pk field 
          $pk_class = 'Field_'.ucfirst(strtolower($name)).'__Id';
@@ -193,7 +195,7 @@ abstract class Supermodlr_Core {
       }
 
       //setup default primary_key (pk) column config
-      if ($this->cfg('pk_name') === NULL) 
+      if (!isset($this->__cfg['pk_name']) || $this->__cfg['pk_name'] === NULL) 
       {     
 
          $pk = '_id';
@@ -202,12 +204,12 @@ abstract class Supermodlr_Core {
       }
          
       //setup default cache setting
-      if (is_null($this->cfg('read_cache'))) {
+      if (!isset($this->__cfg['read_cache']) || $this->__cfg['read_cache'] === NULL) {
          $this->scfg($name.'.read_cache',FALSE);
       }
 
       //setup driver names for this datatype
-      if (is_null($this->cfg('drivers'))) 
+      if (!isset($this->__cfg['drivers']) || $this->__cfg['drivers'] === NULL) 
       {
          //default drivers setup in the app model class file generated on install
          $drivers_config = $this->cfg('drivers_config');
@@ -242,7 +244,7 @@ abstract class Supermodlr_Core {
             if (count($drivers_config) > 1)
             {
                //if no primary driver was set in the config
-               if (is_null($primary_driver))
+               if ($primary_driver === NULL)
                {
                   //set first database in config list as primary
                   $drivers_config[0]['primary'] = TRUE;
@@ -276,7 +278,7 @@ abstract class Supermodlr_Core {
             
 
       // default access tags
-      if ($this->cfg('access') === NULL)
+      if (!isset($this->__cfg['access']) || $this->__cfg['access'] === NULL)
       {
          $this->cfg('access',array(
             'create' => array('owner'),
@@ -286,12 +288,12 @@ abstract class Supermodlr_Core {
          ));
       }
       //default user access tags to anon access
-      if ($this->cfg('user_access_tags') === NULL)
+      if (!isset($this->__cfg['user_access_tags']) || $this->__cfg['user_access_tags'] === NULL)
       {
          $this->cfg('user_access_tags',array('anon'));
       }
 
-      if ($this->cfg('owner_field') === NULL)
+      if (!isset($this->__cfg['owner_field']) || $this->__cfg['owner_field'] === NULL)
       {
          // get all fields
          $fields = $this->get_fields();
@@ -361,6 +363,7 @@ abstract class Supermodlr_Core {
       else if ($check_scfg)
       { 
          $name = $this->get_name(); 
+
          //look for name specific value
          $value = $this->get_scfg_value($name.'.'.$key,FALSE);
          
@@ -387,18 +390,21 @@ abstract class Supermodlr_Core {
      */
    public static function get_scfg_value($key,$check_cfg = TRUE) 
    {
+if ($key == 'db_name') fbl('get_scfg_value:db_name');
+      $called_class = get_called_class();
+
       //get env
-      $env = self::get_env_key();
-      
+      $env = $called_class::get_env_key();
+
       //get all classes in extension tree
-      $classes = self::get_class_tree();
+      $classes = $called_class::get_class_tree();
 
       //get model name
-      $name = self::get_name();
+      $name = $called_class::get_name();
 
       //loop through all classes
       foreach ($classes as $class) 
-      {
+      { fbl($class."::".$name.".".$key);
          //check env for value
          if (isset($class::$__scfg['env'][$env][$key])) 
          {
@@ -416,7 +422,7 @@ abstract class Supermodlr_Core {
          }
          //check scfg
          else if (isset($class::$__scfg[$key])) 
-         {
+         { if ($key == 'db_name') fbl($class::$__scfg,'scfg');
             return $class::$__scfg[$key];
          }
 
@@ -425,32 +431,32 @@ abstract class Supermodlr_Core {
       //loop through all traits
       
       //check for this key on an instance to force init_cfg to run
-      if ($check_cfg && (!isset(self::$__scfg[$name.'.__instance_create']) || self::$__scfg[$name.'.__instance_create'] === FALSE))
+      if ($check_cfg && (!isset($called_class::$__scfg[$name.'.__instance_create']) || $called_class::$__scfg[$name.'.__instance_create'] === FALSE))
       {
          //first re-check get_scfg_value
-         $value = self::get_scfg_value($key,FALSE);
+         $value = $called_class::get_scfg_value($key,FALSE);
          //if not found, check for name.key
          if ($value === NULL)
          {        
              //construct a temp object for this class and check cfg
-             if (!isset(self::$__scfg[$name.'.__instance']) || self::$__scfg[$name.'.__instance'] === NULL)
+             if (!isset($called_class::$__scfg[$name.'.__instance']) || $called_class::$__scfg[$name.'.__instance'] === NULL)
              {
-                $class = get_called_class();
 
                 //mark this class as being created so we don't go into an enless loop
-                self::$__scfg[$name.'.__instance_create'] = TRUE;
+                $called_class::$__scfg[$name.'.__instance_create'] = TRUE;
 
-                $reflection_class = new ReflectionClass($class);
-                
+                $reflection_class = new ReflectionClass($called_class);
+                fbl(var_export($reflection_class->isAbstract(),TRUE),'is abstract: ');
                 if (!$reflection_class->isAbstract())
-                {
+                { 
                     //create a single readonly instance of this class
-                    self::$__scfg[$name.'.__instance'] = new $class();                    
+                    $called_class::$__scfg[$name.'.__instance'] = new $called_class();                    
 
                     //mark this class static instance as created
-                    self::$__scfg[$name.'.__instance_create'] = FALSE;                    
+                    $called_class::$__scfg[$name.'.__instance_create'] = FALSE;                    
 
-                    $value = self::$__scfg[$name.'.__instance']->get_cfg_value($key,FALSE);
+                    $value = $called_class::$__scfg[$name.'.__instance']->get_cfg_value($key,FALSE);
+                    fbl(var_export($value,TRUE),$called_class.' cfg.'.$key);
                 }
                 
              }        
@@ -468,14 +474,16 @@ abstract class Supermodlr_Core {
    
    // loads config for connected database(s) and framework specific functions
    public static function init_framework() {
+
+      $called_class = get_called_class();
       //if the framework hasn't already been loaded
-      if (self::scfg('framework') === NULL)
+      if (!isset(Supermodlr::$__scfg['framework']) || Supermodlr::$__scfg['framework'] === NULL)
       {
          //choose framework
-         $Framework = self::load_framework();
+         $Framework = $called_class::load_framework();
          
          //store framework class
-         self::scfg('framework',$Framework);
+         $called_class::scfg('framework',$Framework);
 
          //get config array
          $config = $Framework->load_config('supermodlr');
@@ -483,7 +491,7 @@ abstract class Supermodlr_Core {
          //merge config into existing scfg
          if (is_array($config) && !empty($config)) 
          {
-            self::$__scfg = array_merge_recursive(self::$__scfg,$config);
+            $called_class::$__scfg = array_merge_recursive($called_class::$__scfg,$config);
          }
       }
 
@@ -492,15 +500,21 @@ abstract class Supermodlr_Core {
    // looks for a framework ini file.  defaults to kohana
    public static function load_framework() 
    {
-      
-      //look for framework property set by custom Supermodlr file
-      if (self::scfg('framework_name') !== NULL) 
+      $called_class = get_called_class();
+      $class_tree = $called_class::get_class_tree();
+      $framework = NULL;
+      foreach ($class_tree as $class)
       {
-         $framework = self::scfg('framework_name');
+        //look for framework property set by custom Supermodlr file
+        if (isset($class::$__scfg['framework_name']) && $class::$__scfg['framework_name'] !== NULL) 
+        {
+           $framework = $class::$__scfg['framework_name'];
+           break ;
+        //fallback on default
+        }         
+      }
 
-      //fallback on default
-      } 
-      else 
+      if ($framework === NULL)
       {
          $framework = 'Default';
       }
@@ -518,7 +532,8 @@ abstract class Supermodlr_Core {
      */  
    public static function get_framework()
    {
-      return self::scfg('framework');
+      $called_class = get_called_class();
+      return $called_class::scfg('framework');
    }
    
    /**
@@ -585,19 +600,21 @@ abstract class Supermodlr_Core {
      */  
    public static function get_fields() 
    {
+      $called_class = get_called_class();
+
       //get model name
-      $model_name = self::get_name();
+      $model_name = $called_class::get_name();
 
       //return fields if already loaded
-      if (!is_null(self::scfg($model_name.'.fields'))) 
+      if (!is_null($called_class::scfg($model_name.'.fields'))) 
       {
-         return self::scfg($model_name.'.fields');
+         return $called_class::scfg($model_name.'.fields');
       //load fields listed in field_keys
       } 
-      else if (self::scfg($model_name.'.field_keys') !== NULL) 
+      else if ($called_class::scfg($model_name.'.field_keys') !== NULL) 
       {
         //look on this model for any field keys
-         $field_keys = self::scfg($model_name.'.field_keys');
+         $field_keys = $called_class::scfg($model_name.'.field_keys');
          $fields = array();
          //loop through all field keys
          foreach ($field_keys as $field_name) 
@@ -609,11 +626,11 @@ abstract class Supermodlr_Core {
          }
 
          //look at all parents for fields
-         $class_tree = self::get_class_tree();
+         $class_tree = $called_class::get_class_tree();
          foreach ($class_tree as $class)
          {
-            $parent_model_name = self::get_name_from_class($class);
-            $field_keys = self::scfg($parent_model_name.'.field_keys');
+            $parent_model_name = $called_class::get_name_from_class($class);
+            $field_keys = $called_class::scfg($parent_model_name.'.field_keys');
             if ($field_keys !== NULL && is_array($field_keys))
              foreach ($field_keys as $field_name) 
              {
@@ -631,7 +648,7 @@ abstract class Supermodlr_Core {
          //look at all traits for fields @todo figure out if traits should be before or after parents and how they can be ordered in case of conflicts
 
          //store created fields once for each model
-         self::scfg($model_name.'.fields',$fields);
+         $called_class::scfg($model_name.'.fields',$fields);
          return $fields; 
       } else {
          return array();
@@ -651,25 +668,39 @@ abstract class Supermodlr_Core {
    
    public static function get_env() 
    {
-      return self::scfg('environment');
+      $called_class = get_called_class();
+      return $called_class::$__scfg['environment'];
    }
 
     public static function get_env_key() 
     {
-        $env = self::scfg('environment');
-        if ($env === self::DEVELOPMENT)
+        $called_class = get_called_class();
+        if (isset($called_class::$__scfg['environment']))
+        {
+          $env = $called_class::$__scfg['environment'];
+        }
+        else
+        {
+          $called_class::init_framework();
+          $Framework = $called_class::$__scfg['framework'];
+
+          //get enviroment
+          $env = $Framework->get_environment();
+        }
+        
+        if ($env === Supermodlr::DEVELOPMENT)
         {
             return 'DEVELOPMENT';
         }
-        else if ($env === self::TESTING)
+        else if ($env === Supermodlr::TESTING)
         {
             return 'TESTING';
         }    
-        else if ($env === self::STAGING)
+        else if ($env === Supermodlr::STAGING)
         {
             return 'STAGING';
         }     
-        else if ($env === self::PRODUCTION)
+        else if ($env === Supermodlr::PRODUCTION)
         {
             return 'PRODUCTION';
         }      
@@ -1344,7 +1375,7 @@ abstract class Supermodlr_Core {
       //@todo check model permissions for create/update permission
       
       
-      $fields = self::get_fields();
+      $fields = $class::get_fields();
       //loop through all posted keys
       foreach ($post as $key => $value)
       {
@@ -2137,10 +2168,12 @@ abstract class Supermodlr_Core {
     //allow datatypes to run code on event keys
    public static function static_model_event($key,$args = array()) { 
 
+      $called_class = get_called_class();
+
       //get model data type name
-      $class = self::get_model_class();
+      $class = $called_class::get_model_class();
       
-      $trait_events = self::get_trait_events($key);
+      $trait_events = $called_class::get_trait_events($key);
       
       //run all trait events
       foreach ($trait_events[$key] as $trait => $methods) {
@@ -2188,7 +2221,7 @@ abstract class Supermodlr_Core {
       if (!isset($params['limit'])) $params['limit'] = NULL;
         if (!isset($params['from'])) $params['from'] = $o->cfg('db_name');
       if (!isset($params['array'])) $params['array'] = FALSE;
-      if (!isset($params['fields'])) $params['fields'] = self::get_fields();
+      if (!isset($params['fields'])) $params['fields'] = $class::get_fields();
       if (!isset($params['model'])) $params['model'] = $o;
       
         //if (!isset($params['cache'])) $params['cache'] = $o->cfg('read_cache');
@@ -2235,15 +2268,16 @@ abstract class Supermodlr_Core {
 
    //get all assigned traits
    public static function get_traits() {
+
+      //get class name called
+      $called_class = get_called_class();
+
       //if traits were already found, return them
-      $traits = self::scfg('traits');
+      $traits = $called_class::scfg('traits');
       if (!is_null($traits)) {
          return $traits;
       }
       //find all traits
-
-      //get class name called
-      $called_class = get_called_class();
 
       //get all traits assigned directly to the data_type
       $traits = class_uses($called_class);  // only returns traits on the sent class, not inheirited from parents or others included
@@ -2278,7 +2312,7 @@ abstract class Supermodlr_Core {
           }
       }
        //store all found traits
-        self::scfg('traits',array_keys($traits));
+        $called_class::scfg('traits',array_keys($traits));
         return $traits;
    }
 
@@ -2286,13 +2320,15 @@ abstract class Supermodlr_Core {
    // @todo maybe all methods should be calculated at 'data-type' compile time and added as an array on the generated data type object model php class file
    public static function get_trait_events($key = NULL) {
    
+      $called_class = get_called_class();
+
       //get model data type name
-      $class = self::get_model_class();
+      $class = $called_class::get_model_class();
       
       $trait_event_key = 'trait_events_'.$class;
       
       //check if this event has already been run once
-      $trait_events = self::scfg($trait_event_key);
+      $trait_events = $called_class::scfg($trait_event_key);
          
       //if we haven't searched for all methods
       if (is_null($trait_events) || !isset($trait_events[$key])) {
@@ -2303,7 +2339,7 @@ abstract class Supermodlr_Core {
          $trait_events[$key] = array();
             
          //run methods on all traits
-         $traits = self::traits();
+         $traits = $called_class::traits();
          foreach ($traits as $trait) {
             $trait_method = $trait.'_'.$key;
             if (method_exists($trait,$trait_method)) {
@@ -2315,7 +2351,7 @@ abstract class Supermodlr_Core {
             }
             
          }
-         self::scfg($trait_event_key,$trait_events);
+         $called_class::scfg($trait_event_key,$trait_events);
       }
    }
    
@@ -2339,8 +2375,8 @@ abstract class Supermodlr_Core {
    
    public static function get_models() 
    {
-      
-      if (self::scfg('models') === NULL)
+      $called_class = get_called_class();
+      if ($called_class::scfg('models') === NULL)
       {
          $models = array();
          
@@ -2352,7 +2388,7 @@ abstract class Supermodlr_Core {
             {
                //skip directories
                if ($model == '.' || $model == '..') continue;
-               $model_detail = self::get_model_from_file($model);
+               $model_detail = $called_class::get_model_from_file($model);
                $models[] = $model_detail;
             }
          }
@@ -2365,13 +2401,13 @@ abstract class Supermodlr_Core {
             {
                //skip directories
                if ($model == '.' || $model == '..') continue;
-               $model_detail = self::get_model_from_file($model);
+               $model_detail = $called_class::get_model_from_file($model);
                $models[] = $model_detail;
             }
          }
-         self::scfg('models',$models);
+         $called_class::scfg('models',$models);
       }
-      return self::scfg('models');
+      return $called_class::scfg('models');
    }  
 
    public function rel($field,$rel_field = NULL)

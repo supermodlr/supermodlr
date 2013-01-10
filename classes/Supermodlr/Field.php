@@ -170,8 +170,8 @@ class Supermodlr_Field {
       }
       
       // check storage type
-      if ($this->storage == 'single' && is_array($value) && $this->datatype != 'relationship') 
-      {
+      if ($this->storage == 'single' && !in_array($this->datatype, array('mixed','relationship','object')) && is_array($value) && $this->datatype != 'relationship') 
+      { 
          return new Status(FALSE,$this->message('storage.single',$value));
       } else if ($this->storage == 'array' && (!is_array($value) || $this->is_assoc($value))) 
       {
