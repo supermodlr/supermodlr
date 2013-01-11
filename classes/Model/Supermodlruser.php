@@ -4,7 +4,7 @@
   */
 class Model_Supermodlruser extends Supermodlr {
         public static $__scfg = array(
-                'supermodlruser.field_keys' => array(
+                'field_keys' => array(
                   '_id',
                   'useraccesstags',
                 ),
