@@ -29,11 +29,4 @@ class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
         return APPPATH.'classes'.DIRECTORY_SEPARATOR;
     }   
 
-    //config file
-
-    public function get_environment()
-    {
-        return Kohana::$environment;
-    }
-
 }

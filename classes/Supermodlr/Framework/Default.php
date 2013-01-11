@@ -61,9 +61,4 @@ class Supermodlr_Framework_Default {
         return NULL;
     }
     
-
-    public function get_environment()
-    {
-        return NULL;
-    }
 }

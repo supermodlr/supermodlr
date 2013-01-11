@@ -3,11 +3,6 @@
 
 abstract class Supermodlr_Core {
 
-    const PRODUCTION  = 10;
-    const STAGING     = 20;
-    const TESTING     = 30;
-    const DEVELOPMENT = 40;
-
     //static config for vars that apply to all data types and can be loaded once
     protected static $__scfg = array();
    
@@ -161,15 +156,7 @@ abstract class Supermodlr_Core {
       $this->model_event('init_cfg');
       
       //get framework
-      $Framework = $this->cfg('framework');
-
-      //get enviroment
-      $env = $Framework->get_environment();
-      if ($env === NULL)
-      {
-        $env = Supermodlr::DEVELOPMENT;
-      }
-      $this->scfg('environment',$env);
+      $Framework = Supermodlr::scfg('framework');
 
       $name = $this->get_name();
 
@@ -177,14 +164,13 @@ abstract class Supermodlr_Core {
       $this->cfg('name',$name);
         
       //setup default db_name config (table or collection name for this datatype)
-      if (!isset($this->__cfg['db_name']) || $this->__cfg['db_name'] === NULL) 
+      if (!isset($this->__cfg['db_name'])) 
       {
          $this->scfg($name.'.db_name',$name);
       }
 
-
       //setup default primary_key (pk) column config
-      if (!isset($this->__cfg['pk_field']) || $this->__cfg['pk_field'] === NULL) 
+      if (!isset($this->__cfg['pk_field'])) 
       {
          //default field class name for pk field 
          $pk_class = 'Field_'.ucfirst(strtolower($name)).'__Id';
@@ -195,21 +181,20 @@ abstract class Supermodlr_Core {
       }
 
       //setup default primary_key (pk) column config
-      if (!isset($this->__cfg['pk_name']) || $this->__cfg['pk_name'] === NULL) 
+      if (!isset($this->__cfg['pk_name'])) 
       {     
-
          $pk = '_id';
 
          $this->scfg($name.'.pk_name',$pk);
       }
          
       //setup default cache setting
-      if (!isset($this->__cfg['read_cache']) || $this->__cfg['read_cache'] === NULL) {
+      if (!isset($this->__cfg['read_cache'])) {
          $this->scfg($name.'.read_cache',FALSE);
       }
 
       //setup driver names for this datatype
-      if (!isset($this->__cfg['drivers']) || $this->__cfg['drivers'] === NULL) 
+      if (!isset($this->__cfg['drivers'])) 
       {
          //default drivers setup in the app model class file generated on install
          $drivers_config = $this->cfg('drivers_config');
@@ -270,7 +255,7 @@ abstract class Supermodlr_Core {
             $this->scfg($name.'.drivers',$drivers,TRUE);
             
             //re-save drivers config in case there were any changes
-            $this->cfg('drivers_config',$drivers_config);
+            $this->scfg($name.'.drivers_config',$drivers_config);
          }
          
          //@todo add in config option for additional drivers (that are added after any drivers set by the parent) instead of overridding the parent driver_config OR make a way to make conf options on multiple levels merge (if they are an array)
@@ -278,9 +263,9 @@ abstract class Supermodlr_Core {
             
 
       // default access tags
-      if (!isset($this->__cfg['access']) || $this->__cfg['access'] === NULL)
+      if (!isset($this->__cfg['access']))
       {
-         $this->cfg('access',array(
+         $this->scfg($name.'.access',array(
             'create' => array('owner'),
             'read'   => array('owner'),
             'update' => array('owner'),
@@ -288,12 +273,12 @@ abstract class Supermodlr_Core {
          ));
       }
       //default user access tags to anon access
-      if (!isset($this->__cfg['user_access_tags']) || $this->__cfg['user_access_tags'] === NULL)
+      if (!isset($this->__cfg['user_access_tags']))
       {
-         $this->cfg('user_access_tags',array('anon'));
+         $this->scfg($name.'.user_access_tags',array('anon'));
       }
 
-      if (!isset($this->__cfg['owner_field']) || $this->__cfg['owner_field'] === NULL)
+      if (!isset($this->__cfg['owner_field']))
       {
          // get all fields
          $fields = $this->get_fields();
@@ -305,7 +290,7 @@ abstract class Supermodlr_Core {
             if (isset($Field->owner) && $Field->owner === TRUE)
             {
                //save this field key as the owner field
-               $this->cfg('owner_field',$Field->name);
+               $this->scfg($name.'.owner_field',$Field->name);
                break ;
             }
          }
@@ -336,36 +321,22 @@ abstract class Supermodlr_Core {
    }
    
    /**
-     * returns a cfg value based on env, class, and static vs obj
+     * returns a cfg value based on class, and static vs obj
      */
-   public function get_cfg_value($key,$check_scfg = TRUE) 
+   public function get_cfg_value($key) 
    {
-      //get env
-      $env = $this->get_env_key();
-      
-      //check env for value
-      if (isset($this->__cfg['env'][$env][$key])) 
-      {
-         return $this->__cfg['env'][$env][$key];   
-         
-      } 
-      //check default      
-      else if (isset($this->__cfg['env']['default'][$key])) 
-      {
-         return $this->__cfg['env']['default'][$key];
-      } 
       //check cfg    
-      else if (isset($this->__cfg[$key])) 
+      if (isset($this->__cfg[$key])) 
       {
          return $this->__cfg[$key];
       } 
       //not found on obj      
-      else if ($check_scfg)
+      else 
       { 
          $name = $this->get_name(); 
 
          //look for name specific value
-         $value = $this->get_scfg_value($name.'.'.$key,FALSE);
+         $value = $this->get_scfg_value($name.'.'.$key);
          
          //if found
          if ($value !== NULL) 
@@ -375,26 +346,18 @@ abstract class Supermodlr_Core {
          //look for raw key in static config       
          else 
          {
-            return $this->get_scfg_value($key,FALSE);
+            return $this->get_scfg_value($key);
          }
          
-      }
-      else
-      {
-         return NULL;
       }
    }
 
    /**
      * returns a scfg value based on env, class, and static 
      */
-   public static function get_scfg_value($key,$check_cfg = TRUE) 
+   public static function get_scfg_value($key) 
    {
-if ($key == 'db_name') fbl('get_scfg_value:db_name');
       $called_class = get_called_class();
-
-      //get env
-      $env = $called_class::get_env_key();
 
       //get all classes in extension tree
       $classes = $called_class::get_class_tree();
@@ -404,25 +367,16 @@ if ($key == 'db_name') fbl('get_scfg_value:db_name');
 
       //loop through all classes
       foreach ($classes as $class) 
-      { fbl($class."::".$name.".".$key);
+      { 
          //check env for value
-         if (isset($class::$__scfg['env'][$env][$key])) 
-         {
-            return $class::$__scfg['env'][$env][$key];   
-         } 
-         //check default
-         else if (isset($class::$__scfg['env']['default'][$key])) 
-         {
-            return $class::$__scfg['env']['default'][$key];
-         } 
-         //check model scfg
-         else if (isset($class::$__scfg[$name.'.'.$key])) 
+        //check model scfg
+         if (isset($class::$__scfg[$name.'.'.$key])) 
          {
             return $class::$__scfg[$name.'.'.$key];
          }
          //check scfg
          else if (isset($class::$__scfg[$key])) 
-         { if ($key == 'db_name') fbl($class::$__scfg,'scfg');
+         { 
             return $class::$__scfg[$key];
          }
 
@@ -431,7 +385,7 @@ if ($key == 'db_name') fbl('get_scfg_value:db_name');
       //loop through all traits
       
       //check for this key on an instance to force init_cfg to run
-      if ($check_cfg && (!isset($called_class::$__scfg[$name.'.__instance_create']) || $called_class::$__scfg[$name.'.__instance_create'] === FALSE))
+/*      if ($check_cfg && (!isset($called_class::$__scfg[$name.'.__instance_create']) || $called_class::$__scfg[$name.'.__instance_create'] === FALSE))
       {
          //first re-check get_scfg_value
          $value = $called_class::get_scfg_value($key,FALSE);
@@ -466,9 +420,9 @@ if ($key == 'db_name') fbl('get_scfg_value:db_name');
          return $value;
       }
       else
-      {
+      {*/
          return NULL;
-      }
+      //}
    }
 
    
@@ -480,10 +434,10 @@ if ($key == 'db_name') fbl('get_scfg_value:db_name');
       if (!isset(Supermodlr::$__scfg['framework']) || Supermodlr::$__scfg['framework'] === NULL)
       {
          //choose framework
-         $Framework = $called_class::load_framework();
+         $Framework = Supermodlr::load_framework();
          
          //store framework class
-         $called_class::scfg('framework',$Framework);
+         Supermodlr::scfg('framework',$Framework);
 
          //get config array
          $config = $Framework->load_config('supermodlr');
