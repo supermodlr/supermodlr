@@ -158,7 +158,12 @@ abstract class Supermodlr_Core {
         if (!isset(static::$__scfg['drivers'])) 
         {
             //default drivers setup in the app model class file generated on install
-            $drivers_config = static::scfg('drivers_config');
+            $drivers_config = static::scfg($name.'.drivers_config');
+            if ($drivers_config === NULL)
+            {
+              $drivers_config = static::scfg('drivers_config');  
+            }
+            
             if (is_array($drivers_config)) 
             {
                 $primary_driver = NULL;
@@ -414,7 +419,10 @@ abstract class Supermodlr_Core {
      */  
    public static function get_framework()
    {
-      
+      if (!isset(Supermodlr::$__scfg['framework']))
+      {
+        static::init_framework();
+      }  
       return Supermodlr::$__scfg['framework'];
    }
    
@@ -1147,7 +1155,16 @@ abstract class Supermodlr_Core {
          if (substr($col,0,2) == '__' && $col != $this->cfg('trait_column')) continue;
          
          //store values in array
+         if ($val InstanceOf DateTime)
+         {
+            $val = $val->getTimestamp();
+         }
          $cols[$col] = $val;
+         if ($col == 'updated')
+         {
+          fbl(var_export($this->$col,TRUE));
+          fbl($val,'updated val');
+         }
       }
       //return array of values
       return $cols;
@@ -2092,8 +2109,14 @@ abstract class Supermodlr_Core {
                
                unset($results[$k]);
             }
+            //if we only want a count, return the count as an int
+            if ($params['count'] === TRUE)
+            {
+              $result_row = reset($result_set);
+              $result_set = intval($result_row['count']);
+            }
             //if we only wanted one result, return the result directly
-            if ($params['limit'] == 1) 
+            else if ($params['limit'] == 1) 
             {
                $result_set = reset($result_set);
             }

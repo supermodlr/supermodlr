@@ -13,6 +13,7 @@ class Supermodlr_Db {
 	protected $pass = '';
 	protected $transactions = FALSE;
 	protected $use_prepared = FALSE;
+	protected $function_args = array();
 	
 	public function __construct($params = array()) 
 	{
@@ -302,4 +303,13 @@ class Supermodlr_Db {
 	{
 	   return $this->transactions;
 	}	
+
+	/**
+	  *
+	  * @returns bool 		  
+	  */
+    public function set_function_default_args($func,$args)
+    {
+    	$this->function_args[$function] = $args;	
+    }	
 }

@@ -6,6 +6,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
     protected $port = '3306';
     protected $use_prepared = TRUE;
     protected $transactions = FALSE;    
+    protected $function_args = array('$week'=> array(':column',3));
     
     /**
       * 
@@ -153,6 +154,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
       * @param array|string $order = NULL
       * @param int $limit = NULL
       * @param int $skip = 0
+      * @param bool $count = FALSE
       * @param bool $prepared = TRUE use prepared statements if TRUE, standard query if FALSE
       * @returns resource
       */
@@ -262,6 +264,11 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
             $columns_sql = '*';
         }
         
+        if (isset($params['count']) && $params['count'] === TRUE)
+        {
+        	$columns_sql = ' count(*) as count ';
+        }
+
         //where
         $where_sql_params = $params;
         $where_values = array();
@@ -270,7 +277,10 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
 
         $where_sql_params['where_values'] = &$where_values;
         $where_sql = $this->where_to_sql($where_sql_params);
-        
+        if ($where_sql !== '')
+        {
+        	$where_sql = ' where '.$where_sql;
+        }        
         //order
         $order_sql = '';
         if (isset($params['order']) && !empty($params['order'])) 
@@ -392,7 +402,10 @@ fbl($where_values);
         
         //where
         $where_sql = $this->where_to_sql($params);
-        
+        if ($where_sql !== '')
+        {
+        	$where_sql = ' where '.$where_sql;
+        }        
         //setup sql statement
         $sql = 'update '.$params['into'].' set '.$set_sql.' '.$where_sql.';';
         //if this is not a prepared statement, execute it
@@ -446,6 +459,10 @@ fbl($where_values);
         }   
         //where
         $where_sql = $this->where_to_sql($params);
+        if ($where_sql !== '')
+        {
+        	$where_sql = ' where '.$where_sql;
+        }
         
         //setup sql statement
         $sql = 'delete from '.$params['from'].' '.$where_sql.';';
@@ -487,6 +504,12 @@ fbl($where_values);
         {
             $params['from'] = $params['into'];
         }
+
+        if (!isset($params['operator']))
+        {
+        	$params['operator'] = 'AND';	
+        }
+
         $where_sql = '';
         $where_values = array();
         //if where conditions were sent
@@ -543,6 +566,66 @@ fbl($where_values);
                                 $where_set[] = $params['from'].'.'.$col." > ?";
                                 $params['where_values'][] = $val['$gt'];            
                             }
+                            else if (isset($val['$and']))
+                            {
+                        		$sub_params = $params;
+                        		$sub_params['operator'] = 'AND';
+                        		$sub_params['where'] = $val['$and'];
+                        		$sub_params['where_values'] = &$params['where_values'];
+                        		$where_set[] = '('.$this->where_to_sql($sub_params).')';
+                            }
+                            else if (isset($val['$week']))
+                            {
+                            	if (isset($this->function_args['$week']) && is_array($this->function_args['$week']))
+	                           	{
+	                           		//@todo move this to a generic function builder method
+	                           		$args = array();
+	                           		$value_found = FALSE;
+	                           		foreach ($this->function_args['$week'] as $argval)
+	                           		{
+	                           			if ($argval === ':value')
+	                           			{
+	                           				$args[]	= '?';
+	                           				$params['where_values'][] = $val['$week'];
+	                           				$value_found = TRUE;
+	                           			}
+	                           			else if ($argval === ':column')
+	                           			{
+	                           				$args[]	= $col;
+	                           			}
+	                           			else
+	                           			{
+	                           				$args[] = $argval;
+	                           			}
+	                           		}
+	                           		$where = ' week('.implode(',',$args).')';
+	                           		if ($value_found === FALSE)
+	                           		{
+	                           			if (isset($val['$operator']))
+	                           			{
+	                           				if ($val['$operator'] == '$lte')
+	                           				{
+	                           					$operator = '<=';
+	                           				}
+	                           				//@todo finish adding all possible operators
+	                           			}
+	                           			else
+	                           			{
+	                           				$operator = '=';
+	                           			}
+	                           			$where .= ' '.$operator.' ?';
+	                           			$params['where_values'][] = $val['$week'];
+	                           		}
+									$where_set[] = $where;
+	                                
+                            	}
+                            	else
+                            	{
+	                                $where_set[] = ' week('.$params['from'].'.'.$col.") = ?";
+	                                $params['where_values'][] = $val['$week'];                            		
+                            	}
+                                        	
+                            }
                         }
                     }
                     else
@@ -555,7 +638,7 @@ fbl($where_values);
                 }
             }
             //generate sql where fragment
-            $where_sql = ' where '.implode(' and ',$where_set);
+            $where_sql = implode(' '.$params['operator'].' ',$where_set);
         } 
         else 
         {
@@ -800,7 +883,7 @@ fbl($where_values);
     public function driver_datetime_fromdb($params)
     {
         try {
-            $datetime = new DateTime($timestamp);
+            $datetime = new DateTime($params['value']);
             $params['value'] = $datetime;
         }
         catch(Exception $e)
@@ -873,4 +956,6 @@ fbl($where_values);
     {
     
     }       
+
+
 }

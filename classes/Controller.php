@@ -103,6 +103,8 @@ class Controller extends Kohana_Controller {
 
 		$field_templates = array();
 		
+		$model_data = $Model->to_array();
+
 		//loop through all fields
 		foreach ($fields as $Field)
 		{
@@ -128,7 +130,7 @@ class Controller extends Kohana_Controller {
 			//if value is set on the current object
 			if (isset($Model->$field_key))
 			{
-				$Field = $this->field_set_value($Model,$Field);
+				$Field = $this->field_set_value($model_data,$Field);
 			}
 			
 			//get field objects for all submodel.fields
@@ -162,16 +164,16 @@ class Controller extends Kohana_Controller {
 						$sub_field->label = ucfirst($sub_field->name);
 					}
 					//if this field is set on the model
-					if (isset($Model->$field_key))
+					if (isset($model_data[$field_key]))
 					{					
 						//set a pointer to the field object
-						$pointer = &$Model->$field_key;
+						$pointer = &$model_data[$field_key];
 
 						//check to see if this submodel field is set on the parent model
 						if (isset($pointer[$sub_field->name])) 
 						{
 							//set the value on the submodel field object to be sent to templates
-							$sub_field = $this->field_set_value($Model,$sub_field,$pointer[$sub_field->name]);
+							$sub_field = $this->field_set_value($model_data,$sub_field,$pointer[$sub_field->name]);
 						}
 					}
 					
@@ -218,14 +220,14 @@ class Controller extends Kohana_Controller {
 		return $Model_Wrapper_View;
 	}
 
-	public function field_set_value($Model,$Field, &$pointer = NULL) 
+	public function field_set_value($data,$Field, &$pointer = NULL) 
 	{
 
 		$field_key = $Field->name;
 
 		if ($pointer === NULL)
 		{
-			$pointer = &$Model->$field_key;
+			$pointer = &$data[$field_key];
 		}
 
 		if ($Field->storage !== 'single' || $Field->datatype === 'object' || $Field->datatype == 'relationship')
