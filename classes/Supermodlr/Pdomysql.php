@@ -505,7 +505,7 @@ fbl($where_values);
       */
     public function where_to_sql($params = array()) 
     {
-        fbl($params,'where_to_sql');
+
         //@todo change this to a generice $table var or something
         if (!isset($params['from']) && isset($params['into']))
         {

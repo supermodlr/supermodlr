@@ -1,0 +1,1 @@
+<input type="password" ng-model="data.<?=$field->model_name; ?>.<?=$field->path('.'); ?>" id="<?=$form_id; ?>__field__<?=$field->path('_'); ?>" name="field__<?=$field->path('_'); ?>" autocomplete="off"/>

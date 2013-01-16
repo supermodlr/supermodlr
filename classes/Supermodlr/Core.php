@@ -1138,7 +1138,7 @@ abstract class Supermodlr_Core {
     /**
      * @returns array all public columns and fields (skips hidden/cfg properties)
      */
-   public function to_array($check_access = TRUE) 
+   public function to_array($check_access = TRUE,$display = FALSE) 
    {
 
       //set all defaults on object
@@ -1171,8 +1171,13 @@ abstract class Supermodlr_Core {
                 continue;
              }               
          }
-      
 
+         //ugly hack in place until we code for a "owner private" field access type that is updatable by the owner, but is never shown or returned
+         if ($display === TRUE && $col == 'password')
+         {
+          continue;
+         }
+      
          //store values in array
          if ($val InstanceOf DateTime)
          {
@@ -1394,7 +1399,7 @@ abstract class Supermodlr_Core {
         $this->filter();
 
         //validate this object before it is saved
-        $valid = $this->validate();
+        $valid = $this->validate(); fbl($valid,'save valid');
         if ($valid->ok() === FALSE) {
             return $valid;
         }
@@ -1679,7 +1684,7 @@ abstract class Supermodlr_Core {
          {
             $this->model_event('object_updated',$params);
          }
-      
+
          return new Status(TRUE, $messages, array('_id'=> $this->$pk));
 
       
@@ -2121,23 +2126,16 @@ abstract class Supermodlr_Core {
                   $result_set[] = new $class($row[$pk], $row);
                }
                
-               unset($results[$k]);
             }
-            //if we only want a count, return the count as an int
-            if ($params['count'] === TRUE)
-            {
-              $result_row = reset($result_set);
-              $result_set = intval($result_row['count']);
-            }
-            //if we only wanted one result, return the result directly
-            else if ($params['limit'] == 1) 
+        if ($params['limit'] == 1) 
             {
                $result_set = reset($result_set);
             }
          } 
          else 
          {
-            $result_set = $results;
+            $result_row = reset($result_set);
+            $result_set = intval($result_row['count']);
          }
       }
       

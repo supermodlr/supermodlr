@@ -211,7 +211,7 @@ class Supermodlr_Db {
 
             }
         }
-        fbl($params,'update params');
+        
        return $this->driver_update($params);
     }   
     
