@@ -514,8 +514,8 @@ abstract class Supermodlr_Core {
          //loop through all field keys
          foreach ($field_keys as $field_name) 
          {
-            $field_class_name = ucfirst(strtolower($field_name));
-            $model_class_name = ucfirst(strtolower($model_name));
+            $field_class_name = $this->get_name_case($field_name);
+            $model_class_name = $this->get_name_case($model_name);
             $fieldclass = 'Field_'.$model_class_name.'_'.$field_class_name;
             $fields[$field_name] = new $fieldclass(array('model'=> 'model', '_id'=> $called_class));
          }
@@ -529,8 +529,8 @@ abstract class Supermodlr_Core {
             if ($field_keys !== NULL && is_array($field_keys))
              foreach ($field_keys as $field_name) 
              {
-                $field_class_name = ucfirst(strtolower($field_name));
-                $model_class_name = ucfirst(strtolower($parent_model_name));
+                $field_class_name = $this->get_name_case($field_name);
+                $model_class_name = $this->get_name_case($parent_model_name);
                 $fieldclass = 'Field_'.$model_class_name.'_'.$field_class_name;
                 //if this field wasn't already overridden
                 if (!isset($fields[$field_name]))
