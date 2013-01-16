@@ -266,7 +266,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
         
         if (isset($params['count']) && $params['count'] === TRUE)
         {
-        	$columns_sql = ' count(*) as count ';
+            $columns_sql = ' count(*) as count ';
         }
 
         //where
@@ -279,7 +279,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
         $where_sql = $this->where_to_sql($where_sql_params);
         if ($where_sql !== '')
         {
-        	$where_sql = ' where '.$where_sql;
+            $where_sql = ' where '.$where_sql;
         }        
         //order
         $order_sql = '';
@@ -401,11 +401,17 @@ fbl($where_values);
         $set_sql = implode(',',$set_sql_arry);
         
         //where
-        $where_sql = $this->where_to_sql($params);
+        $where_sql_params = $params;
+        $where_values = array();
+        //assign 'where' by reference so it can be modified inside 'where_to_sql'
+        $where_sql_params['where'] = &$params['where'];
+
+        $where_sql_params['where_values'] = &$where_values;
+        $where_sql = $this->where_to_sql($where_sql_params);
         if ($where_sql !== '')
         {
-        	$where_sql = ' where '.$where_sql;
-        }        
+            $where_sql = ' where '.$where_sql;
+        }       
         //setup sql statement
         $sql = 'update '.$params['into'].' set '.$set_sql.' '.$where_sql.';';
         //if this is not a prepared statement, execute it
@@ -461,7 +467,7 @@ fbl($where_values);
         $where_sql = $this->where_to_sql($params);
         if ($where_sql !== '')
         {
-        	$where_sql = ' where '.$where_sql;
+            $where_sql = ' where '.$where_sql;
         }
         
         //setup sql statement
@@ -499,6 +505,7 @@ fbl($where_values);
       */
     public function where_to_sql($params = array()) 
     {
+        fbl($params,'where_to_sql');
         //@todo change this to a generice $table var or something
         if (!isset($params['from']) && isset($params['into']))
         {
@@ -507,19 +514,20 @@ fbl($where_values);
 
         if (!isset($params['operator']))
         {
-        	$params['operator'] = 'AND';	
+            $params['operator'] = 'AND';    
         }
 
         $where_sql = '';
-        $where_values = array();
+
         //if where conditions were sent
         if (isset($params['where']) && is_array($params['where']) && !empty($params['where'])) 
         {
             $where_set = array();
             //loop through all where conditions
-            foreach ($params['where'] as $col => $val) 
+            $where = $params['where'];
+            foreach ($where as $col => $val) 
             {
-                //if we are using prepared statements
+                //if we are not using prepared statements
                 if ($params['prepared'] === FALSE) 
                 {
                     $where_set[] = $params['from'].'.'.$col." = '".$val."'";
@@ -527,114 +535,113 @@ fbl($where_values);
                 //raw sql statements
                 else 
                 {
-                    //detect commands
-                    if (is_array($val))
+                    //detect logical commands
+                    if (substr($col, 0,1) === '$')
                     {
-                        $keys = array_keys($val);
-                        //if the first key starts with '$', then we assume it is a command
-                        if (substr($keys[0], 0,1) === '$')
+                        if ($col === '$and')
                         {
-                            //regexp
-                            if (isset($val['$regex']))
+                            $sub_params = $params;
+                            $sub_params['operator'] = 'AND';
+                            $sub_params['where_values'] = &$params['where_values'];                            
+                            //loop through all $and values and recursivly add $and statements
+                            foreach ($val as $and_where)
                             {
-                                //skip the first '/'
-                                $mysql_regexp = substr($val['$regex'], 1);
-                                
-                                //remove the end '/' and any operators that were set
-                                $mysql_regexp = preg_replace('/\/[a-z]*$/i','',$mysql_regexp);
-
-                                $where_set[] = $params['from'].'.'.$col." REGEXP '".$mysql_regexp."'";
-                                
+                                $sub_params['where'] = $and_where;
+                                $where_set[] = '('.$this->where_to_sql($sub_params).')';    
+                     
                             }
-                            else if (isset($val['$lte']))
-                            {
-                                $where_set[] = $params['from'].'.'.$col." <= ?";
-                                $params['where_values'][] = $val['$lte'];
-                            }
-                            else if (isset($val['$lt']))
-                            {
-                                $where_set[] = $params['from'].'.'.$col." < ?";
-                                $params['where_values'][] = $val['$lt'];
-                            }
-                            else if (isset($val['$gte']))
-                            {
-                                $where_set[] = $params['from'].'.'.$col." >= ?";
-                                $params['where_values'][] = $val['$gte'];           
-                            }           
-                            else if (isset($val['$gt']))
-                            {
-                                $where_set[] = $params['from'].'.'.$col." > ?";
-                                $params['where_values'][] = $val['$gt'];            
-                            }
-                            else if (isset($val['$and']))
-                            {
-                        		$sub_params = $params;
-                        		$sub_params['operator'] = 'AND';
-                        		$sub_params['where'] = $val['$and'];
-                        		$sub_params['where_values'] = &$params['where_values'];
-                        		$where_set[] = '('.$this->where_to_sql($sub_params).')';
-                            }
-                            else if (isset($val['$week']))
-                            {
-                            	if (isset($this->function_args['$week']) && is_array($this->function_args['$week']))
-	                           	{
-	                           		//@todo move this to a generic function builder method
-	                           		$args = array();
-	                           		$value_found = FALSE;
-	                           		foreach ($this->function_args['$week'] as $argval)
-	                           		{
-	                           			if ($argval === ':value')
-	                           			{
-	                           				$args[]	= '?';
-	                           				$params['where_values'][] = $val['$week'];
-	                           				$value_found = TRUE;
-	                           			}
-	                           			else if ($argval === ':column')
-	                           			{
-	                           				$args[]	= $col;
-	                           			}
-	                           			else
-	                           			{
-	                           				$args[] = $argval;
-	                           			}
-	                           		}
-	                           		$where = ' week('.implode(',',$args).')';
-	                           		if ($value_found === FALSE)
-	                           		{
-	                           			if (isset($val['$operator']))
-	                           			{
-	                           				if ($val['$operator'] == '$lte')
-	                           				{
-	                           					$operator = '<=';
-	                           				}
-	                           				//@todo finish adding all possible operators
-	                           			}
-	                           			else
-	                           			{
-	                           				$operator = '=';
-	                           			}
-	                           			$where .= ' '.$operator.' ?';
-	                           			$params['where_values'][] = $val['$week'];
-	                           		}
-									$where_set[] = $where;
-	                                
-                            	}
-                            	else
-                            	{
-	                                $where_set[] = ' week('.$params['from'].'.'.$col.") = ?";
-	                                $params['where_values'][] = $val['$week'];                            		
-                            	}
-                                        	
-                            }
-                        }
+                        }   
                     }
                     else
                     {
-                        $where_set[] = $params['from'].'.'.$col." = ?";
-                        $params['where_values'][] = $val;
-                    }
+                        //detect value commands
+                        if (is_array($val))
+                        {
+                            $keys = array_keys($val);
+                            //if the first key starts with '$', then we assume it is a command
+                            if (substr($keys[0], 0,1) === '$')
+                            {
+                                //regexp
+                                if (isset($val['$regex']))
+                                {
+                                    //skip the first '/'
+                                    $mysql_regexp = substr($val['$regex'], 1);
+                                    
+                                    //remove the end '/' and any operators that were set
+                                    $mysql_regexp = preg_replace('/\/[a-z]*$/i','',$mysql_regexp);
 
-                    
+                                    $where_set[] = $params['from'].'.'.$col." REGEXP '".$mysql_regexp."'";
+                                    
+                                }
+                                else if (isset($val['$lte']))
+                                {
+                                    $where_set[] = $params['from'].'.'.$col." <= ?";
+                                    $params['where_values'][] = $val['$lte'];
+                                }
+                                else if (isset($val['$lt']))
+                                {
+                                    $where_set[] = $params['from'].'.'.$col." < ?";
+                                    $params['where_values'][] = $val['$lt'];
+                                }
+                                else if (isset($val['$gte']))
+                                {
+                                    $where_set[] = $params['from'].'.'.$col." >= ?";
+                                    $params['where_values'][] = $val['$gte'];           
+                                }           
+                                else if (isset($val['$gt']))
+                                {
+                                    $where_set[] = $params['from'].'.'.$col." > ?";
+                                    $params['where_values'][] = $val['$gt'];            
+                                }
+                                else if (isset($val['$week']))
+                                {
+                                    $func_params = $params;
+                                    $func_params['value'] = $val['$week'];
+                                    $func_params['column'] = $col;
+                                    $func_params['where_values'] = &$func_params['where_values'];
+                                    $func_params['where_set'] = &$where_set;
+                                    $this->get_function_syntax('week',$func_params);
+                                                
+                                }
+                                else if (isset($val['$year']))
+                                {
+                                    $func_params = $params;
+                                    $func_params['value'] = $val['$year'];
+                                    $func_params['column'] = $col;
+                                    $func_params['where_values'] = &$func_params['where_values'];
+                                    $func_params['where_set'] = &$where_set;
+                                    $this->get_function_syntax('year',$func_params);
+                                                
+                                }              
+                                else if (isset($val['$month']))
+                                {
+                                    $func_params = $params;
+                                    $func_params['value'] = $val['$month'];
+                                    $func_params['column'] = $col;
+                                    $func_params['where_values'] = &$func_params['where_values'];
+                                    $func_params['where_set'] = &$where_set;
+                                    $this->get_function_syntax('month',$func_params);
+                                                
+                                }          
+                                else if (isset($val['$quarter']))
+                                {
+                                    $func_params = $params;
+                                    $func_params['value'] = $val['$quarter'];
+                                    $func_params['column'] = $col;
+                                    $func_params['where_values'] = &$func_params['where_values'];
+                                    $func_params['where_set'] = &$where_set;
+                                    $this->get_function_syntax('quarter',$func_params);
+                                                
+                                }                                                                             
+                            }
+                        }
+                        else
+                        {
+                            $where_set[] = $params['from'].'.'.$col." = ?";
+                            $params['where_values'][] = $val;
+                        }
+
+                    }
                 }
             }
             //generate sql where fragment
@@ -647,6 +654,57 @@ fbl($where_values);
 
         return $where_sql;
     }   
+
+    public function get_function_syntax($func,$params)
+    {
+        if (isset($this->function_args[$func]) && is_array($this->function_args[$func]))
+        {
+            $args = array();
+            $value_found = FALSE;
+            foreach ($this->function_args[$func] as $argval)
+            {
+                if ($argval === ':value')
+                {
+                    $args[] = '?';
+                    $params['where_values'][] = $params['value'];
+                    $value_found = TRUE;
+                }
+                else if ($argval === ':column')
+                {
+                    $args[] = $params['column'];
+                }
+                else
+                {
+                    $args[] = $argval;
+                }
+            }
+            $where = ' '.$func.'('.implode(',',$args).')';
+            if ($value_found === FALSE)
+            {
+                if (isset($val['$operator']))
+                {
+                    if ($val['$operator'] == '$lte')
+                    {
+                        $operator = '<=';
+                    }
+                    //@todo finish adding all possible operators
+                }
+                else
+                {
+                    $operator = '=';
+                }
+                $where .= ' '.$operator.' ?';
+                $params['where_values'][] = $params['value'];
+            }
+            $params['where_set'][] = $where;
+            
+        }
+        else
+        {
+            $params['where_set'][] = ' '.$func.'('.$params['from'].'.'.$params['column'].") = ?";
+            $params['where_values'][] = $params['value']; 
+        }
+    }
 
     /**
       * @param Supermodlr $model required 
@@ -793,18 +851,22 @@ fbl($where_values);
     public function relationship_todb($params = array()) 
     {
         $field_key = $params['field']->name;
-        if (isset($params['value']['model']) && isset($params['value']['_id']))
+        if ($params['field']->storage == 'single')
         {
-            $params['set'][$field_key.'__model'] = $params['value']['model'];
-            $params['set'][$field_key.'__id'] = $params['value']['_id'];
+            if (isset($params['value']['model']) && isset($params['value']['_id']))
+            {
+                $params['set'][$field_key.'__model'] = $params['value']['model'];
+                $params['set'][$field_key.'__id'] = $params['value']['_id'];
+            }
+            else
+            {
+                $params['set'][$field_key.'__model'] = NULL;
+                $params['set'][$field_key.'__id'] = NULL;
+            }
+            //unset the direct value
+            unset($params['set'][$field_key]);               
         }
-        else
-        {
-            $params['set'][$field_key.'__model'] = NULL;
-            $params['set'][$field_key.'__id'] = NULL;
-        }
-        //unset the direct value
-        unset($params['set'][$field_key]);      
+   
     }
 
     /**
@@ -812,17 +874,56 @@ fbl($where_values);
       * @param Object Model $model required format: array($col => $val)       
       * @param Object Field $field required format: array($col => $val)
       * @param mixed $value required reference  
-      * @param mixed $set required reference
+      * @param mixed $result required reference
       * @returns 
       */
     public function relationship_fromdb($params = array()) 
     {
         $field_key = $params['field']->name;
-        if (isset($params['result'][$field_key.'__model']) && isset($params['result'][$field_key.'__model']))
+        if ($params['field']->storage == 'single')
+        {        
+            if (isset($params['result'][$field_key.'__model']) && isset($params['result'][$field_key.'__model']))
+            {
+                $params['result'][$field_key] = array('model'=> $params['result'][$field_key.'__model'], '_id'=> $params['result'][$field_key.'__id']);
+                unset($params['result'][$field_key.'__model']);
+                unset($params['result'][$field_key.'__id']);
+            }
+        }
+    
+    }
+
+    /**
+      * Converts storage == 'array' to expected table column format
+      * @param Object Model $model required format: array($col => $val)       
+      * @param Object Field $field required format: array($col => $val)
+      * @param mixed $value required reference  
+      * @param mixed $result required reference
+      * @returns 
+      */
+    public function array_fromdb($params = array()) 
+    {
+        $field_key = $params['field']->name;
+        if (isset($params['result'][$field_key]))
         {
-            $params['result'][$field_key] = array('model'=> $params['result'][$field_key.'__model'], '_id'=> $params['result'][$field_key.'__id']);
-            unset($params['result'][$field_key.'__model']);
-            unset($params['result'][$field_key.'__id']);
+            $params['result'][$field_key] = json_decode($params['result'][$field_key],TRUE);
+        }
+    
+    }
+
+    /**
+      * Converts storage == 'array' to expected table column format
+      * @param Object Model $model required format: array($col => $val)       
+      * @param Object Field $field required format: array($col => $val)
+      * @param mixed $value required reference  
+      * @param mixed $set required reference
+      * @returns 
+      */
+    public function array_todb($params = array()) 
+    {
+        $field_key = $params['field']->name;
+        if (isset($params['result'][$field_key]))
+        {
+            $params['set'][$field_key] = json_encode($params['set'][$field_key],TRUE);
         }
     
     }

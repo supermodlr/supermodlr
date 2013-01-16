@@ -77,22 +77,26 @@ class Supermodlr_Field {
       'unique'    => 'An entry with this value already exists.',
    );
    
-   public function __construct()
+   public function __construct($model = NULL)
    {
-      //detect and set model if it is not set
-      if ($this->model === NULL || $this->model_name === NULL)
-      {
-         //detect model from class name
-         $model = $this->get_model();
-
-         //if a model was found in the filename
-         if ($model !== NULL)
-         {
-            //set the model property
+        if ($model !== NULL)
+        {
             $this->model = $model;
-            $this->model_name = Model_Model::get_name_from_class($model['_id']);
-         }
-      }
+        }
+        //detect and set model if it is not set
+        if ($this->model === NULL || $this->model_name === NULL)
+        {
+            //detect model from class name
+            $model = $this->get_model();
+
+            //if a model was found in the filename
+            if ($model !== NULL)
+            {
+                //set the model property
+                $this->model = $model;
+                $this->model_name = Model_Model::get_name_from_class($model['_id']);
+            }
+        }
 
       //$this->value = self::NOT_SET;
       //$this->raw_value = self::NOT_SET;
@@ -321,7 +325,7 @@ class Supermodlr_Field {
     * @returns string 
     */   
     public function message($key, $value = NULL) 
-   { 
+    { 
       if (isset($this->messages[$key])) 
       {
          return __($this->messages[$key],array(':value',$value));

@@ -11,7 +11,7 @@ class Field_Supermodlrcore_Useraccesstags extends Field
     public $searchable = TRUE;
     public $filterable = FALSE;
     public $nullvalue = FALSE;
-    public $hidden = FALSE;
+    public $hidden = TRUE;
     public $private = TRUE;
     public $readonly = FALSE;
     public $core = TRUE;

@@ -517,7 +517,7 @@ abstract class Supermodlr_Core {
             $field_class_name = ucfirst(strtolower($field_name));
             $model_class_name = ucfirst(strtolower($model_name));
             $fieldclass = 'Field_'.$model_class_name.'_'.$field_class_name;
-            $fields[$field_name] = new $fieldclass();
+            $fields[$field_name] = new $fieldclass(array('model'=> 'model', '_id'=> $called_class));
          }
 
          //look at all parents for fields
@@ -535,7 +535,7 @@ abstract class Supermodlr_Core {
                 //if this field wasn't already overridden
                 if (!isset($fields[$field_name]))
                 {
-                    $fields[$field_name] = new $fieldclass();
+                    $fields[$field_name] = new $fieldclass(array('model'=> 'model', '_id'=> $called_class));
                 }
              }            
          }
@@ -1138,7 +1138,7 @@ abstract class Supermodlr_Core {
     /**
      * @returns array all public columns and fields (skips hidden/cfg properties)
      */
-   public function to_array() 
+   public function to_array($check_access = TRUE) 
    {
 
       //set all defaults on object
@@ -1147,6 +1147,8 @@ abstract class Supermodlr_Core {
       //filter all values
       $this->filter();
       
+      $fields = $this->get_fields();
+
       $cols = array();
       //loop through all set values
       foreach ($this as $col => $val) 
@@ -1154,17 +1156,29 @@ abstract class Supermodlr_Core {
          //skip hidden properties (ones that start with '_')
          if (substr($col,0,2) == '__' && $col != $this->cfg('trait_column')) continue;
          
+         //only export valid fields
+         if (!isset($fields[$col]))
+         {
+            continue;
+         }
+
+         //if we want to check access before returning the data
+         if ($check_access)
+         {
+             //only users with admin access can see private fields. 
+             if ($fields[$col]->private === TRUE && !in_array('admin',$this->get_user_access_tags()))
+             {
+                continue;
+             }               
+         }
+      
+
          //store values in array
          if ($val InstanceOf DateTime)
          {
             $val = $val->getTimestamp();
          }
          $cols[$col] = $val;
-         if ($col == 'updated')
-         {
-          fbl(var_export($this->$col,TRUE));
-          fbl($val,'updated val');
-         }
       }
       //return array of values
       return $cols;
