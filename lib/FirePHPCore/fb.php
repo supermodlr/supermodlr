@@ -63,14 +63,6 @@ function fb()
     $args = func_get_args();
     return call_user_func_array(array($instance,'fb'),$args);
 }
-function fbl()
-{
-    $instance = FirePHP::getInstance(true);
-  
-    $args = func_get_args();
-    return call_user_func_array(array($instance,'fb'),$args);
-}
-
 
 class FB
 {
