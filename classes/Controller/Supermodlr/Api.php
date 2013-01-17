@@ -461,7 +461,7 @@ class Controller_Supermodlr_Api extends Controller {
             $_id = $this->request->param('id');
 
             //@todo come up with better way to validate this id?
-            if (!valid::alpha_dash($_id))
+            if (!Valid::alpha_dash($_id))
             {
                 $this->response->status(400);
                 $this->response->body(json_encode(array('status'=> FALSE,'message'=> 'Invalid id')));
@@ -506,7 +506,7 @@ class Controller_Supermodlr_Api extends Controller {
             $_id = $this->request->param('id');
 
             //@todo come up with better way to validate this id?
-            if (!valid::alpha_dash($_id))
+            if (!Valid::alpha_dash($_id))
             {
                 $this->response->status(400);
                 $this->response->body(json_encode(array('status'=> FALSE,'message'=> 'Invalid id')));

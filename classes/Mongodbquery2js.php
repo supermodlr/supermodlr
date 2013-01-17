@@ -1,6 +1,6 @@
 <?php
 
-class mongodbQuery2js {
+class Mongodbquery2js {
 
     public $commands = array('$or','$nor','$and');
     public $operators = array('$in','$nin','$gt','$gte','$lt','$lte','$mod','$all','$exists','$ne','$size','$type','$regex','$elemMatch','$not');

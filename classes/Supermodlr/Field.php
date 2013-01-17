@@ -498,7 +498,7 @@ class Supermodlr_Field {
             continue;
          }
          //convert basic mongo query to raw js
-         $Query_parser = new MongodbQuery2js($logic);
+         $Query_parser = new Mongodbquery2js($logic);
          $Query_parser->set_var_prefix($data_prefix);
          $js_bool = $Query_parser->parse();   
          if ($cmd == '$showif')
