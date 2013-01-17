@@ -226,18 +226,18 @@ EOF;
         //replace all underbars with / to build file path
         $model_file_name = str_replace('_',DIRECTORY_SEPARATOR,$model_file_name);
         return $Supermodlr_path.$model_file_name.'.php';
-    }   
+    }
     
     public function save_class_file($full_file_path, $file_contents)
     {
         $file_info = pathinfo($full_file_path);
         if (!is_dir($file_info['dirname']))
         {
-            $dir_created = mkdir($file_info['dirname'],'0777',TRUE);//@todo fix server issues at server level
+            $dir_created = mkdir($file_info['dirname'],(int) 0777,TRUE);//@todo fix server issues at server level
         }   
         $saved = file_put_contents($full_file_path,$file_contents);
         return $saved;
-    }   
+    }
 
 
     //generate and return the class name to be used for this model

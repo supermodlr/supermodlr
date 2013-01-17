@@ -459,7 +459,7 @@ EOF;
         if (!is_dir($file_info['dirname']))
         {
 
-            $dir_created = mkdir($file_info['dirname'],'0777',TRUE);//@todo fix permissions issues on server level
+            $dir_created = mkdir($file_info['dirname'],(int) 0777,TRUE);//@todo fix permissions issues on server level
 
         }
 
