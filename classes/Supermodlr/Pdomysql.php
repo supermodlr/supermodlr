@@ -32,7 +32,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
             
             try {
             
-                $this->connection = new PDO('mysql:host='.$host.':'.$port.';dbname='.$dbname, $user, $pass);
+                $this->connection = new PDO('mysql:host='.$host.';port='.$port.';dbname='.$dbname, $user, $pass);
                 $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); 
             } 
             catch (PDOException $Error) 
