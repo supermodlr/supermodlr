@@ -294,7 +294,7 @@ class Supermodlr_Pdomysql extends Supermodlr_Db {
                 $order_str_arry = array();
                 foreach ($params['order'] as $key => $order)
                 {
-                    $order_str_arry[] = $key.' '.(($order) ? 'ASC' : 'DESC');
+                    $order_str_arry[] = $key.' '.(($order >= 1) ? 'ASC' : 'DESC');
                 }
                 $order_sql = ' order by '.implode(', ',$order_str_arry);
             }
