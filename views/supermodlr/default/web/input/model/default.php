@@ -5,6 +5,7 @@
 			<?php 
 			foreach ($fields as $field)
 			{
+				if ($field->hidden) continue;
 				$view->set('field',$field);
 
 				echo $view->get('wrapper',$field);

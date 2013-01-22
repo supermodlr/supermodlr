@@ -16,6 +16,7 @@ class Supermodlr_Model_Model extends Supermodlr {
                     'fields',//this is an array of all field objects included in the saved model.  the field object would only contain key/value pairs for field properties that are changed
                     'extends',//what model file does this model extend.  should have a special auto-completer that searchs on all available models (except self). defaults to 'Supermodlr'
                          //'drivers OR cfg??',
+                    'methods',
                 ),
                 'core_models' => array('model','field'), 
         );
@@ -158,6 +159,7 @@ class Supermodlr_Model_Model extends Supermodlr {
     // this model model is generating a model class file.
     public function generate_class_file_contents()
     {
+        
         if (isset($this->extends) && isset($this->extends['_id'])) 
         {
             $extends = $this->extends['_id'];
@@ -181,6 +183,7 @@ class {$model_class} extends {$extends} {
 
 EOF;
 
+        //store all fields in model scfg
         if (isset($this->fields) && is_array($this->fields)) 
         {
             foreach ($this->fields as $field)
@@ -192,6 +195,26 @@ EOF;
 
         $file_contents .= "                )".PHP_EOL;
         $file_contents .= " );".PHP_EOL;
+
+        //set all default values for each field on the model
+        if (isset($this->fields) && is_array($this->fields)) 
+        {
+            foreach ($this->fields as $field)
+            {
+                //if the default value should not be set to null and defaultvalue is null
+                if ($field_obj->defaultvalue === NULL && $field_obj->nullvalue === FALSE)
+                {
+                    //skip defining this field so it has no default value
+                    continue;
+                }
+                else
+                {
+                    $file_contents .= "   public ".$field_obj->name."= ".Field::generate_php_value($field_obj->defaultvalue).";".PHP_EOL;
+                }
+                
+            }
+
+        }
 
         //loop through all stored methods
         if (isset($this->methods) && is_array($this->methods))

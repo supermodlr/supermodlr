@@ -1399,7 +1399,7 @@ abstract class Supermodlr_Core {
         $this->filter();
 
         //validate this object before it is saved
-        $valid = $this->validate(); fbl($valid,'save valid');
+        $valid = $this->validate();
         if ($valid->ok() === FALSE) {
             return $valid;
         }
