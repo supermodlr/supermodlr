@@ -270,7 +270,7 @@ class Controller extends Kohana_Controller {
 
             foreach ($items as $item) 
             {
-                $rel_class = 'model_'.$item['model'];
+                $rel_class = 'Model_'.Supermodlr::get_name_case($item['model']);
                 $rel = new $rel_class($item['_id']);
                 $label_field_key = 'name';
                 foreach ($Field->source as $source) {
