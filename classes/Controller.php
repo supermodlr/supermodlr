@@ -127,7 +127,7 @@ class Controller extends Kohana_Controller {
                 $Field->label = $Field->label[$ilang];
             }
             //else uccase the name
-            else 
+            else if (!isset($Field->label))
             {
                 $Field->label = ucfirst($Field->name);
             }
