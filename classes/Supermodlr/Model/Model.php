@@ -201,6 +201,7 @@ EOF;
         {
             foreach ($this->fields as $field)
             {
+                $field_obj = new $field['_id'];
                 //if the default value should not be set to null and defaultvalue is null
                 if ($field_obj->defaultvalue === NULL && $field_obj->nullvalue === FALSE)
                 {
@@ -209,7 +210,7 @@ EOF;
                 }
                 else
                 {
-                    $file_contents .= "   public ".$field_obj->name."= ".Field::generate_php_value($field_obj->defaultvalue).";".PHP_EOL;
+                    $file_contents .= "   public \$".$field_obj->name." = ".Field::generate_php_value($field_obj->defaultvalue).";".PHP_EOL;
                 }
                 
             }
