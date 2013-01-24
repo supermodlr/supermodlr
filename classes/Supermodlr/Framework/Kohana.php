@@ -28,5 +28,9 @@ class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
     {
         return APPPATH.'classes'.DIRECTORY_SEPARATOR;
     }   
-
+    
+    public function get_user()
+    {
+        return FALSE;
+    }
 }

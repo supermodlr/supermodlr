@@ -6,8 +6,15 @@
  * @package supermodlr
  */
 
-
-
+/**
+* Supermodlr_Core
+*
+* @uses     
+*
+* @category Category
+* @package  Package
+* @author   Justin Shanks <jshanman@gmail.com>
+*/    
 abstract class Supermodlr_Core {
 
     // Static config for vars that apply to all data types and can be loaded once
@@ -213,9 +220,9 @@ abstract class Supermodlr_Core {
                 //@todo add in config option for additional drivers (that are added after any drivers set by the parent) instead of overridding the parent driver_config OR make a way to make conf options on multiple levels merge (if they are an array)
           }
           // default access tags
-          if (!isset(static::$__scfg['access']))
+          if (!isset(static::$__scfg['model_access_rules']))
           {
-                static::scfg('access',array(
+                static::scfg('model_access_rules',array(
                      'create' => array('auth'),
                      'read'    => array('auth'),
                      'update' => array('owner'),
@@ -372,7 +379,8 @@ abstract class Supermodlr_Core {
             $framework = 'Default';
         }
         //create class name
-        $class = 'Supermodlr_Framework_'.ucfirst(strtolower($framework));
+        $class = 'Framework_'.ucfirst(strtolower($framework));
+        
         //return new instance
         $Framework = new $class();
         return $Framework;
@@ -424,17 +432,14 @@ abstract class Supermodlr_Core {
         $Driver = $this->get_primary_db();
         $db_name = $this->cfg('db_name');
         $pk_name = $this->cfg('pk_name');
-        $row = $Driver->read(array(
-            'from'=> $db_name,
+        $row = static::query(array(
             'where'=> array($pk_name => $id),
             'limit' => 1,
-            'model'=> $this,
-            'fields'=> $this->get_fields(),
         ));
         if ($row)
         {
             //return first result
-            return reset($row);
+            return $row;
         }
         else
         {
@@ -909,20 +914,18 @@ abstract class Supermodlr_Core {
                 }
                 //only select the pk from the db
                 $query_fields = array($pk);
-                //@todo change this to use a db $ne operator for the pk once that feature is added to the db class and drivers
+                //@todo change this to use a db $ne operator for the current pk once that feature is added to the db class and drivers
                 //query the primary db
-                $result_set = $Driver->read(array(
-                    'from'=> $this->get_name(),
+                $result = static::query(array(
                     'where'=> $where,
                     'fields'=> $query_fields,
-                    'limit'=> 1
+                    'limit'=> 1,
                 ));
                 //if we found a record
-                if ($result_set)
+                if ($result)
                 {
-                    $row = reset($result_set);
                     //if there is no pk or there is a pk but it does not match the returned row
-                    if (!isset($data[$pk]) || (isset($data[$pk]) && (string) $data[$pk] !== (string) $row[$pk]))
+                    if (!isset($result[$pk]) || (isset($result[$pk]) && (string) $result[$pk] !== (string) $result[$pk]))
                     {
                         $messages[$field_key] = $Field->message('unique');
                         $validate_result = FALSE;
@@ -1299,11 +1302,9 @@ abstract class Supermodlr_Core {
           if (isset($this->$pk) && ($this->loaded() === NULL || $this->loaded() === FALSE))
         {
             //search primary db for this pk
-            $exists = $drivers[0]->read(array(
-                'from'=> $this->cfg('db_name'),
+            $exists = static::query(array(
                 'where'=> array($pk => $this->$pk),
-                'model'=> $this,
-                'fields'=> $this->get_fields(),
+                'limit'=> 1,
             ));
             //if this entry is already in the db
             if ($exists)
@@ -1883,29 +1884,100 @@ abstract class Supermodlr_Core {
     }
 
     /**
-     * query a model.  returns a set of objects
+     * decides if an action or set of actions is allowed on this model given the bound user (or anon) context
+     * 
+     * @param mixed $actions a string or an array of strings to check for permissions against this model and the bound user.
+     *
+     * @access public
+     * @static
+     *
+     * @return bool True if all the sent actions are allowed, False if non of the sent actions are allowed.
+     */
+    public static function allowed($actions)
+    {
+        // Get all user access tags for the current bound user (if any)
+        $tags = static::get_user_access_tags();
+
+        // If this is the admin
+        if (in_array('admin', $tags))
+        {
+            // Admins can do anything
+            return TRUE;
+        }
+
+        //@todo check for owner
+
+
+        // If a single action was sent
+        if (!is_array($actions))
+        {
+            // Turn it into an array
+            $actions = array($actions);
+        }
+
+        // Get this models access rules
+        $model_access_rules = static::get_model_access_rules();
+
+        // Loop through all sent actions
+        foreach ($actions as $action)
+        {
+            $allowed = FALSE;
+
+            // Loop through all user roles
+            foreach ($tags as $tag)
+            {
+                // If this user role is valid for this action
+                if (in_array($tag, $model_access_rules[$action]))
+                {
+                    // Set allowed to true for this action
+                    $allowed = TRUE;
+
+                    // Continue to check the next action
+                    break ;
+                }
+            }
+
+            // If this action was not allowed, break out of all and return FALSE
+            if ( ! $allowed)
+            {
+                break;
+            }
+                
+        }
+        return $allowed;
+    }
+
+    /**
+     * query a model.  returns a set of objects or a single object if limit=1 is sent 
      * send array('where'=> array('column.name'=> 'value')) as $params
      * you can also send any other params that the model::$db driver supports
-     * if array('count'=> TRUE) is sent in params, a number is returned instead of a result set of objects
+     * if array('count'=> TRUE) is sent in params, an int is returned instead of a result set of objects
      */
-    public static function query($params) {
+    public static function query($params) 
+    {
+        //ensure bound user has read permission
+        if ( ! static::allowed('read'))
+        {
+            //@todo finish adding access controls for all actions and add a user
+            //throw new Supermodlr_Exception('Not Authorized', 401);
+        }
         $class = get_called_class();
-          $o = new $class();
-          $drivers = $o->cfg('drivers');
-          $pk = $o->cfg('pk_name');
-         //default to primary db
-         if (!isset($params['driver'])) $params['driver'] = 0;
+        $o = new $class();
+        $drivers = $o->cfg('drivers');
+        $pk = $o->cfg('pk_name');
+        //default to primary db
+        if (!isset($params['driver'])) $params['driver'] = 0;
         if (!isset($params['count'])) $params['count'] = FALSE;
         if (!isset($params['limit'])) $params['limit'] = NULL;
-          if (!isset($params['from'])) $params['from'] = $o->cfg('db_name');
+        if (!isset($params['from'])) $params['from'] = $o->cfg('db_name');
         if (!isset($params['array'])) $params['array'] = FALSE;
         if (!isset($params['fields'])) $params['fields'] = $class::get_fields();
         if (!isset($params['model'])) $params['model'] = $o;
-          //if (!isset($params['cache'])) $params['cache'] = $o->cfg('read_cache');
+        //if (!isset($params['cache'])) $params['cache'] = $o->cfg('read_cache');
         //get driver @todo add support to select driver by driver.id stored in driver_config
         $Driver = $drivers[$params['driver']];
-          $results = $Driver->read($params);
-          $result_set = array();
+        $results = $Driver->read($params);
+        $result_set = array();
         if ($results)
         {
             if ($params['count'] !== TRUE)
@@ -1922,7 +1994,7 @@ abstract class Supermodlr_Core {
                         $result_set[] = new $class($row[$pk], $row);
                     }
                 }
-          if ($params['limit'] == 1)
+                if ($params['limit'] == 1)
                 {
                     $result_set = reset($result_set);
                 }
