@@ -235,6 +235,8 @@ abstract class Supermodlr_Core {
           {
                 static::scfg('user_access_tags',array('anon'));
           }
+
+          // Loop through all fields on this model and look for a field with a property of 'owner=true'. 
           if (!isset(static::$__scfg['owner_field']))
           {
                 // get all fields
@@ -1341,7 +1343,7 @@ abstract class Supermodlr_Core {
         $action = ($is_insert) ? 'create' : 'update';
 
         //ensure bound user has read permission
-        if ( ! isset(! $this->allowed($action))
+        if ( ! $this->allowed($action))
         {
             //@todo finish adding access controls for all actions and add a user
             throw new Supermodlr_Exception('Not Authorized', 401);
@@ -1930,8 +1932,19 @@ abstract class Supermodlr_Core {
             return TRUE;
         }
 
-        //@todo check for owner
+        // Get owner field key (if any)
+        $owner_field_key = static::scfg('owner_field');
 
+        // If there is an owner field and $this is set
+        if ($owner_field_key && $this)
+        {
+            //@todo check for owner
+            $User = static::get_bound_user();
+
+
+            //if ($User && $User->_id == $)
+
+        }
 
         // If a single action was sent
         if (!is_array($actions))
@@ -1984,7 +1997,7 @@ abstract class Supermodlr_Core {
         if ( !isset($params['allowed']) || $params['allowed'] !== TRUE || ! static::allowed('read'))
         {
             //@todo finish adding access controls for all actions and add a user
-            throw new Supermodlr_Exception('Not Authorized', 401);
+            //throw new Supermodlr_Exception('Not Authorized', 401);
         }
         $class = get_called_class();
         $o = new $class();
