@@ -433,8 +433,9 @@ abstract class Supermodlr_Core {
         $db_name = $this->cfg('db_name');
         $pk_name = $this->cfg('pk_name');
         $row = static::query(array(
-            'where'=> array($pk_name => $id),
-            'limit' => 1,
+            'where'   => array($pk_name => $id),
+            'limit'   => 1,
+            'allowed' => TRUE,
         ));
         if ($row)
         {
@@ -920,6 +921,7 @@ abstract class Supermodlr_Core {
                     'where'=> $where,
                     'fields'=> $query_fields,
                     'limit'=> 1,
+                    'allowed' => TRUE,
                 ));
                 //if we found a record
                 if ($result)
@@ -1284,27 +1286,32 @@ abstract class Supermodlr_Core {
      */
     public function save()
     {
-        //@todo check model permissions for create/update permission
-          //set defaults to values that are not yet set
-          $this->defaults();
-          //run all filters
-          $this->filter();
-          //validate this object before it is saved
-          $valid = $this->validate();
-          if ($valid->ok() === FALSE) {
-                return $valid;
-          }
+        //set defaults to values that are not yet set
+        $this->defaults();
+        
+        //run all filters
+        $this->filter();
+
+        //validate this object before it is saved
+        $valid = $this->validate();
+        if ($valid->ok() === FALSE) {
+            return $valid;
+        }
+        
         //get pk field key
         $pk = $this->cfg('pk_name');
+
         //get db drivers
         $drivers = $this->cfg('drivers');
-          //detect if this is an insert or an update.  if a pk is set but we didn't load the object from the db.
-          if (isset($this->$pk) && ($this->loaded() === NULL || $this->loaded() === FALSE))
+        
+        //detect if this is an insert or an update.  if a pk is set but we didn't load the object from the db.
+        if (isset($this->$pk) && ($this->loaded() === NULL || $this->loaded() === FALSE))
         {
             //search primary db for this pk
             $exists = static::query(array(
                 'where'=> array($pk => $this->$pk),
                 'limit'=> 1,
+                'allowed' => TRUE,
             ));
             //if this entry is already in the db
             if ($exists)
@@ -1318,17 +1325,28 @@ abstract class Supermodlr_Core {
                 //this is an insert
                 $is_insert = TRUE;
             }
-          }
+        }
         //if no pk is set, assume insert
         else if (!isset($this->$pk))
         {
             $is_insert = TRUE;
         }
+        
         //if a pk is set
         else
         {
                 $is_insert = FALSE;
-          }
+        }
+
+        $action = ($is_insert) ? 'create' : 'update';
+
+        //ensure bound user has read permission
+        if ( ! isset(! $this->allowed($action))
+        {
+            //@todo finish adding access controls for all actions and add a user
+            throw new Supermodlr_Exception('Not Authorized', 401);
+        }        
+
         $messages = array();
         $saves_result = TRUE;
         $set = $this->to_array();
@@ -1895,6 +1913,13 @@ abstract class Supermodlr_Core {
      */
     public static function allowed($actions)
     {
+        // If cfg is set to always allow
+        if (static::scfg('always_allowed') === TRUE)
+        {
+            // Bypass security.  This should be used very carefully since it bypasses all model and field security
+            return TRUE;
+        }
+
         // Get all user access tags for the current bound user (if any)
         $tags = static::get_user_access_tags();
 
@@ -1956,10 +1981,10 @@ abstract class Supermodlr_Core {
     public static function query($params) 
     {
         //ensure bound user has read permission
-        if ( ! static::allowed('read'))
+        if ( !isset($params['allowed']) || $params['allowed'] !== TRUE || ! static::allowed('read'))
         {
             //@todo finish adding access controls for all actions and add a user
-            //throw new Supermodlr_Exception('Not Authorized', 401);
+            throw new Supermodlr_Exception('Not Authorized', 401);
         }
         $class = get_called_class();
         $o = new $class();
