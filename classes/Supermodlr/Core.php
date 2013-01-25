@@ -1342,7 +1342,7 @@ abstract class Supermodlr_Core {
 
         $action = ($is_insert) ? 'create' : 'update';
 
-        //ensure bound user has read permission
+        //ensure bound user has permission
         if ( ! $this->allowed($action))
         {
             //@todo finish adding access controls for all actions and add a user
@@ -1771,6 +1771,13 @@ abstract class Supermodlr_Core {
     //delete this object for all db's
     public function delete($params = array())
     {
+
+        //ensure bound user has permission
+        if ( ! $this->allowed('delete'))
+        {
+            throw new Supermodlr_Exception('Not Authorized', 401);
+        }  
+
         //get db drivers
         $drivers = $this->cfg('drivers');
         //get pk field key from obj cfg
@@ -1924,7 +1931,7 @@ abstract class Supermodlr_Core {
 
         // Get all user access tags for the current bound user (if any)
         $tags = static::get_user_access_tags();
-
+fbl($tags,'allowed tags');
         // If this is the admin
         if (in_array('admin', $tags))
         {
@@ -1935,15 +1942,24 @@ abstract class Supermodlr_Core {
         // Get owner field key (if any)
         $owner_field_key = static::scfg('owner_field');
 
-        // If there is an owner field and $this is set
-        if ($owner_field_key && $this)
+        // If there is an owner field and $this is set to an instance of supermodlr that is the same as the called class and a the owner_field_key has a value on this object
+        if ($owner_field_key && isset($this) && $this instanceof Supermodlr && $this->get_name() == static::get_name() && isset($this->$owner_field_key) && $this->$owner_field_key !== NULL)
         {
-            //@todo check for owner
-            $User = static::get_bound_user();
+            // Get bound user
+            $User = $this->get_bound_user();
 
+            // Get the primary key field name for the user object
+            $pk = $User->cfg('pk_name');
 
-            //if ($User && $User->_id == $)
+            // Expect the related user to be related via a relationship field.  @todo decide if we should allow other field types to store an "owner" field.
+            $owner_value = $this->$owner_field_key;
 
+            // If a user was found and the id's exactly match
+            if ($User && ((string) $User->$pk) === ((string) $owner_value['_id']))
+            {
+                // Add in the owner tag
+                $tags[] = 'owner';
+            }
         }
 
         // If a single action was sent
@@ -2257,7 +2273,7 @@ abstract class Supermodlr_Core {
       */
     public static function get_user_access_tags()
     {
-        $User = static::scfg('bound_user');
+        $User = static::get_bound_user();
         if ($User !== NULL && $User InstanceOf Model_Supermodlruser && isset($User->useraccesstags))
         {
                 return $User->useraccesstags;
