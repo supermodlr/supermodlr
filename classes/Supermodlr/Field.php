@@ -19,10 +19,10 @@ class Supermodlr_Field {
 
    public $name = NULL; //app name of field (alpha-numeric)
    public $description = NULL;
-   public $datatype = NULL; //string,int,float,timestamp,datetime,boolean,relationship,binary,resource,object.   dataype of object means that this field is related to a model and expects to embed the fields (based on storage value)
+   public $datatype = NULL; //string,int,float,timestamp,datetime,boolean,relationship,binary,resource,object.   datatype of object means that this field is related to a model and expects to embed the fields (based on storage value)
    public $multilingual = NULL; //TRUE|FALSE
    public $charset = NULL; //UTF-8 (if datatype = string)
-   public $storage = NULL;//single|array|keyed_array|FALSE (set to false if this field is only used for display/validation and should be ignored by the database).  storage of object means that the values are stored in an assocative array
+   public $storage = NULL;//single|array|keyed_array storage of object means that the values are stored in an associative array
    public $required = NULL;//TRUE|FALSE|array indicates if this field must be on an object before it can be saved. array indicates a conditional that must be met if this is true or not.  array format: array('{$field_key'=> '{$value}') || array('$callback'=> array('method1','method2')) - method1/method2 must be methods on the model class and are sent 1 param containing the value or field::NOT_SET 
    public $unique = NULL;//TRUE|FALSE|array indicates if the value of this field can not be the same as any other value of the same field in the same data set.  if array, it will contain an array of all other field names that make the entry unique
    public $searchable = NULL;//TRUE|FALSE indicates if this field value should be available in text searches
@@ -54,6 +54,8 @@ class Supermodlr_Field {
    public $conditions = NULL; //controls conditional display for input forms and display. format: array('input'=> array('field1'=> 'value'), 'display'=> array()).  input/display array format is same as mongodb query syntax (supports: $and, $or, $ne, $not, $gt, $lt, $gte, $lte, $regex)
    public $readonly = NULL; //if true, after set for the first time, it can not be changed unless by admin via admin interface
    public $source = NULL; //array of models to look in for a valid entry.  only valid if dataype == 'relationship' format: array('models'=>array('model1','model2'), 'where'=> array(/* additional where clauses used when looking for valid values*/),'name_column' = 'name')
+   public $stored = TRUE; // If FALSE. this field can be used and displayed like all other fields, but is never stored in any database
+   public $owner = NULL; // If True, this indicates that this field relates the entire object to a user owner.  Either a PK field or a relationship
    //@todo encryption?
    
    public static $default_messages = array( //array of messages for various errors if we want to override the default error messages  @todo create messages in a language file, allow placement of :value in message.

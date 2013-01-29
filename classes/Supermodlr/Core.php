@@ -921,7 +921,7 @@ abstract class Supermodlr_Core {
                 //query the primary db
                 $result = static::query(array(
                     'where'=> $where,
-                    'fields'=> $query_fields,
+                    'columns'=> $query_fields,
                     'limit'=> 1,
                     'allowed' => TRUE,
                 ));
@@ -929,7 +929,7 @@ abstract class Supermodlr_Core {
                 if ($result)
                 {
                     //if there is no pk or there is a pk but it does not match the returned row
-                    if (!isset($result[$pk]) || (isset($result[$pk]) && (string) $result[$pk] !== (string) $result[$pk]))
+                    if (!isset($result->$pk) || (isset($result->$pk) && (string) $result->$pk !== (string) $data[$pk]))
                     {
                         $messages[$field_key] = $Field->message('unique');
                         $validate_result = FALSE;
@@ -1087,7 +1087,7 @@ abstract class Supermodlr_Core {
                      continue;
                  }
             }
-            //ugly hack in place until we code for a "owner private" field access type that is updatable by the owner, but is never shown or returned
+            //ugly hack in place until we code for a "owner private" field access type that is update-able by the owner, but is never shown or returned
             if ($display === TRUE && $col == 'password')
             {
              continue;
@@ -1099,6 +1099,65 @@ abstract class Supermodlr_Core {
             }
             $cols[$col] = $val;
         }
+        //return array of values
+        return $cols;
+    }
+
+    public function to_display($check_access = TRUE)
+    {
+
+    }
+
+    public function to_storage($check_access = TRUE)
+    {
+
+        //set all defaults on object
+        $this->defaults();
+        //filter all values
+        $this->filter();
+
+        // Get field objects
+        $fields = $this->get_fields();
+
+        // init return array
+        $cols = array();
+
+        //loop through all set values
+        foreach ($this as $col => $val)
+        {
+            //skip hidden properties (ones that start with '_')
+            if (substr($col,0,2) == '__' && $col != $this->cfg('trait_column')) continue;
+
+            //only export valid fields
+            if (!isset($fields[$col]))
+            {
+                continue;
+            }
+
+            //if we want to check access before returning the data
+            if ($check_access)
+            {
+                 //only users with admin access can see private fields.
+                 if ($fields[$col]->private === TRUE && !in_array('admin',$this->get_user_access_tags()))
+                 {
+                     continue;
+                 }
+            }
+
+            // Skip any non-stored fields
+            if ($fields[$col]->stored === FALSE)
+            {
+                continue;
+            }
+
+            //store values in array
+            if ($val InstanceOf DateTime)
+            {
+                $val = $val->getTimestamp();
+            }
+            $cols[$col] = $val;
+        }
+
         //return array of values
         return $cols;
     }
@@ -1288,18 +1347,12 @@ abstract class Supermodlr_Core {
      */
     public function save()
     {
-        //set defaults to values that are not yet set
-        $this->defaults();
-        
-        //run all filters
-        $this->filter();
+        // prepare data for storage
+        $set = $this->to_storage();
 
-        //validate this object before it is saved
-        $valid = $this->validate();
-        if ($valid->ok() === FALSE) {
-            return $valid;
-        }
-        
+        $messages = array();
+        $saves_result = TRUE;
+
         //get pk field key
         $pk = $this->cfg('pk_name');
 
@@ -1343,17 +1396,22 @@ abstract class Supermodlr_Core {
         $action = ($is_insert) ? 'create' : 'update';
 
         //ensure bound user has permission
-        if ( ! $this->allowed($action))
+        if ( ! $this->allowed($action,$this))
         {
             //@todo finish adding access controls for all actions and add a user
             throw new Supermodlr_Exception('Not Authorized', 401);
         }        
 
-        $messages = array();
-        $saves_result = TRUE;
-        $set = $this->to_array();
         $params = array('this'=> $this, 'drivers'=> &$drivers, 'is_insert'=> &$is_insert, 'set'=> &$set, 'result', &$saves_result, 'messages'=> &$messages);
+        
         $this->model_event('save',$params);
+
+        //validate this object before it is saved
+        $valid = $this->validate($set);
+        if ($valid->ok() === FALSE) {
+            return $valid;
+        }
+
         //loop through all drivers (primary first)
         foreach ($drivers as $Driver) {
             //if this db supports transactions
@@ -1773,7 +1831,7 @@ abstract class Supermodlr_Core {
     {
 
         //ensure bound user has permission
-        if ( ! $this->allowed('delete'))
+        if ( ! $this->allowed('delete',$this))
         {
             throw new Supermodlr_Exception('Not Authorized', 401);
         }  
@@ -1920,7 +1978,7 @@ abstract class Supermodlr_Core {
      *
      * @return bool True if all the sent actions are allowed, False if non of the sent actions are allowed.
      */
-    public static function allowed($actions)
+    public static function allowed($actions,$context_object = NULL)
     {
         // If cfg is set to always allow
         if (static::scfg('always_allowed') === TRUE)
@@ -1931,7 +1989,7 @@ abstract class Supermodlr_Core {
 
         // Get all user access tags for the current bound user (if any)
         $tags = static::get_user_access_tags();
-fbl($tags,'allowed tags');
+
         // If this is the admin
         if (in_array('admin', $tags))
         {
@@ -1942,20 +2000,31 @@ fbl($tags,'allowed tags');
         // Get owner field key (if any)
         $owner_field_key = static::scfg('owner_field');
 
-        // If there is an owner field and $this is set to an instance of supermodlr that is the same as the called class and a the owner_field_key has a value on this object
-        if ($owner_field_key && isset($this) && $this instanceof Supermodlr && $this->get_name() == static::get_name() && isset($this->$owner_field_key) && $this->$owner_field_key !== NULL)
+        // If there is an owner field and $context_object was sent and the owner_field_key has a value on this object
+        if ($owner_field_key && $context_object !== NULL && isset($context_object->$owner_field_key) && $context_object->$owner_field_key !== NULL)
         {
             // Get bound user
-            $User = $this->get_bound_user();
+            $User = $context_object->get_bound_user();
 
             // Get the primary key field name for the user object
             $pk = $User->cfg('pk_name');
 
             // Expect the related user to be related via a relationship field.  @todo decide if we should allow other field types to store an "owner" field.
-            $owner_value = $this->$owner_field_key;
+            $owner_value = $context_object->$owner_field_key;
+
+            //if this field value is an array, assume relationship (for now)
+            if (is_array($owner_value) && isset($owner_value['_id']))
+            {
+                $owner = (((string) $User->$pk) === ((string) $owner_value['_id']));
+            }
+            //assume raw value
+            else
+            {
+                $owner = (((string) $User->$pk) === ((string) $owner_value));
+            }
 
             // If a user was found and the id's exactly match
-            if ($User && ((string) $User->$pk) === ((string) $owner_value['_id']))
+            if ($User && $owner)
             {
                 // Add in the owner tag
                 $tags[] = 'owner';
@@ -2010,10 +2079,13 @@ fbl($tags,'allowed tags');
     public static function query($params) 
     {
         //ensure bound user has read permission
-        if ( !isset($params['allowed']) || $params['allowed'] !== TRUE || ! static::allowed('read'))
+        if ( !isset($params['allowed']) || $params['allowed'] !== TRUE)
         {
-            //@todo finish adding access controls for all actions and add a user
-            //throw new Supermodlr_Exception('Not Authorized', 401);
+            if ( ! static::allowed('read'))
+            {
+                //@todo finish adding access controls for all actions and add a user
+                throw new Supermodlr_Exception('Not Authorized', 401);                
+            }
         }
         $class = get_called_class();
         $o = new $class();

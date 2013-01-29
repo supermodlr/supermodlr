@@ -16,5 +16,5 @@ class Field_Supermodlrcore_Useraccesstags extends Field
     public $readonly = FALSE;
     public $core = TRUE;
     public $defaultvalue = array('auth');
-
+    public $stored = FALSE;
 }

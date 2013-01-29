@@ -43,6 +43,7 @@ class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
         $Request = Request::current();
         if (method_exists($Request, 'get_user') && $Request->get_user() instanceof Model_Supermodlruser && !$this->loading_user)
         {
+
             $this->loading_user = TRUE;
             $User = $Request->get_user();
             $this->loading_user = FALSE;
