@@ -60,7 +60,7 @@ abstract class Supermodlr_Core {
             {
                      //load column values and field values
                 $this->load($data);
-                $this->cfg('loaded_data',$this->to_array());
+                $this->cfg('loaded_data',$this->to_array(FALSE));
                 $this->cfg('loaded',TRUE);
             }
             else
