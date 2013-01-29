@@ -242,7 +242,7 @@ class Supermodlr_Field {
                if (is_array($rule)) 
                {
                   //if there are no arguments
-                  if ($rule[1] === array())
+                  if (!isset($rule[1]) || $rule[1] === array() || $rule[1] === NULL)
                   {
                      $rule[1] = NULL;
                   }
