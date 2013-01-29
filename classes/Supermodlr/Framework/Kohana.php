@@ -3,7 +3,7 @@
 class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
     
     private $config = NULL;
-
+    private $loading_user = FALSE;
     public function load_config($file = NULL) 
     {
 
@@ -39,11 +39,14 @@ class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
      */
     public function get_user()
     {
-fbl('here');
+
         $Request = Request::current();
-        if (method_exists($Request, 'get_user') && $Request->get_user() instanceof Model_Supermodlruser)
+        if (method_exists($Request, 'get_user') && $Request->get_user() instanceof Model_Supermodlruser && !$this->loading_user)
         {
-            return $Request->get_user();
+            $this->loading_user = TRUE;
+            $User = $Request->get_user();
+            $this->loading_user = FALSE;
+            return $User;
         }
         else if (isset($Request->user) && $Request->user instanceof Model_Supermodlruser)
         {
@@ -52,7 +55,6 @@ fbl('here');
         // Bind a dummy admin user to supermodlr.  This is expected to be overwritten by an application if it has users.
         else if (Kohana::$environment !== Kohana::PRODUCTION)
         {       
-        fbl('set admin'); 
             $User = new Model_Supermodlruser();
             $User->useraccesstags = array('admin');
             return $User;
