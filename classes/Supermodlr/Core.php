@@ -2079,7 +2079,7 @@ abstract class Supermodlr_Core {
     public static function query($params) 
     {
         //ensure bound user has read permission
-        if ( !isset($params['allowed']) || $params['allowed'] !== TRUE)
+        if ( (isset($params['allowed']) && $params['allowed'] !== TRUE) || static::scfg('external_api') === TRUE)
         {
             if ( ! static::allowed('read'))
             {
