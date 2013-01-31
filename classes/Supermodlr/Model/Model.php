@@ -42,14 +42,17 @@ class Supermodlr_Model_Model extends Supermodlr {
         $PK_Field->model = array("model"=> "model", "_id"=> $this->get_class_name());
         $PK_Field->save();
 
-        //get changes
+        // Get changes
         $changed = $this->changed();
         
-        //if there were any changes
+        // If there were any changes, re-write the model class file
         if (count($changed) > 0 || $params['is_insert'] === TRUE)
         {
-            $this->write_class_file();
+            $this->write_model_class_file();
         }
+
+        // Write the controller class file if it doesn't already exist
+        $this->write_controller_class_file();
     }
 
     //if this object is deleted, delete the file and all the field files
@@ -100,16 +103,36 @@ class Supermodlr_Model_Model extends Supermodlr {
         }
     }
     
-    
-    public function write_class_file() 
+    /**
+     * 
+     */
+    public function write_controller_class_file() 
     {
-        //re-generate the file content
-        $file_contents = $this->generate_class_file_contents();
+        // Re-generate the file content
+        $file_contents = $this->generate_controller_class_file_contents();
         
-        $full_file_path = $this->get_class_file_path();
+        $full_file_path = $this->get_controller_class_file_path();
+
+        // If the file already exists, do not overwrite
+        if (file_exists($full_file_path))
+            return TRUE;
         
-        //re-save the field file
-        return $this->save_class_file($full_file_path,$file_contents);  
+        // Re-save the field file
+        return $this->save_class_file($full_file_path, $file_contents);  
+    }
+    
+    /**
+     * 
+     */
+    public function write_model_class_file() 
+    {
+        // Re-generate the file content
+        $file_contents = $this->generate_model_class_file_contents();
+        
+        $full_file_path = $this->get_model_class_file_path();
+        
+        // Re-save the field file
+        return $this->save_class_file($full_file_path, $file_contents);  
     }
     
     //@todo
@@ -121,7 +144,7 @@ class Supermodlr_Model_Model extends Supermodlr {
     }
 
 
-/* need to make sure this doesn't remove a field if it was simply moved */
+    /* need to make sure this doesn't remove a field if it was simply moved */
     public function event__model_model__fields_i__removed($params)
     {
         foreach ($params['data'] as $field)
@@ -157,7 +180,7 @@ class Supermodlr_Model_Model extends Supermodlr {
     }
 
     // this model model is generating a model class file.
-    public function generate_class_file_contents()
+    public function generate_model_class_file_contents()
     {
         
         if (isset($this->extends) && isset($this->extends['_id'])) 
@@ -235,7 +258,7 @@ EOF;
     }
     
 
-    public function get_class_file_path()
+    public function get_model_class_file_path()
     {
         $model_file_name = $this->get_class_name();
         
@@ -248,10 +271,55 @@ EOF;
         $Framework = $this->get_framework();
         $Supermodlr_path = $Framework->saved_classes_root();
         //replace all underbars with / to build file path
-        $model_file_name = str_replace('_',DIRECTORY_SEPARATOR,$model_file_name);
-        return $Supermodlr_path.$model_file_name.'.php';
+        $model_file_name = str_replace('_',DIRECTORY_SEPARATOR, $model_file_name);
+        return $Supermodlr_path.$model_file_name.EXT;
+    }
+
+    /**
+     * 
+     */
+    public function generate_controller_class_file_contents()
+    {
+        $controller_class_name = $this->get_controller_class_name();
+        $file_contents = <<<EOF
+<?php defined('SYSPATH') or die('No direct script access.');
+/**
+ * {$controller_class_name}
+ *
+ * @uses     Controller_Scaffold
+ */
+class {$controller_class_name} extends Controller_Scaffold {
+
+EOF;
+
+        $file_contents .= "}".PHP_EOL;
+
+        return $file_contents;
     }
     
+    /**
+     * 
+     */
+    public function get_controller_class_file_path()
+    {
+        $controller_class_name = $this->get_controller_class_name();
+        
+        // @todo do not overwrite any core files
+        /*if (in_array($controller_class_name, $this->cfg('core_models')))
+        {
+            return FALSE;
+        }*/
+
+        $framework = $this->get_framework();
+        $supermodlr_path = $framework->saved_classes_root();
+        //replace all underbars with / to build file path
+        $controller_class_name = str_replace('_',DIRECTORY_SEPARATOR, $controller_class_name);
+        return $supermodlr_path.$controller_class_name.EXT;
+    }
+
+    /**
+     * 
+     */
     public function save_class_file($full_file_path, $file_contents)
     {
         $file_info = pathinfo($full_file_path);
@@ -263,6 +331,13 @@ EOF;
         return $saved;
     }
 
+    /**
+     * 
+     */
+    public function get_controller_class_name()
+    {
+        return 'Controller_'.ucfirst(strtolower($this->name));
+    }
 
     //generate and return the class name to be used for this model
     public function get_class_name()
