@@ -2233,7 +2233,7 @@ abstract class Supermodlr_Core {
                 foreach ($model_dir as $model)
                 {
                     //skip directories
-                    if ($model == '.' || $model == '..') continue;
+                    if (substr($model, 0,1) === '.') continue;
                     $model_detail = $called_class::get_model_from_file($model);
                     $models[] = $model_detail;
                 }
@@ -2245,7 +2245,7 @@ abstract class Supermodlr_Core {
                 foreach ($model_dir as $model)
                 {
                     //skip directories
-                    if ($model == '.' || $model == '..') continue;
+                    if (substr($model, 0,1) === '.') continue;
                     $model_detail = $called_class::get_model_from_file($model);
                     $models[] = $model_detail;
                 }
