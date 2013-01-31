@@ -926,7 +926,7 @@ abstract class Supermodlr_Core {
                     'allowed' => TRUE,
                 ));
                 //if we found a record
-                if ($result)
+                if ($result && isset($data[$pk]))
                 {
                     //if there is no pk or there is a pk but it does not match the returned row
                     if (!isset($result->$pk) || (isset($result->$pk) && (string) $result->$pk !== (string) $data[$pk]))
