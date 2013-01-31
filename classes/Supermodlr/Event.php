@@ -44,7 +44,7 @@ class Supermodlr_Event
 		foreach (self::$events as $i => $event)
 		{
 			//get call type for callback (function, object, or static
-			$call_type == self::callable($event['callback']);
+			$call_type == self::iscallable($event['callback']);
 			
 			//use 'call' args if no args were sent to the initial registration
 			if (!empty($event['args'])) $args = &$event['args']; 
@@ -74,19 +74,19 @@ class Supermodlr_Event
 	 * @param $callback (string|function) if this is a string, it must exist as a function.  if it is an array, then it must be callable (passed as [$object,'method'] or ['class','method'])
 	 * @return (mixed) returns (string) of 'function', 'static', or 'object' if it is callable or (bool) FALSE if not callable
 	 */		
-	public static function callable($callback)
+	public static function iscallable($callback)
 	{
 		//if callback is an object,method or class,method call
 		if (is_array($callback))
 		{
-			if (is_object($callback[0])
+			if (is_object($callback[0]))
 			{
 				if (is_callable($callback[0],$callback[1]))
 				{
 					return 'object';
 				}
 			}
-			else if (is_string($callback[0])
+			else if (is_string($callback[0]))
 			{
 				if (is_callable($callback[0].'::'.$callback[1]))
 				{

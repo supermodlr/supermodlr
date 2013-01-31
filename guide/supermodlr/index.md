@@ -1,5 +1,4 @@
 # Supermodlr
-==========
 
 ## What is Supermodlr?
 * Object Relational Mapper (MySQL, MS SQL)
@@ -21,5 +20,3 @@
 * API
     * REST Compliant
     * Generates HTML5 + AngularJS forms that provide client and server-side validation
-
-See /guide/ for more details and getting-started documentation.
