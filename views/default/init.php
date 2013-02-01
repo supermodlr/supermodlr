@@ -3,8 +3,8 @@
 $controller->doctype('html');
 
 
-$controller->js('lib/jquery/jquery-1.8.2.min.js','headertags');
-$controller->js('lib/jqueryui/js/jquery-ui-1.9.0.custom.min.js','headertags');
+$controller->js('lib/jquery/jquery-1.8.3.js','headertags');
+$controller->js('lib/jqueryui/js/jquery-ui-1.9.2.custom.min.js','headertags');
 
 
 //$controller->js('views/default/web/js/controllers.js','headertags');
