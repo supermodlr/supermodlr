@@ -2127,7 +2127,7 @@ abstract class Supermodlr_Core {
             }
             else
             {
-                $result_row = reset($result_set);
+                $result_row = reset($results);
                 $result_set = intval($result_row['count']);
             }
         }
