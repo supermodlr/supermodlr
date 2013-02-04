@@ -1,22 +1,18 @@
 <?php
 /**
- * Supermodlr Core file handles all low level logic for models
- * 
- * @author Justin Shanks <jshanman@gmail.com>
- * @package supermodlr
- */
-
-/**
 * Supermodlr_Core
 *
 * @uses     
 *
-* @category Category
-* @package  Package
+* @category Core
+* @package  Supermodlr
 * @author   Justin Shanks <jshanman@gmail.com>
 */    
 abstract class Supermodlr_Core {
 
+    // We want to use the core Supermodlr_Trait_Supertrait so that only traits use the Trait_Supertrait trait
+    use Supermodlr_Trait_Supertrait;
+    
     // Static config for vars that apply to all data types and can be loaded once
     protected static $__scfg = array();
 
@@ -35,16 +31,20 @@ abstract class Supermodlr_Core {
     {
         //init framework
         $this->init_framework();
+
         //init config
         $this->init_cfg();
+
         //get primary id field
         $pk_name = $this->cfg('pk_name');
+
         //if an id was sent
         if (!is_null($id))
         {
             //set primary key column
             $this->$pk_name = $id;
         }
+
         //call construct event
         $this->model_event('construct',$this);
           //if we are loading an existing object
@@ -121,157 +121,190 @@ abstract class Supermodlr_Core {
         */
     public static function init_cfg()
     {
-          static::$__scfg['init_cfg'] = TRUE;
-          //call events to init config for the datatype
-          //static::model_event('init_cfg');
-          //get framework
-          $Framework = static::get_framework();
-          $name = static::get_name();
-          //setup default name config
-          static::scfg('name',$name);
-          //setup default db_name config (table or collection name for this datatype)
-          if (!isset(static::$__scfg['db_name']))
-          {
-                static::scfg('db_name',$name);
-          }
-          //setup default primary_key (pk) column config
-          if (!isset(static::$__scfg['pk_name']))
-          {
-                $pk = '_id';
-                static::scfg('pk_name',$pk);
-          }
-          //setup default primary_key (pk) column config
-          if (!isset(static::$__scfg['pk_field']))
-          {
-                $pk_name = static::get_name_case(static::scfg('pk_name'));
-                //default field class name for pk field
-                $pk_class = 'Field_'.static::get_name_case($name).'_'.$pk_name;
-                static::scfg('pk_field',$pk_class);
-          }
-          //setup default cache setting
-          if (!isset(static::$__scfg['read_cache']))
-          {
-                static::scfg('read_cache',FALSE);
-          }
-          //setup driver names for this datatype
-          if (!isset(static::$__scfg['drivers']))
-          {
-                //default drivers setup in the app model class file generated on install
-                $drivers_config = static::scfg($name.'.drivers_config');
-                if ($drivers_config === NULL)
-                {
-                  $drivers_config = static::scfg('drivers_config');
-                }
-                if (is_array($drivers_config))
-                {
-                     $primary_driver = NULL;
-                     $non_primary = array();
-                     foreach ($drivers_config as $i => $driver)
-                     {
-                         //if there is only one driver, make it primary
-                         if (count($drivers_config) == 1)
-                         {
-                             $driver['primary'] = TRUE;
-                             $drivers_config[$i] = $driver;
-                         }
-                         //if this driver is marked as primary
-                         if (isset($driver['primary']) && $driver['primary'] == TRUE)
-                         {
-                             //store driver object in primary driver var
-                             $primary_driver = $Framework->get_driver($driver['driver'],$driver);
-                         }
-                         //this is not marked as the primary driver
-                         else
-                         {
-                             //store this db object in a non primary var
-                             $non_primary[] = $Framework->get_driver($driver['driver'],$driver);
-                         }
-                     }
-                     //if there is more than one db driver, ensure the primary is listed first
-                     if (count($drivers_config) > 1)
-                     {
-                         //if no primary driver was set in the config
-                         if ($primary_driver === NULL)
-                         {
-                             //set first database in config list as primary
-                             $drivers_config[0]['primary'] = TRUE;
-                             $drivers = $non_primary;
-                         }
-                         //if a primary was set, ensure it is first
-                         else
-                         {
-                             $drivers = array();
-                             $drivers[] = $primary_driver;
-                             $drivers = array_merge($drivers,$non_primary);
-                         }
-                     }
-                     //if there is only one db driver
-                     else
-                     {
-                         //set the drivers var as the primary driver
-                         $drivers = array();
-                         $drivers[] = $primary_driver;
-                     }
-                     //store all db driver objects
-                     static::scfg('drivers',$drivers,TRUE);
-                     //re-save drivers config in case there were any changes
-                     static::scfg('drivers_config',$drivers_config);
-                }
-                //@todo add in config option for additional drivers (that are added after any drivers set by the parent) instead of overridding the parent driver_config OR make a way to make conf options on multiple levels merge (if they are an array)
-          }
-          // default access tags
-          if (!isset(static::$__scfg['model_access_rules']))
-          {
-                static::scfg('model_access_rules',array(
-                     'create' => array('auth'),
-                     'read'    => array('auth'),
-                     'update' => array('owner'),
-                     'delete' => array('owner'),
-                     'query'  => array('admin'),
-                ));
-          }
-          //default user access tags to anon access
-          if (!isset(static::$__scfg['user_access_tags']))
-          {
-                static::scfg('user_access_tags',array('anon'));
-          }
+        static::$__scfg['init_cfg'] = TRUE;
+          
+        //call events to init config for the datatype
+          
+        //static::model_event('init_cfg');
 
-          // Loop through all fields on this model and look for a field with a property of 'owner=true'. 
-          if (!isset(static::$__scfg['owner_field']))
-          {
-                // get all fields
-                $fields = static::get_fields();
-                //loop through all fields
-                foreach ($fields as $Field)
+        //get framework
+        $Framework = static::get_framework();
+
+
+        $name = static::get_name();
+
+        //setup default name config
+        static::scfg('name',$name);
+/*
+        // Load all direct traits (and their traits), set all scfg values if they are not yet set
+        $traits = static::get_traits();
+
+        // Loop through all traits and traits of traits 
+        foreach ($traits as $trait)
+        {
+            // Get the name of this trait
+            $trait_name = $trait::get_trait_name();
+
+            // Get the name of the property that we expect to find scfg values on
+            $scfg_prop = '__'.$trait_name.'__scfg';
+echo $trait.'::'.$scfg_prop.PHP_EOL;
+            // If scfg property is set and is an array
+            if (isset($trait::$$scfg_prop) && is_array($trait::$$scfg_prop))
+            {
+                $trait_scfg = $trait::$$scfg_prop;
+                echo 'HERE';
+                var_dump($trait_scfg);
+                // Loop through all scfg values on this trait
+                foreach ($trait_scfg as $trait_scfg_key => $trait_scfg_value)
                 {
-                     //if a field marked as "owner" is found
-                     if (isset($Field->owner) && $Field->owner === TRUE)
-                     {
-                         //save this field key as the owner field
-                         static::scfg('owner_field',$Field->name);
-                         break ;
-                     }
+                    // If this scfg key is not set on this class
+                    if (!isset(static::$__scfg[$trait_scfg_key]))
+                    {
+                        static::$__scfg[$trait_scfg_key] = $trait_scfg_value;
+                    }
+                    //if it is set and is an array, merge recursive
+                    else if (is_array(static::$__scfg[$trait_scfg_key]) && is_array($trait_scfg_value))
+                    {
+                        // static::$__scfg should override any values set in $trait_scfg_value
+                        static::$__scfg[$trait_scfg_key] = array_merge_recursive($trait_scfg_value,static::$__scfg[$trait_scfg_key]);
+                    }
                 }
-          }
-          //setup stored_traits default
-          /*if (is_null($this->cfg('stored_traits'))) {
-                $this->cfg('stored_traits',FALSE);
-          //if there are stored traits, setup default trait column name
-          } else if ($this->cfg('stored_traits') === TRUE) {
-                if (is_null($this->cfg('trait_column'))) {
-                     $this->cfg('trait_column','__traits');
+            }
+        }*/
+
+        // loop through class tree (skipping this class)
+
+            // loop through all parent::__scfg values and set them on self::__scfg if not already set (@todo decide recursive merge??)
+
+        //setup default db_name config (table or collection name for this datatype)
+        if (!isset(static::$__scfg['db_name']))
+        {
+            static::scfg('db_name',$name);
+        }
+
+        //setup default primary_key (pk) column config
+        if (!isset(static::$__scfg['pk_name']))
+        {
+            $pk = '_id';
+            static::scfg('pk_name',$pk);
+        }
+
+        //setup default primary_key (pk) column config
+        if (!isset(static::$__scfg['pk_field']))
+        {
+            $pk_name = static::get_name_case(static::scfg('pk_name'));
+            //default field class name for pk field
+            $pk_class = 'Field_'.static::get_name_case($name).'_'.$pk_name;
+            static::scfg('pk_field',$pk_class);
+        }
+
+        //setup default cache setting
+        if (!isset(static::$__scfg['read_cache']))
+        {
+            static::scfg('read_cache',FALSE);
+        }
+
+        //setup driver names for this datatype
+        if (!isset(static::$__scfg['drivers']))
+        {
+            //default drivers setup in the app model class file generated on install
+            $drivers_config = static::scfg($name.'.drivers_config');
+            if ($drivers_config === NULL)
+            {
+              $drivers_config = static::scfg('drivers_config');
+            }
+            if (is_array($drivers_config))
+            {
+                $primary_driver = NULL;
+                $non_primary = array();
+                foreach ($drivers_config as $i => $driver)
+                {
+                    //if there is only one driver, make it primary
+                    if (count($drivers_config) == 1)
+                    {
+                        $driver['primary'] = TRUE;
+                        $drivers_config[$i] = $driver;
+                    }
+                    //if this driver is marked as primary
+                    if (isset($driver['primary']) && $driver['primary'] == TRUE || $i === 'primary')
+                    {
+                        //store driver object in primary driver var
+                        $primary_driver = $Framework->get_driver($driver['driver'],$driver);
+                    }
+                    //this is not marked as the primary driver
+                    else
+                    {
+                        //store this db object in a non primary var
+                        $non_primary[] = $Framework->get_driver($driver['driver'],$driver);
+                    }
                 }
-                if (is_null($this->cfg('trait_source'))) {
-                     $this->cfg('trait_source','traits');
+                //if there is more than one db driver, ensure the primary is listed first
+                if (count($drivers_config) > 1)
+                {
+                   //if no primary driver was set in the config
+                   if ($primary_driver === NULL)
+                   {
+                       //set first database in config list as primary
+                       $drivers_config[0]['primary'] = TRUE;
+                       $drivers = $non_primary;
+                   }
+                   //if a primary was set, ensure it is first
+                   else
+                   {
+                       $drivers = array();
+                       $drivers[] = $primary_driver;
+                       $drivers = array_merge($drivers,$non_primary);
+                   }
                 }
-                if (is_null($this->cfg('trait_pk'))) {
-                     $this->cfg('trait_pk','trait_id');
+                //if there is only one db driver
+                else
+                {
+                    //set the drivers var as the primary driver
+                    $drivers = array();
+                    $drivers[] = $primary_driver;
                 }
-          }
-          if (is_null($this->cfg('trait_prefix'))) {
-                $this->cfg('trait_prefix','trait_');
-          }*/
-          //flag this class as init so we know not to call again for this class
+                //store all db driver objects
+                static::scfg('drivers',$drivers,TRUE);
+                //re-save drivers config in case there were any changes
+                static::scfg('drivers_config',$drivers_config);
+            }
+            //@todo add in config option for additional drivers (that are added after any drivers set by the parent) instead of overriding the parent driver_config OR make a way to make conf options on multiple levels merge (if they are an array)
+        }
+
+        // default access tags
+        if (!isset(static::$__scfg['model_access_rules']))
+        {
+            static::scfg('model_access_rules',array(
+                'create' => array('auth'),
+                'read'    => array('auth'),
+                'update' => array('owner'),
+                'delete' => array('owner'),
+                'query'  => array('admin'),
+            ));
+        }
+        //default user access tags to anon access
+        if (!isset(static::$__scfg['user_access_tags']))
+        {
+            static::scfg('user_access_tags',array('anon'));
+        }
+
+        // Loop through all fields on this model and look for a field with a property of 'owner=true'. 
+        if (!isset(static::$__scfg['owner_field']))
+        {
+            // get all fields
+            $fields = static::get_fields();
+            //loop through all fields
+            foreach ($fields as $Field)
+            {
+                //if a field marked as "owner" is found
+                if (isset($Field->owner) && $Field->owner === TRUE)
+                {
+                    //save this field key as the owner field
+                    static::scfg('owner_field',$Field->name);
+                    break ;
+                }
+            }
+        }
     }
 
     /**
@@ -301,44 +334,54 @@ abstract class Supermodlr_Core {
      */
     public static function scfg($key,$value = NULL)
     {
-          //if we are not setting a value, retrieve it
-          if ($value === NULL)
-          {
-                if (isset(static::$__scfg[$key]))
-                {
-                     return static::$__scfg[$key];
-                }
-                else
-                {
-                     return static::get_scfg_value($key);;
-                }
-          //store this config value
-          } else {
-                static::$__scfg[$key] = $value;
-          }
+        //if we are not setting a value, retrieve it
+        if ($value === NULL)
+        {
+            //init config if it hasn't been init yet
+            if (!isset(static::$__scfg['init_cfg']))
+            {
+                static::init_cfg();
+            }
+            if (isset(static::$__scfg[$key]))
+            {
+                 return static::$__scfg[$key];
+            }
+            else
+            {
+                 return static::get_scfg_value($key);;
+            }
+        //store this config value
+        } else {
+            static::$__scfg[$key] = $value;
+        }
     }
+    
     /**
      * returns a scfg value, checks all classes in the tree
      */
     public static function get_scfg_value($key)
     {
-          //init config if it hasn't been init yet
-          if (!isset(static::$__scfg['init_cfg']))
-          {
-                static::init_cfg();
-          }
-          //get all classes in extension tree
-          $classes = static::get_class_tree();
-          //loop through all classes
-          foreach ($classes as $class)
-          {
-                //check scfg for this class
-                if (isset($class::$__scfg[$key]))
-                {
-                     return $class::$__scfg[$key];
-                }
-          }
-          return NULL;
+        //init config if it hasn't been init yet
+        if (!isset(static::$__scfg['init_cfg']))
+        {
+            static::init_cfg();
+        }        
+        //get all classes in extension tree
+        $classes = static::get_class_tree();
+
+        //loop through all classes
+        foreach ($classes as $class)
+        {
+            // Skip self
+            if ($class === get_called_class()) continue;
+
+            //check scfg for this class
+            if (isset($class::$__scfg[$key]))
+            {
+                 return $class::$__scfg[$key];
+            }
+        }
+        return NULL;
     }
 
     // loads config for connected database(s) and framework specific functions
@@ -465,6 +508,7 @@ abstract class Supermodlr_Core {
     public static function get_fields()
     {
         $called_class = get_called_class();
+
         //get model name
         $model_name = $called_class::get_name();
         //return fields if already loaded
@@ -486,25 +530,20 @@ abstract class Supermodlr_Core {
                 $fieldclass = 'Field_'.$model_class_name.'_'.$field_class_name;
                 $fields[$field_name] = new $fieldclass(array('model'=> 'model', '_id'=> $called_class));
             }
-            //look at all parents for fields
-            $class_tree = static::get_class_tree();
-            foreach ($class_tree as $class)
+
+            // Get the direct parent of this class
+            $parent_class = get_parent_class($called_class);
+
+            // If there is a parent
+            if ($parent_class !== FALSE)
             {
-                $parent_model_name = static::get_name_from_class($class);
-                $field_keys = $class::scfg('field_keys');
-                if ($field_keys !== NULL && is_array($field_keys))
-                 foreach ($field_keys as $field_name)
-                 {
-                     $field_class_name = static::get_name_case($field_name);
-                     $model_class_name = static::get_name_case($parent_model_name);
-                     $fieldclass = 'Field_'.$model_class_name.'_'.$field_class_name;
-                     //if this field wasn't already overridden
-                     if (!isset($fields[$field_name]))
-                     {
-                          $fields[$field_name] = new $fieldclass(array('model'=> 'model', '_id'=> $called_class));
-                     }
-                 }
+                // Call get_fields on the parent (which will call it on it's parent, if any)
+                $parent_fields = $parent_class::get_fields();
+
+                // Merge in results, with the current fields overriding any below it
+                $fields = array_merge($parent_fields,$fields);                
             }
+
             //look at all traits for fields @todo figure out if traits should be before or after parents and how they can be ordered in case of conflicts
             //store created fields once for each model
             static::scfg('fields',$fields);
@@ -2134,46 +2173,7 @@ abstract class Supermodlr_Core {
         return $result_set;
     }
 
-    //get all assigned traits
-    public static function get_traits() {
-        //get class name called
-        $called_class = get_called_class();
-        //if traits were already found, return them
-        $traits = $called_class::scfg('traits');
-        if (!is_null($traits)) {
-            return $traits;
-        }
-        //find all traits
-        //get all traits assigned directly to the data_type
-        $traits = class_uses($called_class);  // only returns traits on the sent class, not inheirited from parents or others included
-        //get all parent classes for this data_type
-        $parents = class_parents($called_class);
-        //loop through all parent classes
-        foreach ($parents as $parent) {
-            $parent_traits = class_uses($parent);
-              $traits = array_merge($traits,$parent_traits);
-        }
-        //search through all traits for additional traits
-         $searched_traits = array();
-         //stop looping when we've searched all traits, including found traits
-        while (count($searched_traits) < count($traits)) {
-             //loop through all traits
-             foreach ($traits as $trait) {
-                  //if we've already searched this trait for additional traits, skip it
-                      if (!isset($searched_traits[$trait])) {
-                    //get all traits called by this trait
-                    $trait_traits = class_uses($trait);
-                    //merge newly found traits with existing found traits
-                    $traits = array_merge($traits,$trait_traits);
-                    //mark this trait as searched
-                    $searched_traits[$trait] = TRUE;
-                      }
-             }
-        }
-         //store all found traits
-          $called_class::scfg('traits',array_keys($traits));
-          return $traits;
-    }
+
 
     // @todo maybe all methods should be calculated at 'data-type' compile time and added as an array on the generated data type object model php class file
     public static function get_trait_events($key = NULL) {
