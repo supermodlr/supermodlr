@@ -135,7 +135,7 @@ abstract class Supermodlr_Core {
 
         //setup default name config
         static::scfg('name',$name);
-/*
+
         // Load all direct traits (and their traits), set all scfg values if they are not yet set
         $traits = static::get_traits();
 
@@ -147,13 +147,13 @@ abstract class Supermodlr_Core {
 
             // Get the name of the property that we expect to find scfg values on
             $scfg_prop = '__'.$trait_name.'__scfg';
-echo $trait.'::'.$scfg_prop.PHP_EOL;
+
             // If scfg property is set and is an array
             if (isset($trait::$$scfg_prop) && is_array($trait::$$scfg_prop))
             {
+                // Get the static __$trait__scfg property from the trait class
                 $trait_scfg = $trait::$$scfg_prop;
-                echo 'HERE';
-                var_dump($trait_scfg);
+
                 // Loop through all scfg values on this trait
                 foreach ($trait_scfg as $trait_scfg_key => $trait_scfg_value)
                 {
@@ -170,7 +170,7 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
                     }
                 }
             }
-        }*/
+        }
 
         // loop through class tree (skipping this class)
 
@@ -287,24 +287,6 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
         {
             static::scfg('user_access_tags',array('anon'));
         }
-
-        // Loop through all fields on this model and look for a field with a property of 'owner=true'. 
-        if (!isset(static::$__scfg['owner_field']))
-        {
-            // get all fields
-            $fields = static::get_fields();
-            //loop through all fields
-            foreach ($fields as $Field)
-            {
-                //if a field marked as "owner" is found
-                if (isset($Field->owner) && $Field->owner === TRUE)
-                {
-                    //save this field key as the owner field
-                    static::scfg('owner_field',$Field->name);
-                    break ;
-                }
-            }
-        }
     }
 
     /**
@@ -312,21 +294,21 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
      */
     public function cfg($key,$value = NULL)
     {
-          if ($value === NULL)
-          {
-                if (isset($this->__cfg[$key]))
-                {
-                     return $this->__cfg[$key];
-                }
-                else
-                {
-                     return $this->get_scfg_value($key);
-                }
-          }
-          else
-          {
-                $this->__cfg[$key] = $value;
-          }
+        if ($value === NULL)
+        {
+            if (isset($this->__cfg[$key]))
+            { 
+                return $this->__cfg[$key];
+            }
+            else
+            { 
+                return $this->scfg($key);
+            }
+        }
+        else
+        {
+            $this->__cfg[$key] = $value;
+        }
     }
     
     /**
@@ -339,11 +321,11 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
         {
             //init config if it hasn't been init yet
             if (!isset(static::$__scfg['init_cfg']))
-            {
+            { 
                 static::init_cfg();
             }
             if (isset(static::$__scfg[$key]))
-            {
+            { 
                  return static::$__scfg[$key];
             }
             else
@@ -352,6 +334,7 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
             }
         //store this config value
         } else {
+
             static::$__scfg[$key] = $value;
         }
     }
@@ -361,7 +344,7 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
      */
     public static function get_scfg_value($key)
     {
-        //init config if it hasn't been init yet
+    //init config if it hasn't been init yet
         if (!isset(static::$__scfg['init_cfg']))
         {
             static::init_cfg();
@@ -505,30 +488,63 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
     /**
      *
      */
-    public static function get_fields()
+    public static function get_fields($for_model = NULL)
     {
+
+        // Get class name as called
         $called_class = get_called_class();
+
+        if ($for_model === NULL)
+        {
+            $for_model = $called_class;
+        }
 
         //get model name
         $model_name = $called_class::get_name();
+
         //return fields if already loaded
         if (static::scfg('fields') !== NULL)
         {
             return static::scfg('fields');
+
         //load fields listed in field_keys
         }
         else if (static::scfg('field_keys') !== NULL)
         {
-          //look on this model for any field keys
+
+            //look on this model for any field keys
             $field_keys = static::scfg('field_keys');
+    
             $fields = array();
+
             //loop through all field keys
             foreach ($field_keys as $field_name)
             {
+                // Detect field class name
                 $field_class_name = static::get_name_case($field_name);
+
+                // Detect model class name
                 $model_class_name = static::get_name_case($model_name);
+
+                // Build full field class name @todo move this to a central function
                 $fieldclass = 'Field_'.$model_class_name.'_'.$field_class_name;
-                $fields[$field_name] = new $fieldclass(array('model'=> 'model', '_id'=> $called_class));
+
+                $corefieldclass = 'Field_Supermodlrcore_'.$field_class_name;
+
+                // Ensure the class exists.  If it doesn't exist, we assume a child model has a class for this field
+                if (class_exists($fieldclass))
+                {
+                    // Assign the instantiated field to the array of fields.  Create the field with $for_model's context
+                    $fields[$field_name] = new $fieldclass(array('model'=> 'model', '_id'=> $for_model));
+                }
+                else if (class_exists($corefieldclass))
+                {
+                    $fields[$field_name] = new $corefieldclass(array('model'=> 'model', '_id'=> $for_model));
+                }
+                else
+                {
+                    fbl($fieldclass .' class not found');
+                }
             }
 
             // Get the direct parent of this class
@@ -538,7 +554,7 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
             if ($parent_class !== FALSE)
             {
                 // Call get_fields on the parent (which will call it on it's parent, if any)
-                $parent_fields = $parent_class::get_fields();
+                $parent_fields = $parent_class::get_fields($for_model);
 
                 // Merge in results, with the current fields overriding any below it
                 $fields = array_merge($parent_fields,$fields);                
@@ -548,7 +564,9 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
             //store created fields once for each model
             static::scfg('fields',$fields);
             return $fields;
-        } else {
+        } 
+        else 
+        {
             return array();
         }
     }
@@ -561,6 +579,49 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
         $classes = array_merge($classes,class_parents($called_class));
         return $classes;
     }
+
+    /**
+     * owner_field finds and returns the name of the field in $self::fields that is marked as the "owner" field.  The Owner field is used to link this row to a bound user for permissions
+     * 
+     * @param mixed $field_name send a field_name to set as the owner field or NULL to get (or detect) the current owner field.
+     *
+     * @access public
+     * @static
+     *
+     * @return string|NULL $field.name of the field marked as the owner field for this model or NULL if there is none
+     */
+    public static function owner_field($field_name = NULL)
+    {
+        //if acting as a getter
+        if ($field_name === NULL)
+        {
+            // Loop through all fields on this model and look for a field with a property of 'owner=true'. 
+            if (static::scfg('owner_field') === NULL)
+            {
+                // get all fields
+                $fields = static::get_fields();
+                //loop through all fields
+                foreach ($fields as $Field)
+                {
+                    //if a field marked as "owner" is found
+                    if (isset($Field->owner) && $Field->owner === TRUE)
+                    {
+                        //save this field key as the owner field
+                        static::scfg('owner_field',$Field->name);
+                        break ;
+                    }
+                }
+            }      
+            return static::scfg('owner_field');            
+        }
+        // Act as a setter
+        else
+        {
+            static::scfg('owner_field',$field_name);
+        }
+
+    }
+
 
     /**
      * returns TRUE if this object was loaded
@@ -1678,51 +1739,66 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
         $this->model_event('set',$params);
         $fields = $this->get_fields();
         $model_name = $this->get_name();
+
+        $Field = NULL;
+
         //if this is a sub key (supports 'key1.key2[.key3...]' format
         if (strpos($key,'.') !== FALSE)
         {
             //put keys in an array
             $keys = explode('.',$key);
+
             //get first key
             $first = $keys[0];
+
             //create first key if it doesn't exist
             if (!isset($this->$first))
             {
                 $this->$first = array();
             }
+
             //set initial position as a reference
             $position = &$this->$first;
+
             //remove first key from list of keys
             unset($keys[0]);
+
             //loop through each key as assign the new position as a reference
             foreach ($keys as $ikey)
             {
                 $position = &$position[$ikey];
             }
+
             //assign the value to the position value
             $position = $value;
-            //@todo get field class here for sub-fields
-            $field_class = 'field_'.$model_name.'_'.$key;
+
+            //@todo fix for sub-fields/sub models
+            $Field = NULL;
         }
         else
         {
-            if (!isset($this->$key))
-            {
-                $this->$key = NULL;
-            }
             $position = &$this->$key;
-            $field_class = 'field_'.$model_name.'_'.ucfirst($key);
+            if (isset($fields[$key]))
+            {
+                $Field = $fields[$key];
+                if (!isset($this->$key))
+                {
+                    $this->$key = NULL;
+                }                
+            }
+            
         }
         $set_value = TRUE;
+
         //ensure this field class exists
-        if (!class_exists($field_class) || !isset($fields[$key]))
+        if (!($Field InstanceOf Field))
         {
             //@todo throw error, cannot set a property if it is not part of a field assigned to this model
             $this->cfg('meta.'.$key,$value);
             return ;
         }
+
         //@todo check field permissions for create/update/delete
-        $Field = new $field_class();
         if ($value === NULL)
         {
             //if null is not a valid value
@@ -2037,7 +2113,7 @@ echo $trait.'::'.$scfg_prop.PHP_EOL;
         }
 
         // Get owner field key (if any)
-        $owner_field_key = static::scfg('owner_field');
+        $owner_field_key = static::owner_field();
 
         // If there is an owner field and $context_object was sent and the owner_field_key has a value on this object
         if ($owner_field_key && $context_object !== NULL && isset($context_object->$owner_field_key) && $context_object->$owner_field_key !== NULL)

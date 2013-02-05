@@ -196,10 +196,10 @@ class Controller_Supermodlr_Api extends Controller {
         $model_name = $this->model_name;
         $model_class = $this->model_class;
         
-        //get id from the url
+        //get id from the url. Id maps to the model.id
         $id = $this->request->param('id');
 
-        //get id_action from the url
+        //get id_action from the url. id_action maps to the field.name to validate
         $field_name = $this->request->param('id_action');
         
         if ($id !== '*')
@@ -226,10 +226,10 @@ class Controller_Supermodlr_Api extends Controller {
 
         //get posted data
         $data = $this->get_data();
-        
+
         //load posted data onto model
         $Model->load($data);    
-        
+
         //get the fields
         $fields = $Model->get_fields();
 

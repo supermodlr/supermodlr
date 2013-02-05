@@ -79,30 +79,28 @@ class Supermodlr_Field {
       'unique'    => 'An entry with this value already exists.',
    );
    
-   public function __construct($model = NULL)
-   {
+
+    /**
+     * __construct creates a field object instance.
+     * 
+     * @param mixed $model send a model relationship field value to bind a model to this field
+     *
+     * @access public
+     *
+     * @return mixed Value.
+     */
+    public function __construct($model = NULL)
+    {
+        // if a model was sent
         if ($model !== NULL)
         {
+            // bind the model and model name to this field
             $this->model = $model;
+            $this->model_name = Supermodlr::get_name_from_class($model['_id']);
         }
-        //detect and set model if it is not set
-        if ($this->model === NULL || $this->model_name === NULL)
-        {
-            //detect model from class name
-            $model = $this->get_model();
-
-            //if a model was found in the filename
-            if ($model !== NULL)
-            {
-                //set the model property
-                $this->model = $model;
-                $this->model_name = Model_Model::get_name_from_class($model['_id']);
-            }
-        }
-
-      //$this->value = self::NOT_SET;
-      //$this->raw_value = self::NOT_SET;
-   }
+        //$this->value = self::NOT_SET;
+        //$this->raw_value = self::NOT_SET;
+    }
    
 
    //returns the model name based on the class name
@@ -141,6 +139,25 @@ class Supermodlr_Field {
       }
 
    }
+
+    /**
+     * get_model_name returns the $model.name value of the model that is bound to this field, if any
+     * 
+     * @access public
+     *
+     * @return mixed name of model bound to this field, or NULL.
+     */
+    public function get_model_name()
+    {
+        if (isset($this->model) && is_array($this->model) && isset($this->model['_id'])) 
+        {
+            return Supermodlr::get_name_from_class($this->model['_id']);
+        }
+        else
+        {
+            return NULL;
+        }
+    }
 
 
     /**

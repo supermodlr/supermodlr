@@ -38,7 +38,7 @@ function <?=$form_id; ?>__extends__add(obj,label) {
     jq.val(json);
 
     //set the object as the model.fields value
-    scope.data.<?=$field->model_name ?>.<?=$field->path('.') ?> = obj;
+    scope.data.<?=$field->get_model_name() ?>.<?=$field->path('.') ?> = obj;
 
     //add the ui element for this field
     $('#<?=$form_id; ?>__field__<?=$field->path('_') ?>__list').html('<li id="<?=$form_id; ?>__<?=$field->path('_') ?>__listitem__'+obj._id+'">'+label+'<?php if ($model->is_new()) {?> <a href=\'javascript:<?=$form_id; ?>__<?=$field->path('_') ?>__remove("'+obj._id+'")\'>x</a><?php } ?></li>');
