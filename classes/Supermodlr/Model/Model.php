@@ -17,8 +17,9 @@ class Supermodlr_Model_Model extends Supermodlr {
                     'extends',//what model file does this model extend.  should have a special auto-completer that searchs on all available models (except self). defaults to 'Supermodlr'
                          //'drivers OR cfg??',
                     'methods',
+                    'traits',
                 ),
-                'core_models' => array('model','field'), 
+                'core_models' => array('model','field','trait'), 
         );
 
     //when a model is created/updated/deleted, we need to re-create/delete the generated class file
