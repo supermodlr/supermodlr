@@ -514,8 +514,10 @@ abstract class Supermodlr_Core {
 
             //look on this model for any field keys
             $field_keys = static::scfg('field_keys');
-    
+
             $fields = array();
+
+            $traits = static::get_traits();
 
             //loop through all field keys
             foreach ($field_keys as $field_name)
@@ -537,13 +539,46 @@ abstract class Supermodlr_Core {
                     // Assign the instantiated field to the array of fields.  Create the field with $for_model's context
                     $fields[$field_name] = new $fieldclass(array('model'=> 'model', '_id'=> $for_model));
                 }
-                else if (class_exists($corefieldclass))
+                //try all direct traits or core
+                else 
                 {
-                    $fields[$field_name] = new $corefieldclass(array('model'=> 'model', '_id'=> $for_model));
-                }
-                else
-                {
-                    fbl($fieldclass .' class not found');
+                    $found_in_traits = FALSE;
+
+                    //loop through all traits
+                    foreach ($traits as $trait)
+                    {
+                        //get the trait name
+                        $trait_class_name = static::get_name_case(static::get_trait_name($trait));
+
+                        // create expected trait field class name
+                        $traitfieldclass = 'Field_'.$trait_class_name.'_'.$field_class_name;
+
+                        // if the trait field class exists and is a valid supermodlr field
+                        if (class_exists($traitfieldclass) && is_subclass_of($traitfieldclass,'Field'))                          
+                        {
+
+                            // assign the field
+                            $fields[$field_name] = new $traitfieldclass(array('model'=> 'model', '_id'=> $for_model));
+
+                            // mark it as found
+                            $found_in_traits = TRUE;
+
+                            // don't look for field in the rest of the traits (if any)
+                            break ;
+                        }
+                    }
+
+                    // if this field was not found on direct traits or their traits and the core version exists
+                    if (!$found_in_traits && class_exists($corefieldclass))
+                    {
+                        // use the core version of the field
+                        $fields[$field_name] = new $corefieldclass(array('model'=> 'model', '_id'=> $for_model));
+                    }
+                    //could not find a valid field
+                    else
+                    {
+                        fbl($fieldclass .' class not found');
+                    }
                 }
             }
 
@@ -1777,7 +1812,6 @@ abstract class Supermodlr_Core {
         }
         else
         {
-            $position = &$this->$key;
             if (isset($fields[$key]))
             {
                 $Field = $fields[$key];
@@ -1785,6 +1819,7 @@ abstract class Supermodlr_Core {
                 {
                     $this->$key = NULL;
                 }                
+                $position = &$this->$key;                
             }
             
         }

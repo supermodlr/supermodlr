@@ -1010,9 +1010,9 @@ class Field_Field_Invalidtestvalues extends Field {
 
 class Field_Field_Model extends Field {
     public $name = 'model'; 
-    public $description = 'Assigns this field to a specific model.  If not set, this field will be a global field available to assign to any model.';   
+    public $description = 'Assigns this field to a specific model or trait.  If not set, this field will be a global field available to assign to any model or trait.';   
     public $datatype = 'relationship'; 
-    public $source = array(array('model'=> 'model','search_field'=> 'name'));
+    public $source = array(array('model'=> 'model','search_field'=> 'name'), array('model'=> 'trait','search_field'=> 'name'));
     public $multilingual = FALSE; 
     public $storage = 'single';
     public $required = FALSE;
