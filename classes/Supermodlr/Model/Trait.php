@@ -330,3 +330,18 @@ class Field_Trait_Methods extends Field {
     public $hidden = TRUE; 
 }
 
+class Field_Trait_Traits extends Field {
+    public $name = 'traits'; 
+    public $datatype = 'relationship'; 
+    public $source = array(array('model'=> 'trait','search_field'=> 'name'));
+    public $multilingual = FALSE; 
+    public $charset = 'UTF-8'; 
+    public $storage = 'array';
+    public $unique = FALSE;
+    public $searchable = FALSE;
+    public $filterable = FALSE;
+    public $defaultvalue = NULL;
+    public $nullvalue = FALSE;
+    public $validation = NULL;
+    public $hidden = TRUE; 
+}

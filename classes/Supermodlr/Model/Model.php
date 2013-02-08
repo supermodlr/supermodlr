@@ -28,17 +28,10 @@ class Supermodlr_Model_Model extends Supermodlr {
         //write _id field file if it doesn't exist
         $PK_Field = new Model_Field();
         $pk_name = $this->cfg('pk_name');
-        //@todo this is an ugly hack, fix me
-        if ($pk_name == '_id') 
-        {
-            $pk_name_case = '_Id';
-        }
-        else 
-        {
-            $pk_name_case = ucfirst(strtolower($pk_name));
-        }
+        $pk_name_case = Supermodlr::get_name_case($pk_name);
+
         $PK_Field->extends = array("model"=> "field", "_id"=> 'Field_Supermodlrcore_'.$pk_name_case);
-        $PK_Field->$pk_name = 'Field_'.ucfirst(strtolower($this->name)).'_'.$pk_name_case;
+        $PK_Field->$pk_name = 'Field_'.Supermodlr::get_name_case($this->name).'_'.$pk_name_case;
         $PK_Field->name = $pk_name;
         $PK_Field->model = array("model"=> "model", "_id"=> $this->get_class_name());
         $PK_Field->save();
@@ -77,16 +70,9 @@ class Supermodlr_Model_Model extends Supermodlr {
 
             //remove pk field
             $pk_name = $this->cfg('pk_name');       
-            //@todo this is an ugly hack, fix me
-            if ($pk_name == '_id') 
-            {
-                $pk_name_case = '_Id';
-            }
-            else 
-            {
-                $pk_name_case = ucfirst(strtolower($pk_name));
-            }
-            $PK_Field = new Model_Field('Field_'.ucfirst(strtolower($this->name)).'_'.$pk_name_case);
+            $pk_name_case = Supermodlr::get_name_case($pk_name);
+
+            $PK_Field = new Model_Field('Field_'.Supermodlr::get_name_case($this->name).'_'.$pk_name_case);
             $PK_Field->delete();
 
 
@@ -201,9 +187,22 @@ class Supermodlr_Model_Model extends Supermodlr {
   * FileDescription: {$this->description}
   */
 class {$model_class} extends {$extends} {
-        public static \$__scfg = array(
-                'field_keys' => array(
-                    '$pk_name',
+
+EOF;
+
+        //set all traits as 'use' statements
+        if (isset($this->traits) && is_array($this->traits)) 
+        {
+                foreach ($this->traits as $trait)
+                {
+                    $file_contents .= "    use ".$trait['_id'].";".PHP_EOL;
+                }  
+
+        }
+        $file_contents .= <<<EOF
+    public static \$__scfg = array(
+            'field_keys' => array(
+                '$pk_name',
 
 EOF;
 
@@ -217,8 +216,8 @@ EOF;
             }       
         }
 
-        $file_contents .= "                )".PHP_EOL;
-        $file_contents .= " );".PHP_EOL;
+        $file_contents .= "        )".PHP_EOL;
+        $file_contents .= "    );".PHP_EOL;
 
         //set all default values for each field on the model
         if (isset($this->fields) && is_array($this->fields)) 
@@ -337,7 +336,7 @@ EOF;
      */
     public function get_controller_class_name()
     {
-        return 'Controller_'.ucfirst(strtolower($this->name));
+        return 'Controller_'.Supermodlr::get_name_case($this->name);
     }
 
     //generate and return the class name to be used for this model
@@ -346,15 +345,15 @@ EOF;
         //if a parent field is set, include the parent field name and the parent model name in the class name
         if (isset($this->parentfield) && is_array($this->parentfield))
         {
-            $parentfield = ucfirst(strtolower(Model_Field::get_name_from_class($this->parentfield['_id']))).'_';
-            $parentmodel = ucfirst(strtolower(Model_Field::get_modelname_from_class($this->parentfield['_id']))).'_';
+            $parentfield = Supermodlr::get_name_case(Model_Field::get_name_from_class($this->parentfield['_id'])).'_';
+            $parentmodel = Supermodlr::get_name_case(Model_Field::get_modelname_from_class($this->parentfield['_id'])).'_';
         }
         else
         {
             $parentmodel = '';
             $parentfield = '';
         }       
-        return 'Model_'.$parentmodel.$parentfield.ucfirst(strtolower($this->name));
+        return 'Model_'.$parentmodel.$parentfield.Supermodlr::get_name_case($this->name);
     }
 
 }
@@ -482,6 +481,23 @@ class Field_Model_Parentfield extends Field {
     public $hidden = TRUE;
     //public $conditions = array('$hidden'=> TRUE, '$showif'=> array('datatype'=> 'object'));       
 }
+
+class Field_Model_Traits extends Field {
+    public $name = 'traits'; 
+    public $datatype = 'relationship'; 
+    public $source = array(array('model'=> 'trait','search_field'=> 'name'));
+    public $multilingual = FALSE; 
+    public $charset = 'UTF-8'; 
+    public $storage = 'array';
+    public $unique = FALSE;
+    public $searchable = FALSE;
+    public $filterable = FALSE;
+    public $defaultvalue = NULL;
+    public $nullvalue = FALSE;
+    public $validation = NULL;
+    public $hidden = FALSE; 
+}
+
 
 
 /*

@@ -161,7 +161,7 @@ function <?=$form_id; ?>__field__validation__edit(id) {
         var rule_hash = CryptoJS.MD5(JSON.stringify(rules[i]));
 
         //if this rule is the one we are editing
-        if (rule_hash == id) {
+        if (rule_hash.toString() == id) {
             rule = rules[i];
             break;
         }
@@ -202,7 +202,7 @@ function <?=$form_id; ?>__field__validation__remove(id) {
         var rule_hash = CryptoJS.MD5(JSON.stringify(rules[i]));
 
         //if this rule is not the one we are removing
-        if (rule_hash != id) {
+        if (rule_hash.toString() != id) {
             new_rules.push(rules[i]);
         }
     }

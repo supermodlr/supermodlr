@@ -1,8 +1,8 @@
-<input class='input' name="<?=$field->get_model_name() ?>__<?=$field->path('_') ?>__autocomplete" id="<?=$form_id; ?>__<?=$field->path('_') ?>__autocomplete" type="text"/>
+<input class='input' name="<?=$field->get_model_name() ?>__<?=$field->path('_') ?>__autocomplete" id="<?=$form_id; ?>__field__<?=$field->path('_') ?>__autocomplete" type="text"/>
 <input class='input' type="text" id="<?=$form_id; ?>__field__<?=$field->path('_') ?>" name="<?=$field->get_model_name() ?>__<?=$field->path('_') ?>" ng-model="data.<?=$field->get_model_name() ?>.<?=$field->path('.') ?>" autocomplete="off" style="display: none"/>
-<ul id='<?=$form_id; ?>__<?=$field->path('_') ?>__list'></ul>
+<ul id='<?=$form_id; ?>__field__<?=$field->path('_') ?>__list'></ul>
 <script type="text/javascript">
-$("#<?=$form_id; ?>__<?=$field->path('_') ?>__autocomplete").autocomplete({
+$("#<?=$form_id; ?>__field__<?=$field->path('_') ?>__autocomplete").autocomplete({
             source: function(request,response) { /*@todo  support field->source as an array to search multiple models and convert $regex to a standard "like" syntax */
                 var url = getAPIPath()+'/<?=$field->get_model_name() ?>/relsearch/<?=$field->path('.') ?>?q='+request.term;
                 $.getJSON( url, request, function( server_data, status, xhr ) {
@@ -29,7 +29,7 @@ $("#<?=$form_id; ?>__<?=$field->path('_') ?>__autocomplete").autocomplete({
             },
             minLength: 2,
             select: function( event, ui ) {
-                <?=$form_id; ?>__<?=$field->path('_') ?>__add({'_id': ui.item._id, 'model': ui.item.model}, ui.item.label);
+                <?=$form_id; ?>__<?=$field->path('_') ?>__add({'_id': ui.item.value, 'model': ui.item.model}, ui.item.label);
                 $(this).val('');
                 return false;
 
@@ -37,7 +37,6 @@ $("#<?=$form_id; ?>__<?=$field->path('_') ?>__autocomplete").autocomplete({
         });
 
 function <?=$form_id; ?>__<?=$field->path('_') ?>__add(obj,label) {
-
 
     var jq = $('#<?=$form_id; ?>__field__<?=$field->path('_') ?>'); 
 
@@ -58,27 +57,30 @@ function <?=$form_id; ?>__<?=$field->path('_') ?>__add(obj,label) {
     //if the scope already has a value
     } else {
         var arry = scope.data.<?=$field->get_model_name() ?>.<?=$field->path('.') ?>;
+
         for (var fi = 0; fi < arry.length; fi++) {
             //convert field data to string
             rowjson = JSON.stringify(arry[fi]);
-            rowjson_hash = CryptoJS.MD5(json);          
+            rowjson_hash = CryptoJS.MD5(rowjson);          
 
             objjson = JSON.stringify(obj);
-            objjson_hash = CryptoJS.MD5(obj);
-            if (rowjson_hash == objjson_hash) {
+            objjson_hash = CryptoJS.MD5(objjson);
+
+            if (rowjson_hash.toString() == objjson_hash.toString()) {
                 exists = true;
             }
         }           
     }
 
-
     //if the stored data does not parse into a valid json object
     if (!arry) {
+
         //create empty object
         arry = [];
     }
 
     if (!exists) {
+
         //add selected field
         arry.push(obj);
         
@@ -91,25 +93,27 @@ function <?=$form_id; ?>__<?=$field->path('_') ?>__add(obj,label) {
         jq.val(json);
 
         //trigger input so angular detects the change
-        jq.trigger('input');
+        //jq.trigger('input');
 
         //set the object as the model.fields value
         scope.data.<?=$field->get_model_name() ?>.<?=$field->path('.') ?> = arry;
+
+    }
+
+    if ($('#<?=$form_id; ?>__field__<?=$field->path('_') ?>__listitem__'+obj_hash).length == 0)
+    {
+        //add the ui element for this field if it doesn't exist
+        $('#<?=$form_id; ?>__field__<?=$field->path('_') ?>__list').append('<li id="<?=$form_id; ?>__field__<?=$field->path('_') ?>__listitem__'+obj_hash+'">'+label+'<?php if ($model->is_new()) {?> <a href=\'javascript:<?=$form_id; ?>__<?=$field->path('_') ?>__remove("'+obj_hash+'")\'>x</a><?php } ?></li>');            
     }
 
 
-    if ($('#<?=$form_id; ?>__<?=$field->path('_') ?>__listitem__'+obj_hash).length == 0) {
-        //add the ui element for this field
-        $('#<?=$form_id; ?>__field__<?=$field->path('_') ?>__list').append('<li id="<?=$form_id; ?>__<?=$field->path('_') ?>__listitem__'+obj_hash+'">'+label+'<?php if ($model->is_new()) {?> <a href=\'javascript:<?=$form_id; ?>__<?=$field->path('_') ?>__remove("'+obj_hash+'")\'>x</a><?php } ?></li>');
 
-        $('#<?=$form_id; ?>__field__<?=$field->path('_') ?>__autocomplete').hide();     
-    }
 
 
 }
 
 function <?=$form_id; ?>__<?=$field->path('_') ?>__remove(obj_hash) {
-    $('#<?=$form_id; ?>__<?=$field->path('_') ?>__listitem__'+obj_hash).remove();
+    $('#<?=$form_id; ?>__field__<?=$field->path('_') ?>__listitem__'+obj_hash).remove();
 
     var jq = $('#<?=$form_id; ?>__field__<?=$field->path('_') ?>');
 
@@ -121,7 +125,7 @@ function <?=$form_id; ?>__<?=$field->path('_') ?>__remove(obj_hash) {
     for (var fi = 0; fi < arry.length; fi++) {
         var this_json = JSON.stringify(arry[fi]);
         var this_hash = CryptoJS.MD5(this_json);
-        if (this_hash != obj_hash) {
+        if (this_hash.toString() != obj_hash.toString()) {
             new_arry.push(arry[fi]);
         }
     }   
@@ -141,7 +145,7 @@ function <?=$form_id; ?>__<?=$field->path('_') ?>__remove(obj_hash) {
     //set the object as the model.fields value
     scope.data.<?=$field->get_model_name() ?>.<?=$field->path('.') ?> = new_arry;   
 
-    $('#<?=$form_id; ?>__<?=$field->path('_') ?>__autocomplete').show();
+    $('#<?=$form_id; ?>__field__<?=$field->path('_') ?>__autocomplete').show();
 
 }
 
@@ -154,9 +158,13 @@ if ($field->value_isset()) {
         window.'.$form_id.'_readyfunctions = [];
     }
     window["'.$form_id.'_readyfunctions"].push(function() {
-        var value = '.json_encode($field->raw_value).';
+        var value = '.$field->raw_value.';
         var label = '.$field->source['labels'].';
-        '.$form_id.'__'.$field->name.'__add(value,label[(value.model+value._id)]);
+        for (var i = 0; i < value.length; i++) {
+            '.$form_id.'__'.$field->name.'__add(value[i],label[(value[i].model+value[i]._id)]);
+        }
+
+        
     });
 ';
 }

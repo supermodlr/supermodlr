@@ -339,6 +339,11 @@ class Controller_Supermodlr_Api extends Controller {
 
             $model_label = $model_class::scfg('label');
 
+            if ($model_label === NULL)
+            {
+                $model_label = ucfirst(strtolower($source['model']));
+            }
+
             //get additional where params if sent
             if (isset($source['where'])) 
             {
