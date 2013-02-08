@@ -1777,7 +1777,7 @@ abstract class Supermodlr_Core {
         }
         else
         {
-            $position = &$this->$key;
+            
             if (isset($fields[$key]))
             {
                 $Field = $fields[$key];
@@ -1785,6 +1785,7 @@ abstract class Supermodlr_Core {
                 {
                     $this->$key = NULL;
                 }                
+                $position = &$this->$key;
             }
             
         }
