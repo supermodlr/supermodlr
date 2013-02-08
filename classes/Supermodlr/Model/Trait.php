@@ -146,7 +146,19 @@ class Supermodlr_Model_Trait extends Supermodlr {
   * FileDescription: {$this->description}
   */
 trait {$trait_class} {
-    use Trait_Supertrait;    
+    use Trait_Supertrait;
+
+EOF;
+        //set all traits as 'use' statements
+        if (isset($this->traits) && is_array($this->traits)) 
+        {
+                foreach ($this->traits as $trait)
+                {
+                    $file_contents .= "    use ".$trait['_id'].";".PHP_EOL;
+                }  
+
+        }
+        $file_contents .= <<<EOF
     public static \$__{$name}__scfg = array(
             'field_keys' => array(
 
@@ -343,5 +355,5 @@ class Field_Trait_Traits extends Field {
     public $defaultvalue = NULL;
     public $nullvalue = FALSE;
     public $validation = NULL;
-    public $hidden = TRUE; 
+    public $hidden = FALSE; 
 }
