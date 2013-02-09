@@ -3,7 +3,7 @@
 class Mongodbquery2js {
 
     public $commands = array('$or','$nor','$and');
-    public $operators = array('$in','$nin','$gt','$gte','$lt','$lte','$mod','$all','$exists','$ne','$size','$type','$regex','$elemMatch','$not');
+    public $operators = array('$in','$nin','$gt','$gte','$lt','$lte','$mod','$all','$exists','$ne','$size','$type','$regex','$elemMatch','$not','$contains');
     public $var_prefix = '';
 
     public function __construct(array $mongo_query)
@@ -97,7 +97,13 @@ class Mongodbquery2js {
                         else if ($k === '$regex')
                         {
                                 //@todo test regex to make sure it's valid and won't cause a js syntax error
-                                $js[] = ' ( typeof '.$this->var_prefix.$k.' != \'undefined\' && ('.$v.').test('.$this->var_prefix.$k.');) ';
+                                $js[] = ' ( typeof '.$this->var_prefix.$k.' != \'undefined\' && ('.$v.').test('.$this->var_prefix.$k.')) ';
+                        }
+                        else if ($k === '$contains')
+                        {
+                                $condition = $this->parse_condition($v);
+                                //@todo test regex to make sure it's valid and won't cause a js syntax error
+                                $js[] = ' ( typeof '.$this->var_prefix.$key.' != \'undefined\' && $.inArray('.$condition.', '.$this->var_prefix.$key.') > -1 ) ';
                         }
 
                         //@todo $type

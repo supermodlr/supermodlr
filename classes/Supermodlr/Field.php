@@ -30,6 +30,7 @@ class Supermodlr_Field {
    public $values = NULL;//array|NULL
    public $value = self::NOT_SET;
    public $raw_value = self::NOT_SET;  
+   public $php_value = self::NOT_SET;     
    public $group = NULL;//NULL|string
    public $filters = NULL;
    public $maxlength = NULL;
@@ -222,12 +223,29 @@ class Supermodlr_Field {
             }
          }
       }
-      
-      // value in values
-      if ($this->values !== NULL && is_array($this->values) && !in_array($value,$this->values)) 
+
+      //check for value in values
+      if ($this->values !== NULL && is_array($this->values))
       {
-         return new Status(FALSE,$this->message('invalues',$value));
+  
+        if (is_array($value))
+        {
+          foreach ($value as $v)
+          {
+            if (!in_array($v,$this->values)) 
+            {
+               return new Status(FALSE,$this->message('invalues',$v));
+            }
+          }
+        }
+        else if (!in_array($value,$this->values)) 
+        {
+           return new Status(FALSE,$this->message('invalues',$value));
+        }
       }
+
+
+
       
       $data = array();
       if (!empty($fieldset)) 

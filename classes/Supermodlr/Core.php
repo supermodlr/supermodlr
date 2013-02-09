@@ -1215,7 +1215,7 @@ abstract class Supermodlr_Core {
             }
             //if we want to check access before returning the data
             if ($check_access)
-            {
+            { 
                  //only users with admin access can see private fields.
                  if ($fields[$col]->private === TRUE && !in_array('admin',$this->get_user_access_tags()))
                  {

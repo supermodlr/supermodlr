@@ -103,7 +103,7 @@ class Controller extends Kohana_Controller {
 
         $field_templates = array();
         
-        $model_data = $Model->to_array();
+        $model_data = $Model->to_array(TRUE,TRUE);
 
         //loop through all fields
         foreach ($fields as $Field)
@@ -250,6 +250,7 @@ class Controller extends Kohana_Controller {
         //bind value to view
         $Field->value = $value;
         $Field->raw_value = $raw_value;     
+        $Field->php_value = $pointer;             
 
         //if this field is a relationship, we need to get all the labels for and existing values
         if ($Field->datatype == 'relationship') 

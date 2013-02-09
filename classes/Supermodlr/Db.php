@@ -87,6 +87,7 @@ class Supermodlr_Db {
                     //after all datatype transforms are done, run storage transform, if any
                     if (method_exists($this, $Field->storage.'_todb'))
                     {
+                     
                         $method = $Field->storage.'_todb';
                         $this->$method(array(
                             'value'=> &$params['set'][$field_key],
@@ -146,6 +147,17 @@ class Supermodlr_Db {
                             'model'  => $params['model'],
                         ));
                     }
+                    //after all datatype transforms are done, run storage transform, if any
+                    if (method_exists($this, $Field->storage.'_fromdb'))
+                    {
+                        $method = $Field->storage.'_fromdb';
+                        $this->$method(array(
+                            'value'=> &$result[$i][$field_key],
+                            'result'  => &$result[$i],
+                            'field'=> $Field,
+                            'model'=> $params['model'],
+                        ));
+                    }                        
                 }
             }
 
