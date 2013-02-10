@@ -1,9 +1,14 @@
 <?php
 //@todo convert this whole page to be generic "list" template and convert the whole thing to use angular js
+
+// Set the model uri
+$uri_parts = $request->uri_parts();
+$model_uri = ($uri_parts[0] == 'supermodlrui') ? "supermodlrui/".strtolower($model_name) : $request->uri();
+
 ?>
 <div>
 <h1><?php echo ucfirst(str_replace('_',' ',$model_name)); ?></h1>
-	<a href="/supermodlrui/<?php echo $model_name; ?>/create">Create</a><?php
+	<a href="/<?=$model_uri; ?>/create">Create</a><?php
 	$js_template = '';
 	if (count($model_rows) > 0)
 	{
@@ -23,7 +28,7 @@
 					</td><?php
 					if ($col == '_id') 
 					{
-						$js_template .= '<td><a href="/supermodlrui/'.$model_name.'/read/\'+row._id+\'">\'+row._id+\'</a></td>';
+						$js_template .= '<td><a href="/'.$model_uri.'/read/\'+row._id+\'">\'+row._id+\'</a></td>';
 					}
 					else
 					{
@@ -33,7 +38,7 @@
 					$col_count++;
 				} 
 
-				$js_template .= '<td><a href="/supermodlrui/'.$model_name.'/update/\'+row._id+\'">Edit</a></td><td><a href="/supermodlr/'.$model_name.'/delete/\'+row._id+\'">Delete</a></td>';
+				$js_template .= '<td><a href="/'.$model_uri.'/update/\'+row._id+\'">Edit</a></td><td><a href="/'.$model_uri.'/delete/\'+row._id+\'">Delete</a></td>';
 				?></tr></thead><tbody id="data_body"><?php 
 			}
 			$col_count = 0;
@@ -43,7 +48,7 @@
 				if ($col_count == 10) continue;
 				if ($col == '_id') 
 				{
-					?><td><a href="/supermodlrui/<?php echo $model_name; ?>/read/<?=$row['_id']; ?>"><?=$row['_id']; ?></a></td><?php
+					?><td><a href="/<?=$model_uri; ?>/read/<?=$row['_id']; ?>"><?=$row['_id']; ?></a></td><?php
 				}
 				else
 				{
@@ -53,8 +58,8 @@
 			} ?>
 
 				
-				<td><a href="/supermodlrui/<?php echo $model_name; ?>/update/<?php echo $row['_id']; ?>">Edit</a></td>
-				<td><a href="/supermodlrui/<?php echo $model_name; ?>/delete/<?php echo $row['_id']; ?>">Delete</a></td>
+				<td><a href="/<?=$model_uri; ?>/update/<?=$row['_id']; ?>">Edit</a></td>
+				<td><a href="/<?=$model_uri; ?>/delete/<?=$row['_id']; ?>">Delete</a></td>
 			</tr>
 			<?php
 			$c++;
