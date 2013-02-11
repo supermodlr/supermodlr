@@ -508,4 +508,14 @@ class Controller extends Kohana_Controller {
     {
         return '/supermodlr/api/';
     }   
+
+    public function log_request()
+    {
+        Log::instance()->add(Log::NOTICE, "===================REQUEST===================".PHP_EOL.var_export($_SERVER,TRUE));
+    }
+
+    public function log_response($response,$data = array())
+    {
+        Log::instance()->add(Log::NOTICE, "===================RESPONSE ".$_SERVER['REQUEST_TIME']."===================".PHP_EOL.var_export($response,TRUE).PHP_EOL.var_export($data,TRUE));
+    }    
 }
