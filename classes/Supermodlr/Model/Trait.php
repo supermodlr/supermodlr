@@ -244,11 +244,9 @@ EOF;
 }
 
 
-class Field_Trait__Id extends Field {
+class Field_Trait__Id extends Field_Supermodlrcore__Id {
     public $name = '_id'; 
-    public $datatype = 'string'; 
     public $multilingual = FALSE; 
-    public $storage = 'single';
     public $required = TRUE;
     public $unique = TRUE;
     public $searchable = TRUE;
@@ -258,12 +256,10 @@ class Field_Trait__Id extends Field {
     public $hidden = TRUE; 
     public $pk = TRUE;  
 }
-class Field_Trait_Name extends Field {
+class Field_Trait_Name extends Field_Supermodlrcore_Name {
     public $name = 'name'; 
-    public $datatype = 'string'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'single';
     public $required = TRUE;
     public $unique = FALSE;
     public $searchable = TRUE;
@@ -282,12 +278,10 @@ class Field_Trait_Name extends Field {
     public $invalidtestvalues = NULL; 
 }
 
-class Field_Trait_Description extends Field {
+class Field_Trait_Description extends Field_Supermodlrcore_Description {
     public $name = 'description'; 
-    public $datatype = 'string'; 
     public $multilingual = TRUE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = TRUE;
@@ -298,13 +292,11 @@ class Field_Trait_Description extends Field {
     public $hidden = FALSE; 
 }
 
-class Field_Trait_Fields extends Field {
+class Field_Trait_Fields extends Field_Supermodlrcore_Arrayrelationship {
     public $name = 'fields'; 
-    public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'field','search_field'=> 'name', 'where'=> array('model'=> NULL)));
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'array';
     public $unique = FALSE;
     public $searchable = TRUE;
     public $filterable = FALSE;
@@ -315,12 +307,10 @@ class Field_Trait_Fields extends Field {
     public $hidden = FALSE; 
 }
 
-class Field_Trait_Methods extends Field {
+class Field_Trait_Methods extends Field_Supermodlrcore_Arraymixed {
     public $name = 'methods'; 
-    public $datatype = 'object'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'array';
     public $unique = FALSE;
     public $searchable = TRUE;
     public $filterable = FALSE;
@@ -330,13 +320,11 @@ class Field_Trait_Methods extends Field {
     public $hidden = TRUE; 
 }
 
-class Field_Trait_Traits extends Field {
+class Field_Trait_Traits extends Field_Supermodlrcore_Arrayrelationship {
     public $name = 'traits'; 
-    public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'trait','search_field'=> 'name'));
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'array';
     public $unique = FALSE;
     public $searchable = FALSE;
     public $filterable = FALSE;

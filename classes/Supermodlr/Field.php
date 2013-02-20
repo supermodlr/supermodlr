@@ -370,7 +370,7 @@ class Supermodlr_Field {
     * @param string $datatype a valid datatype string (string,int,float,timestamp,date,bool,binary,rel,object)
     * @returns bool true if $value is of $datatype variable type
     */       
-    public function validate_datatype($value,$datatype) 
+    /*public function validate_datatype($value,$datatype) 
    {
       //string,int,float,unix timestamp,date,boolean,relationship,binary,resource,object,mixed
       if ($datatype == 'mixed') 
@@ -417,7 +417,7 @@ class Supermodlr_Field {
       {
          return FALSE;
       }
-   }
+   }*/
 
     /**
     * @param string $operation required. 'create', 'read', 'update', 'delete'

@@ -1,13 +1,13 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore_Singletext extends Field implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Supermodlrcore_Arraymixed extends Field implements Interface_Fieldstorage, Interface_Fielddatatype
 {
-    use Trait_Fieldstorage_Single , Trait_Fielddatatype_String;
+    use Trait_Fieldstorage_Array , Trait_Fielddatatype_Mixed;
 
-    public $name = 'singletext';
-    public $datatype = 'string';
+    public $name = 'arraymixed';
+    public $datatype = 'mixed';
     public $multilingual = FALSE;
     public $charset = 'UTF-8';
-    public $storage = 'single';
+    public $storage = 'array';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = TRUE;

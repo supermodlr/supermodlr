@@ -359,7 +359,7 @@ EOF;
 }
 
 
-class Field_Model__Id extends Field {
+class Field_Model__Id extends Field_Supermodlrcore__Id {
     public $name = '_id'; 
     public $datatype = 'string'; 
     public $multilingual = FALSE; 
@@ -373,12 +373,10 @@ class Field_Model__Id extends Field {
     public $hidden = TRUE; 
     public $pk = TRUE;  
 }
-class Field_Model_Name extends Field {
+class Field_Model_Name extends Field_Supermodlrcore_Name {
     public $name = 'name'; 
-    public $datatype = 'string'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'single';
     public $required = TRUE;
     public $unique = FALSE;
     public $searchable = TRUE;
@@ -397,12 +395,10 @@ class Field_Model_Name extends Field {
     public $invalidtestvalues = NULL; 
 }
 
-class Field_Model_Description extends Field {
+class Field_Model_Description extends Field_Supermodlrcore_Description {
     public $name = 'description'; 
-    public $datatype = 'string'; 
     public $multilingual = TRUE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = TRUE;
@@ -413,7 +409,7 @@ class Field_Model_Description extends Field {
     public $hidden = FALSE; 
 }
 
-class Field_Model_Fields extends Field {
+class Field_Model_Fields extends Field_Supermodlrcore_Arrayrelationship {
     public $name = 'fields'; 
     public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'field','search_field'=> 'name', 'where'=> array('model'=> NULL)));
@@ -431,12 +427,10 @@ class Field_Model_Fields extends Field {
     public $filters = array('model_model::filter_fields');
 }
 
-class Field_Model_Methods extends Field {
+class Field_Model_Methods extends Field_Supermodlrcore_Arraymixed {
     public $name = 'methods'; 
-    public $datatype = 'object'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'array';
     public $unique = FALSE;
     public $searchable = TRUE;
     public $filterable = FALSE;
@@ -447,7 +441,7 @@ class Field_Model_Methods extends Field {
 }
 
 
-class Field_Model_Extends extends Field {
+class Field_Model_Extends extends Field_Supermodlrcore_Singlerelationship {
     public $name = 'extends';
     public $datatype = 'relationship';
     public $source = array(array('model'=> 'model','search_field'=> 'name'));
@@ -465,7 +459,7 @@ class Field_Model_Extends extends Field {
 }
 
 
-class Field_Model_Parentfield extends Field {
+class Field_Model_Parentfield extends Field_Supermodlrcore_Singlerelationship {
     public $name = 'parentfield'; 
     public $description = 'If this model is assigned to a model via an "object" field and this is the "model" specific copy, this field stores the relationship to that field.';
     public $datatype = 'relationship'; 
@@ -482,7 +476,7 @@ class Field_Model_Parentfield extends Field {
     //public $conditions = array('$hidden'=> TRUE, '$showif'=> array('datatype'=> 'object'));       
 }
 
-class Field_Model_Traits extends Field {
+class Field_Model_Traits extends Field_Supermodlrcore_Arrayrelationship {
     public $name = 'traits'; 
     public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'trait','search_field'=> 'name'));

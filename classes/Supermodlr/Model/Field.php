@@ -414,18 +414,32 @@ class Supermodlr_Model_Field extends Supermodlr {
         
         $extends = $this->get_extends();
         
+        // If this field extends the core Field class, implement datatype and storage interfaces and use the datatype and storage traits
+        if ($extends === 'Field')
+        {
+            $storage = Supermodlr::get_name_case($this->storage);        
+            $datatype = Supermodlr::get_name_case($this->datatype);            
+            $use = '    use Trait_Supermodlr_FieldTrait_{$storage}, Trait_Supermodlr_FieldTrait_{$datatype};'.PHP_EOL;
+            $implements = ' implements Interface_Fieldstorage, Interface_Fielddatatype';
+        }
+        else
+        {
+            $use = '';
+            $implements = '';
+        }
+
         $Field = new Field();
         $file_contents = <<<EOF
 <?php defined('SYSPATH') or die('No direct script access.');
-class {$field_class} extends {$extends} 
+class {$field_class} extends {$extends} {$implements}
 {
-
+{$use}
 EOF;
         foreach ($Field as $col => $val) 
         {
             if (isset($this->$col))
             {
-                $file_contents .= " public \$$col = ".Field::generate_php_value($this->$col).";".PHP_EOL;
+                $file_contents .= "    public \$$col = ".Field::generate_php_value($this->$col).";".PHP_EOL;
             }
         }
         $file_contents .= PHP_EOL."}";
@@ -534,11 +548,8 @@ EOF;
 }
 
 
-class Field_Field__Id extends Field {
+class Field_Field__Id extends Field_Supermodlrcore__Id {
     public $name = '_id'; 
-    public $datatype = 'string'; 
-    public $multilingual = FALSE; 
-    public $storage = 'single';
     public $required = TRUE;
     public $unique = TRUE;
     public $searchable = TRUE;
@@ -550,12 +561,9 @@ class Field_Field__Id extends Field {
     public $readonly = TRUE;
 }
 
-class Field_Field_Label extends Field {
+class Field_Field_Label extends Field_Supermodlrcore_Singlemultilingualtext {
     public $name = 'label'; 
-    public $datatype = 'string'; 
-    public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = TRUE;
@@ -572,12 +580,25 @@ class Field_Field_Label extends Field {
     public $readonly = FALSE;
 }
 
-class Field_Field_Name extends Field {
-    public $name = 'name'; 
-    public $datatype = 'string'; 
-    public $multilingual = FALSE; 
+class Field_Field_Description extends Field_Supermodlrcore_Singlemultilingualtext {
+    public $name = 'description'; 
+    public $description = 'This text is displayed as help text on data entry forms.';
+    public $multilingual = TRUE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'single';
+    public $required = FALSE;
+    public $unique = FALSE;
+    public $searchable = TRUE;
+    public $filterable = FALSE;
+    public $validation = NULL;
+    public $templates = NULL;   
+    public $hidden = FALSE; 
+    public $nullvalue = FALSE; 
+}
+
+
+class Field_Field_Name extends Field_Supermodlrcore_Name {
+    public $name = 'name'; 
+    public $charset = 'UTF-8'; 
     public $required = TRUE;
     public $unique = FALSE;
     public $searchable = TRUE;
@@ -596,30 +617,11 @@ class Field_Field_Name extends Field {
     public $readonly = TRUE;
 }
 
-class Field_Field_Description extends Field {
-    public $name = 'description'; 
-    public $description = 'This text is displayed as help text on data entry forms.';
-    public $datatype = 'string'; 
-    public $multilingual = TRUE; 
-    public $charset = 'UTF-8'; 
-    public $storage = 'single';
-    public $required = FALSE;
-    public $unique = FALSE;
-    public $searchable = TRUE;
-    public $filterable = FALSE;
-    public $validation = NULL;
-    public $templates = NULL;   
-    public $hidden = FALSE; 
-    public $nullvalue = FALSE; 
-}
-
-class Field_Field_Datatype extends Field {
+class Field_Field_Datatype extends Field_Supermodlrcore_Singletext {
     public $name = 'datatype'; 
     public $description = 'Controls how the data is stored.';
-    public $datatype = 'string'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -629,13 +631,11 @@ class Field_Field_Datatype extends Field {
     public $nullvalue = FALSE; 
 }
 
-class Field_Field_Storage extends Field {
+class Field_Field_Storage extends Field_Supermodlrcore_Singletext {
     public $name = 'storage'; 
     public $description = 'Single means one value per object (per language if multilingual).  Array means multiple values are stored ordered in a numerical index array. keyed_array means multiple values are stored and keyed with numbers or strings';
-    public $datatype = 'string'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -645,26 +645,10 @@ class Field_Field_Storage extends Field {
     public $nullvalue = FALSE; 
 }
 
-class Field_Field_Multilingual extends Field {
-    public $name = 'multilingual'; 
-    public $description = 'Enables string storage for more than one language value';
-    public $datatype = 'boolean'; 
-    public $storage = 'single';
-    public $required = FALSE;
-    public $unique = FALSE; 
-    public $searchable = FALSE;
-    public $filterable = TRUE;
-    public $nullvalue = FALSE; 
-    public $conditions = array('$hidden'=> TRUE, '$showif'=> array('datatype'=> 'string')); 
-}
-
-class Field_Field_Charset extends Field {
+class Field_Field_Charset extends Field_Supermodlrcore_Singletext {
     public $name = 'charset'; 
     public $description = 'Controls how this string is stored.';
-    public $datatype = 'string'; 
-    public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;     
     public $searchable = FALSE;
@@ -786,11 +770,9 @@ when a model extends another model ( modelB extends modelA)
     public $conditions = array('$hidden'=> TRUE, '$showif'=> array('datatype'=> 'object', 'submodel'=> NULL));      
 }*/
 
-class Field_Field_Required extends Field {
+class Field_Field_Required extends Field_Supermodlrcore_Singleboolean {
     public $name = 'required'; 
     public $description = 'The model will not save if this field is not populated and valid.';
-    public $datatype = 'mixed'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $templates = array('input'=> 'single/boolean');
@@ -800,11 +782,9 @@ class Field_Field_Required extends Field {
     public $conditions = array('$hideif'=> array('storage'=> 'false'));     
 }
 
-class Field_Field_Unique extends Field {
+class Field_Field_Unique extends Field_Supermodlrcore_Singleboolean {
     public $name = 'unique'; 
     public $description = 'The model will not save if the value matches an existing entry';
-    public $datatype = 'boolean'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -813,11 +793,9 @@ class Field_Field_Unique extends Field {
     public $conditions = array('$hideif'=> array('storage'=> 'false'));     
 }
 
-class Field_Field_Searchable extends Field {
+class Field_Field_Searchable extends Field_Supermodlrcore_Singleboolean {
     public $name = 'searchable'; 
     public $description = 'If true, this field will be indexed in the text search provider (solr by default) and used in text queries.';
-    public $datatype = 'boolean'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -826,11 +804,9 @@ class Field_Field_Searchable extends Field {
     public $conditions = array('$hidden'=> TRUE, '$hideif'=> array('storage'=> 'false'), '$showif'=> array('datatype'=> 'string'));             
 }
 
-class Field_Field_Filterable extends Field {
+class Field_Field_Filterable extends Field_Supermodlrcore_Singleboolean {
     public $name = 'filterable'; 
     public $description = 'If true, this field will be indexed in all database providers (mongo and mysql by default).';
-    public $datatype = 'boolean'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -839,7 +815,7 @@ class Field_Field_Filterable extends Field {
     public $conditions = array('$hideif'=> array('storage'=> 'false'));             
 }
 
-class Field_Field_Values extends Field {
+class Field_Field_Values extends Field_Supermodlrcore_Arraymixed {
     public $name = 'values'; 
     public $description = 'A list of possible values.  A sent value must exist in this list if it is set.';
     public $datatype = 'mixed'; 
@@ -853,13 +829,11 @@ class Field_Field_Values extends Field {
     public $nullvalue = FALSE; 
 }
 
-class Field_Field_Filters extends Field {
+class Field_Field_Filters extends Field_Supermodlrcore_Arraytext {
     public $name = 'filters'; 
     public $description = 'A list of functions to call to modify the value before it is saved.';
-    public $datatype = 'string'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'array';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -869,13 +843,11 @@ class Field_Field_Filters extends Field {
     public $conditions = array('$hideif'=> array('storage'=> 'false'));          
 }
 
-class Field_Field_Defaultvalue extends Field {
+class Field_Field_Defaultvalue extends Field_Supermodlrcore_Singlemixed {
     public $name = 'defaultvalue'; 
     public $description = 'This value is initially displayed on entry forms and/or stored if no value is sent for this field.';
-    public $datatype = 'mixed'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -884,11 +856,9 @@ class Field_Field_Defaultvalue extends Field {
 }
 
 
-class Field_Field_Nullvalue extends Field {
+class Field_Field_Nullvalue extends Field_Supermodlrcore_Singleboolean {
     public $name = 'nullvalue'; 
     public $description = 'Means null is a valid value for this field.  If set to false and there is no default value set, and no value is sent for this field, it will not be set at all.';
-    public $datatype = 'boolean'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -898,13 +868,11 @@ class Field_Field_Nullvalue extends Field {
 }
 
 
-class Field_Field_Validation extends Field {
+class Field_Field_Validation extends Field_Supermodlrcore_Arraymixed {
     public $name = 'validation'; 
     public $description = 'A list of validation rules that must pass before this field will be allowed to be saved.';
-    public $datatype = 'object'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'array';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -915,13 +883,11 @@ class Field_Field_Validation extends Field {
 }
 
 
-class Field_Field_Messages extends Field {
+class Field_Field_Messages extends Field_Supermodlrcore_Arraymixed {
     public $name = 'messages'; 
     public $description = 'A lit of custom messages for the custom validation rules.';
-    public $datatype = 'string'; 
     public $multilingual = TRUE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'keyed_array';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -931,13 +897,11 @@ class Field_Field_Messages extends Field {
 }
 
 
-class Field_Field_Templates extends Field {
+class Field_Field_Templates extends Field_Supermodlrcore_Arraymixed {
     public $name = 'templates'; 
     public $description = 'A list of templates that this field should use for display and input forms.';
-    public $datatype = 'string'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'keyed_array';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -950,11 +914,9 @@ class Field_Field_Templates extends Field {
 }
 
 
-class Field_Field_Hidden extends Field {
+class Field_Field_Hidden extends Field_Supermodlrcore_Singleboolean {
     public $name = 'hidden'; 
     public $description = 'If true, this field will be hidden on all entry forms and will not be displayed on display views.';
-    public $datatype = 'boolean'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $templates = array('input'=> 'single/boolean');    
@@ -963,12 +925,10 @@ class Field_Field_Hidden extends Field {
     public $nullvalue = FALSE; 
 }
 
-class Field_Field_Extends extends Field {
+class Field_Field_Extends extends Field_Supermodlrcore_Singlerelationship {
     public $name = 'extends'; 
     public $description = 'A list of fields that this field extends.  The first in the list is the direct parent and any not set options on this field will be inheireted from that parent field.';
-    public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'field','search_field'=> 'name', 'where'=> array('model'=> NULL)));    
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -978,13 +938,11 @@ class Field_Field_Extends extends Field {
 }
 
 
-class Field_Field_Validtestvalue extends Field {
+class Field_Field_Validtestvalue extends Field_Supermodlrcore_Singlemixed {
     public $name = 'validtestvalue'; 
     public $description = 'Enter a valid test value which will be used for automated testing.';
-    public $datatype = 'mixed'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -993,13 +951,11 @@ class Field_Field_Validtestvalue extends Field {
 }
 
 
-class Field_Field_Invalidtestvalues extends Field {
+class Field_Field_Invalidtestvalues extends Field_Supermodlrcore_Arraymixed {
     public $name = 'invalidtestvalues'; 
     public $description = 'Enter a list of invalid test values which will be used for automated testing.';  
-    public $datatype = 'mixed'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
-    public $storage = 'array';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -1008,13 +964,11 @@ class Field_Field_Invalidtestvalues extends Field {
     public $hidden = TRUE;  
 }
 
-class Field_Field_Model extends Field {
+class Field_Field_Model extends Field_Supermodlrcore_Singlerelationship {
     public $name = 'model'; 
     public $description = 'Assigns this field to a specific model or trait.  If not set, this field will be a global field available to assign to any model or trait.';   
-    public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'model','search_field'=> 'name'), array('model'=> 'trait','search_field'=> 'name'));
     public $multilingual = FALSE; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -1024,12 +978,10 @@ class Field_Field_Model extends Field {
     public $readonly = TRUE;
 }
 
-class Field_Field_Access extends Field {
+class Field_Field_Access extends Field_Supermodlrcore_Arraymixed {
     public $name = 'access'; 
     public $description = 'A list of actions and user/group/everyone permissions for each action.'; 
-    public $datatype = 'string'; 
     public $multilingual = FALSE; 
-    public $storage = 'keyed_array';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -1038,12 +990,10 @@ class Field_Field_Access extends Field {
     public $hidden = TRUE;  
 }
 
-class Field_Field_Private extends Field {
+class Field_Field_Private extends Field_Supermodlrcore_Singleboolean {
     public $name = 'private'; 
     public $description = 'If true, this field will never be viewable on display views and will not be on entry forms, unless within a admin interface.  Example: password, salt.'; 
-    public $datatype = 'boolean'; 
     public $multilingual = FALSE; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -1051,12 +1001,10 @@ class Field_Field_Private extends Field {
     public $nullvalue = FALSE; 
 }
 
-class Field_Field_Maxlength extends Field {
+class Field_Field_Maxlength extends Field_Supermodlrcore_Singlenumber {
     public $name = 'maxlength'; 
     public $description = 'The max length for this field.  For strings, it is the max number of single byte characters (1,max).  For int, it controls the size of the integer field in bytes (1,2,3,4,8).  For float, it controls precision (1 to 18). ';   
-    public $datatype = 'int'; 
     public $multilingual = FALSE; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -1065,12 +1013,10 @@ class Field_Field_Maxlength extends Field {
     public $conditions = array('$hideif'=> array('storage'=> 'false'));          
 }
 
-class Field_Field_Conditions extends Field {
+class Field_Field_Conditions extends Field_Supermodlrcore_Arraymixed {
     public $name = 'conditions'; 
     public $description = 'A list of rules that can control if this field is displayed on views and forms. (Example: only display this field if field1=value1.  The first matched condistion takes precidence'; 
-    public $datatype = 'array'; 
     public $multilingual = FALSE; 
-    public $storage = 'array';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -1079,12 +1025,10 @@ class Field_Field_Conditions extends Field {
     public $hidden = TRUE;  
 }
 
-class Field_Field_Readonly extends Field {
+class Field_Field_Readonly extends Field_Supermodlrcore_Singleboolean {
     public $name = 'readonly'; 
     public $description = 'If true, this field cannot be changed once it has been set once, except by an admin';    
-    public $datatype = 'boolean'; 
     public $multilingual = FALSE; 
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
@@ -1093,12 +1037,10 @@ class Field_Field_Readonly extends Field {
 }
 
 //format array('models'=> array(array('model'=> 'model1', where'=> array([conditions used to select an entry for this model]),'search_field'=> 'name')]) )
-class Field_Field_Source extends Field {
+class Field_Field_Source extends Field_Supermodlrcore_Arraymixed {
     public $name = 'source'; 
     public $description = 'If datatype == "relationship", this field describes how to select a valid value.';   
-    public $datatype = 'object'; 
     public $multilingual = FALSE; 
-    public $storage = 'array';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = FALSE;
