@@ -3,6 +3,7 @@
     { ?>
         <script type="text/javascript">
 function form_container__<?=$form_id ?>__field__<?=$field->path('_'); ?>__conditions() {
+
     var angular_scope = angular.element($('#<?=$form_id ?>__field__<?=$field->path('_'); ?>')[0]).scope();      
     //bring all scope vars into the local scope
     var scope = angular_scope.data.<?=$field->get_model_name(); ?>;

@@ -921,10 +921,11 @@ fbl($where_values);
     public function array_todb($params = array()) 
     {
         $field_key = $params['field']->name;
-        if (isset($params['result'][$field_key]))
+        if (isset($params['set'][$field_key]))
         {
             $params['set'][$field_key] = json_encode($params['set'][$field_key],TRUE);
         }
+
     
     }
 

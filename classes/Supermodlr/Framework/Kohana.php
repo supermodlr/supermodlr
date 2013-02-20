@@ -53,8 +53,8 @@ class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
         {
             return $Request->user;
         }
-        // Bind a dummy admin user to supermodlr.  This is expected to be overwritten by an application if it has users.
-        else if (Kohana::$environment !== Kohana::PRODUCTION)
+        // Bind a dummy admin user to supermodlr. This should always be overridden by the application
+        else
         {       
             $User = new Model_Supermodlruser();
             $User->useraccesstags = array('admin');

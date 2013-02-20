@@ -103,7 +103,7 @@ class Controller extends Kohana_Controller {
 
         $field_templates = array();
         
-        $model_data = $Model->to_array();
+        $model_data = $Model->to_array(TRUE,TRUE);
 
         //loop through all fields
         foreach ($fields as $Field)
@@ -250,6 +250,7 @@ class Controller extends Kohana_Controller {
         //bind value to view
         $Field->value = $value;
         $Field->raw_value = $raw_value;     
+        $Field->php_value = $pointer;             
 
         //if this field is a relationship, we need to get all the labels for and existing values
         if ($Field->datatype == 'relationship') 
@@ -417,11 +418,11 @@ class Controller extends Kohana_Controller {
 
         if (isset($Field->model) && is_array($Field->model))
         {
-            $model_name = model_model::get_name_from_class($Field->model['_id']);       
+            $model_name = Supermodlr::get_name_from_class($Field->model['_id']);       
         }
         else
         {
-            $model_name = model_field::scfg('core_prefix');
+            $model_name = Model_Field::scfg('core_prefix');
         }
         
         $field_template_paths = array();
@@ -507,4 +508,14 @@ class Controller extends Kohana_Controller {
     {
         return '/supermodlr/api/';
     }   
+
+    public function log_request()
+    {
+        Log::instance()->add(Log::NOTICE, "===================REQUEST ".date("r")."===================".PHP_EOL.var_export($_SERVER,TRUE));
+    }
+
+    public function log_response($response,$data = array())
+    {
+        Log::instance()->add(Log::NOTICE, "===================RESPONSE ".date("r")." ".$_SERVER['REQUEST_TIME']."===================".PHP_EOL.var_export($response,TRUE).PHP_EOL.var_export($data,TRUE));
+    }    
 }

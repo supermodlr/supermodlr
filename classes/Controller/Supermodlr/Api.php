@@ -6,6 +6,8 @@ class Controller_Supermodlr_Api extends Controller {
     {
         parent::before();
         $this->init_req_model();
+
+        $this->log_request();
     }
 
     public function action_index()
@@ -29,6 +31,7 @@ class Controller_Supermodlr_Api extends Controller {
         
         if ($data === FALSE)
         {
+            $this->log_response("HTTP_Exception_400('The data was not posted or formated properly.')");
             throw new HTTP_Exception_400('The data was not posted or formated properly.');          
         }
 
@@ -51,7 +54,7 @@ class Controller_Supermodlr_Api extends Controller {
             $Saved_status->data(NULL,$Model->to_array());
         }
         
-        
+        $this->log_response($Saved_status->to_json());
 
         //return result     
         $this->response->body($Saved_status->to_json());
@@ -74,7 +77,8 @@ class Controller_Supermodlr_Api extends Controller {
         //ensure model loaded
         if ($Model->loaded() === FALSE)
         {
-            //404 if model by this id doesn't exist
+            //404 if model by this id doesn't exist @todo check/test 4xx exception logging
+            $this->log_response('The requested :model with id :id was not found.',array(':model' => $model_name, ':id'=> $id));
             throw new HTTP_Exception_404('The requested :model with id :id was not found.',
                                                     array(':model' => $model_name, ':id'=> $id));
         }
@@ -82,6 +86,8 @@ class Controller_Supermodlr_Api extends Controller {
         //set content type header
         $this->response->headers('content-type','application/json');        
         
+        $this->log_response(json_encode($Model->to_array()));
+
         //return result     
         $this->response->body(json_encode($Model->to_array()));
     }   
@@ -103,6 +109,7 @@ class Controller_Supermodlr_Api extends Controller {
         //ensure model loaded
         if ($Model->loaded() === FALSE)
         {
+            $this->log_response('The requested :model with id :id was not found.',array(':model' => $model_name, ':id'=> $id));
             //404 if model by this id doesn't exist
             throw new HTTP_Exception_404('The requested :model with id :id was not found.',
                                                     array(':model' => $model_name, ':id'=> $id));
@@ -113,6 +120,7 @@ class Controller_Supermodlr_Api extends Controller {
         
         if ($data === FALSE)
         {
+            $this->log_response("HTTP_Exception_400('The data was not posted or formated properly.')");
             throw new HTTP_Exception_400('The data was not posted or formated properly.');          
         }
         
@@ -135,6 +143,7 @@ class Controller_Supermodlr_Api extends Controller {
             $Saved_status->data(NULL,$Model->to_array());   
         }
         
+        $this->log_response($Saved_status->to_json());    
         //return result     
         $this->response->body($Saved_status->to_json());    
     
@@ -162,6 +171,7 @@ class Controller_Supermodlr_Api extends Controller {
         if ($Model->loaded() === FALSE)
         {
             //404 if model by this id doesn't exist
+            $this->log_response('The requested :model with id :id was not found.',array(':model' => $model_name, ':id'=> $id));
             throw new HTTP_Exception_404('The requested :model with id :id was not found.',
                                                     array(':model' => $model_name, ':id'=> $id));
         }       
@@ -182,6 +192,8 @@ class Controller_Supermodlr_Api extends Controller {
             $Deleted_status->data(NULL,$Model->to_array()); 
         }
         
+        $this->log_response($Deleted_status->to_json());    
+
         //return result     
         $this->response->body($Deleted_status->to_json());  
     }           
@@ -211,6 +223,7 @@ class Controller_Supermodlr_Api extends Controller {
             if ($Model->loaded() === FALSE)
             {
                 //404 if model by this id doesn't exist
+                $this->log_response('The requested :model with id :id was not found.',array(':model' => $model_name, ':id'=> $id));
                 throw new HTTP_Exception_404('The requested :model with id :id was not found.',
                                                         array(':model' => $model_name, ':id'=> $id));
             }               
@@ -246,6 +259,8 @@ class Controller_Supermodlr_Api extends Controller {
             $this->response->status(400);
         }
         
+        $this->log_response($Validate_status->to_json()); 
+
         //return result     
         $this->response->body($Validate_status->to_json());         
         
@@ -269,6 +284,7 @@ class Controller_Supermodlr_Api extends Controller {
 
         if ($query === NULL || !($query_array = json_decode($query,TRUE)))
         {
+            $this->log_response("HTTP_Exception_400('The data was not posted or formated properly.')");
             throw new HTTP_Exception_400('The query was not formated properly.');       
         }
     
@@ -284,10 +300,12 @@ class Controller_Supermodlr_Api extends Controller {
         if (!is_array($results)) 
         {
             $this->response->status(400);
+            $this->log_response(array('status'=> FALSE,'message'=> 'There was a problem running this query')); 
             $this->response->body(array('status'=> FALSE,'message'=> 'There was a problem running this query'));
         }
         else 
         {
+            $this->log_response(json_encode($results)); 
             $this->response->body(json_encode($results));
         }
         
@@ -378,6 +396,7 @@ class Controller_Supermodlr_Api extends Controller {
             if (!is_array($results)) 
             {
                 $this->response->status(400);
+                $this->log_response(json_encode(array('status'=> FALSE,'message'=> 'There was a problem running this query'))); 
                 $this->response->body(json_encode(array('status'=> FALSE,'message'=> 'There was a problem running this query')));
                 return false;
             }
@@ -393,7 +412,7 @@ class Controller_Supermodlr_Api extends Controller {
 
             }
         }
-
+        $this->log_response(json_encode($response_data));
         $this->response->body(json_encode($response_data));
 
     }
@@ -469,6 +488,7 @@ class Controller_Supermodlr_Api extends Controller {
             if (!Valid::alpha_dash($_id))
             {
                 $this->response->status(400);
+                $this->log_response(json_encode(array('status'=> FALSE,'message'=> 'Invalid id')));
                 $this->response->body(json_encode(array('status'=> FALSE,'message'=> 'Invalid id')));
                 return false;
             }           
@@ -514,6 +534,7 @@ class Controller_Supermodlr_Api extends Controller {
             if (!Valid::alpha_dash($_id))
             {
                 $this->response->status(400);
+                $this->log_response(json_encode(array('status'=> FALSE,'message'=> 'Invalid id')));                
                 $this->response->body(json_encode(array('status'=> FALSE,'message'=> 'Invalid id')));
                 return false;
             }
@@ -558,7 +579,7 @@ class Controller_Supermodlr_Api extends Controller {
         }
 
         $response_data = array('status'=> TRUE, 'form_id'=> $View->form_id, 'html'=> $View->render());
-
+        $this->log_response(json_encode($response_data));
         $this->response->body(json_encode($response_data));
     }
 
@@ -612,4 +633,5 @@ class Controller_Supermodlr_Api extends Controller {
         return $json_str;
     }
     
+
 } // End Welcome

@@ -47,16 +47,17 @@ abstract class Supermodlr_Core {
 
         //call construct event
         $this->model_event('construct',$this);
-          //if we are loading an existing object
-          if ($id !== NULL)
-          {
-                //create an object by numeric id
-                if ($data === NULL)
-                {
-                     $data = $this->select_by_id($id);
-                }
-                //if we found this object in the database
-                if ($data)
+        //if we are loading an existing object
+        if ($id !== NULL)
+        {
+            //create an object by numeric id
+            if ($data === NULL)
+            {
+                $data = $this->select_by_id($id);
+            }
+            
+            //if we found this object in the database
+            if ($data)
             {
                      //load column values and field values
                 $this->load($data);
@@ -464,6 +465,7 @@ abstract class Supermodlr_Core {
             'where'   => array($pk_name => $id),
             'limit'   => 1,
             'allowed' => TRUE,
+            'array'   => TRUE,
         ));
         if ($row)
         {
@@ -503,9 +505,9 @@ abstract class Supermodlr_Core {
         $model_name = $called_class::get_name();
 
         //return fields if already loaded
-        if (static::scfg('fields') !== NULL)
+        if (isset(static::$__scfg['fields']) && static::$__scfg['fields'] !== NULL)
         {
-            return static::scfg('fields');
+            return static::$__scfg['fields'];
 
         //load fields listed in field_keys
         }
@@ -1215,7 +1217,7 @@ abstract class Supermodlr_Core {
             }
             //if we want to check access before returning the data
             if ($check_access)
-            {
+            { 
                  //only users with admin access can see private fields.
                  if ($fields[$col]->private === TRUE && !in_array('admin',$this->get_user_access_tags()))
                  {
@@ -1772,7 +1774,7 @@ abstract class Supermodlr_Core {
     {
         $params = array('key'=> &$key,'value'=> &$value);
         $this->model_event('set',$params);
-        $fields = $this->get_fields();
+        $fields = $this->get_fields(); 
         $model_name = $this->get_name();
 
         $Field = NULL;
@@ -2391,6 +2393,7 @@ abstract class Supermodlr_Core {
                 $rel = $this->$field;
                 $rel_class = 'Model_'.ucfirst($rel['model']);
                 $Rel = new $rel_class($rel['_id']);
+
             }
             //if no specific field was requested, return the entire rel object
             if ($rel_field === NULL)
