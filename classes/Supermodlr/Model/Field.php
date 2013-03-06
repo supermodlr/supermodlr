@@ -459,14 +459,15 @@ EOF;
         $field_file_name = $this->get_class_name();
 
         $Framework = $this->get_framework();
-        if ($this->is_core())
+        /*if ($this->is_core())
         {
             $Supermodlr_path = $Framework->Supermodlr_root().'classes'.DIRECTORY_SEPARATOR;
         }
         else 
         {
             $Supermodlr_path = $Framework->saved_classes_root();
-        }
+        }*/
+        $Supermodlr_path = $Framework->saved_classes_root();
         
         $field_file_name = str_replace('_',DIRECTORY_SEPARATOR,$field_file_name);
         return $Supermodlr_path.$field_file_name.'.php';
