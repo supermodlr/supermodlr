@@ -25,28 +25,39 @@ class Supermodlr_Model_Model extends Supermodlr {
     //when a model is created/updated/deleted, we need to re-create/delete the generated class file
     public function event__model_model__save_end($params)
     {
-        //write _id field file if it doesn't exist
-        $PK_Field = new Model_Field();
         $pk_name = $this->cfg('pk_name');
         $pk_name_case = Supermodlr::get_name_case($pk_name);
 
-        $PK_Field->extends = array("model"=> "field", "_id"=> 'Field_Supermodlrcore_'.$pk_name_case);
-        $PK_Field->$pk_name = 'Field_'.Supermodlr::get_name_case($this->name).'_'.$pk_name_case;
-        $PK_Field->name = $pk_name;
-        $PK_Field->model = array("model"=> "model", "_id"=> $this->get_class_name());
-        $PK_Field->save();
-
-        // Get changes
-        $changed = $this->changed();
-        
-        // If there were any changes, re-write the model class file
-        if (count($changed) > 0 || $params['is_insert'] === TRUE)
+        $pk_id = 'Field_'.Supermodlr::get_name_case($this->name).'_'.$pk_name_case;
+        if (!class_exists($pk_id))
         {
-            $this->write_model_class_file();
+            //write _id field file if it doesn't exist
+            $PK_Field = new Model_Field();
+
+            $PK_Field->extends = array("model"=> "field", "_id"=> 'Field_Supermodlrcore_'.$pk_name_case);
+            $PK_Field->$pk_name = $pk_id;
+            $PK_Field->name = $pk_name;
+            $PK_Field->model = array("model"=> "model", "_id"=> $this->get_class_name());
+            $PK_Field->save();            
         }
 
-        // Write the controller class file if it doesn't already exist
-        $this->write_controller_class_file();
+        $create_file = $this->cfg('create_file');
+
+        if ($create_file === NULL || $create_file === TRUE)
+        {
+            // Get changes
+            $changed = $this->changed();
+            
+            // If there were any changes, re-write the model class file
+            if (count($changed) > 0 || $params['is_insert'] === TRUE)
+            {
+                $this->write_model_class_file();
+            }
+
+            // Write the controller class file if it doesn't already exist
+            $this->write_controller_class_file();            
+        }
+
     }
 
     //if this object is deleted, delete the file and all the field files
@@ -114,7 +125,7 @@ class Supermodlr_Model_Model extends Supermodlr {
     public function write_model_class_file() 
     {
         // Re-generate the file content
-        $file_contents = $this->generate_model_class_file_contents();
+        $file_contents = $this->generate_class_file_contents();
         
         $full_file_path = $this->get_model_class_file_path();
         
@@ -167,7 +178,7 @@ class Supermodlr_Model_Model extends Supermodlr {
     }
 
     // this model model is generating a model class file.
-    public function generate_model_class_file_contents()
+    public function generate_class_file_contents()
     {
         
         if (isset($this->extends) && isset($this->extends['_id'])) 

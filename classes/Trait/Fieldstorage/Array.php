@@ -1,7 +1,7 @@
 <?php
 
 trait Trait_Fieldstorage_Array {
-    
+
     public function validate_storage($value = NULL) {
         return (is_array($value) && !$this->is_assoc($value));
 

@@ -63,6 +63,8 @@ abstract class Supermodlr_Core {
                 $this->load($data);
                 $this->cfg('loaded_data',$this->to_array(FALSE));
                 $this->cfg('loaded',TRUE);
+                $args = array('this'=> $this);
+                $this->model_event('loaded',$args);
             }
             else
             {
@@ -2067,7 +2069,7 @@ abstract class Supermodlr_Core {
     }
 
     /**
-     * looks for event methods in traits and in the class tree and calls them
+     * looks for event methods in traits and in the class tree and calls them. also calls
      * 
      * this method looks for any functions on any class in the class tree related traits related to $key and runs them.
      * event naming format: event__{$class_name}__{$key} - this allows us to bind any number of events for any number of object extensions and trait inclusions
@@ -2081,12 +2083,16 @@ abstract class Supermodlr_Core {
         $class_tree = $this->get_class_tree();
         foreach ($class_tree as $class)
         {
-            $event_method = strtolower('event__'.$class.'__'.$key);
+            $event_key = $class.'__'.$key;
+            $event_method = strtolower('event__'.$event_key);
             if (method_exists($this,$event_method))
             {
                 $this->$event_method($args);
             }
+            Event::trigger('Supermodlr.'.$event_key,$args);
         }
+
+        Event::trigger('Supermodlr.'.$key,$args);
     }
 
     //allow datatypes to run code on event keys

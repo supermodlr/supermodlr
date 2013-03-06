@@ -4,9 +4,9 @@ class Field_Supermodlrcore_Name extends Field implements Interface_Fieldstorage,
     use Trait_Fieldstorage_Single, Trait_Fielddatatype_String;    
     public $name = 'name';
     public $datatype = 'string';
+    public $storage = 'single';    
     public $multilingual = FALSE;
     public $charset = 'UTF-8';
-    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = TRUE;

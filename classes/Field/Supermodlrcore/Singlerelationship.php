@@ -7,7 +7,7 @@ class Field_Supermodlrcore_Singlerelationship extends Field implements Interface
     public $datatype = 'relationship';
     public $multilingual = FALSE;
     public $charset = 'UTF-8';
-    public $storage = 'array';
+    public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
     public $searchable = TRUE;

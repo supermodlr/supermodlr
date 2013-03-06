@@ -269,13 +269,19 @@ class Supermodlr_Model_Field extends Supermodlr {
     //when a field is created/updated/deleted, we need to re-create/delete the generated class file
     public function event__model_field__save_end($params)
     {
-        //get changes
-        $changed = $this->changed();
 
-        //if there were any changes
-        if (count($changed) > 0)
-        {
-            $this->write_class_file();
+        $create_file = $this->cfg('create_file');
+
+        if ($create_file === NULL || $create_file === TRUE)
+        {        
+            //get changes
+            $changed = $this->changed();
+
+            //if there were any changes
+            if (count($changed) > 0)
+            {
+                $this->write_class_file();
+            }
         }
     }
     
@@ -419,7 +425,7 @@ class Supermodlr_Model_Field extends Supermodlr {
         {
             $storage = Supermodlr::get_name_case($this->storage);        
             $datatype = Supermodlr::get_name_case($this->datatype);            
-            $use = '    use Trait_Supermodlr_FieldTrait_{$storage}, Trait_Supermodlr_FieldTrait_{$datatype};'.PHP_EOL;
+            $use = "    use Trait_Fieldstorage_{$storage}, Trait_Fielddatatype_{$datatype};".PHP_EOL;
             $implements = ' implements Interface_Fieldstorage, Interface_Fielddatatype';
         }
         else

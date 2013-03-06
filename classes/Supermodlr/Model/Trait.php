@@ -24,13 +24,18 @@ class Supermodlr_Model_Trait extends Supermodlr {
     //when a trait is created/updated/deleted, we need to re-create/delete the generated class file
     public function event__model_trait__save_end($params)
     {
-        // Get changes
-        $changed = $this->changed();
-        
-        // If there were any changes, re-write the trait class file
-        if (count($changed) > 0 || $params['is_insert'] === TRUE)
-        {
-            $this->write_trait_class_file();
+        $create_file = $this->cfg('create_file');
+
+        if ($create_file === NULL || $create_file === TRUE)
+        {        
+            // Get changes
+            $changed = $this->changed();
+            
+            // If there were any changes, re-write the trait class file
+            if (count($changed) > 0 || $params['is_insert'] === TRUE)
+            {
+                $this->write_trait_class_file();
+            }
         }
 
     }
@@ -80,7 +85,7 @@ class Supermodlr_Model_Trait extends Supermodlr {
     public function write_trait_class_file() 
     {
         // Re-generate the file content
-        $file_contents = $this->generate_trait_class_file_contents();
+        $file_contents = $this->generate_class_file_contents();
         
         $full_file_path = $this->get_trait_class_file_path();
         
@@ -134,7 +139,7 @@ class Supermodlr_Model_Trait extends Supermodlr {
     }
 
     // this model trait is generating a trait class file.
-    public function generate_trait_class_file_contents()
+    public function generate_class_file_contents()
     {
                 
         $trait_class = $this->get_class_name();
