@@ -19,7 +19,7 @@ class Supermodlr_Model_Model extends Supermodlr {
                     'methods',
                     'traits',
                 ),
-                'core_models' => array('model','field','trait'), 
+                'core_models' => array('model','field','trait'),
         );
 
     //when a model is created/updated/deleted, we need to re-create/delete the generated class file
@@ -291,15 +291,20 @@ EOF;
      */
     public function generate_controller_class_file_contents()
     {
+
         $controller_class_name = $this->get_controller_class_name();
+
+        // If this model extends another, get that model name
+        $extends = ($this->extends) ? str_replace('Model_', 'Controller_', $this->extends['_id']) : "Controller_Scaffold";
+
         $file_contents = <<<EOF
 <?php defined('SYSPATH') or die('No direct script access.');
 /**
  * {$controller_class_name}
  *
- * @uses     Controller_Scaffold
+ * @uses     {$extends}
  */
-class {$controller_class_name} extends Controller_Scaffold {
+class {$controller_class_name} extends {$extends} {
 
 EOF;
 
