@@ -103,7 +103,7 @@ function form_invalid(save_response) {
 }
 
 function form_validate(field_name) {
-fbl(field_name);
+    
     $scope = this;  
     $scope.$http.post(getAPIPath()+'/'+$scope.model_name+'/validate_field/*/'+field_name,$scope.data[$scope.model_name]).
         success(function(data, status, headers, config) {
