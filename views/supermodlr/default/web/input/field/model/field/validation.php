@@ -120,32 +120,37 @@ function <?=$form_id; ?>__field__validation__add(options) {
     //convert rules data to string
     var rules_json = JSON.stringify(rules);
 
-    //set the string value to the input
-    $('#<?=$form_id; ?>__field__validation').val(rules_json);
+    if ($('#'+rule_hash).length == 0)
+    {
 
-    //force model update
-    $('#<?=$form_id; ?>__field__validation').trigger('input');
+        //set the string value to the input
+        $('#<?=$form_id; ?>__field__validation').val(rules_json);
 
-    //update scope directly with array value
-    scope.data.field.validation = rules;
+        //force model update
+        $('#<?=$form_id; ?>__field__validation').trigger('input');
 
-    if (rule[1] && rule[1].length > 0) {
-        var rule_title = '<a title="edit this rule" href="javascript: <?=$form_id; ?>__field__validation__edit(\''+rule_hash+'\')">'+rule_key+'</a>';
-    } else {
-        var rule_title = rule_key;
+        //update scope directly with array value
+        scope.data.field.validation = rules;
+
+        if (rule[1] && rule[1].length > 0) {
+            var rule_title = '<a title="edit this rule" href="javascript: <?=$form_id; ?>__field__validation__edit(\''+rule_hash+'\')">'+rule_key+'</a>';
+        } else {
+            var rule_title = rule_key;
+        }
+
+        //add rule to rule list
+        $('#<?=$form_id; ?>__field__validation__rules').append('<li id="'+rule_hash+'">'+rule_title+' <a href="javascript: <?=$form_id; ?>__field__validation__remove(\''+rule_hash+'\')">x</a></li>');
+
+        //empty existing options
+        $('#<?=$form_id; ?>__field__validation__options').empty();  
+
+        //hide options box
+        $("#<?=$form_id; ?>__field__validation__options_container").dialog( "close" );
+
+        //reset select
+        $('#<?=$form_id; ?>__field__validation__select').val($('#<?=$form_id; ?>__field__validation__select options:first').val());        
     }
 
-    //add rule to rule list
-    $('#<?=$form_id; ?>__field__validation__rules').append('<li id="'+rule_hash+'">'+rule_title+' <a href="javascript: <?=$form_id; ?>__field__validation__remove(\''+rule_hash+'\')">x</a></li>');
-
-    //empty existing options
-    $('#<?=$form_id; ?>__field__validation__options').empty();  
-
-    //hide options box
-    $("#<?=$form_id; ?>__field__validation__options_container").dialog( "close" );
-
-    //reset select
-    $('#<?=$form_id; ?>__field__validation__select').val($('#<?=$form_id; ?>__field__validation__select options:first').val());
 }
 
 function <?=$form_id; ?>__field__validation__edit(id) {
