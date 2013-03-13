@@ -646,28 +646,32 @@ class Supermodlr_Field {
       return $js;
     }
 
-   public static function generate_php_value($value)
-   {
-      //if value is not set
-      if (!isset($value) || $value === NULL)
-      {
-         return 'NULL';
-      }
-      if (is_bool($value))
-      {
-         return ($value) ? 'TRUE' : 'FALSE';
-      }
-      
-      if (is_array($value))
-      {
-         return var_export($value,TRUE);
-      }
-      if (is_string($value) && strpos($value,"'") !== FALSE)
-      {
-         return "'".str_replace("'","\\'",$value)."'";
-      }
-      return "'".$value."'";
-   }
+   /**
+    * Formats a field value for writing into to a php class file.
+    * @param mixed $value The value to be converted
+    * @return mixed
+    */
+	public static function generate_php_value($value)
+	{
+		// If value is not set
+		if (!isset($value) || $value === NULL)
+			return 'NULL';
+
+		elseif (is_bool($value))
+			return ($value) ? 'TRUE' : 'FALSE';
+
+		elseif (is_array($value))
+			return var_export($value,TRUE);
+
+		elseif (is_int($value))
+			return $value;
+
+		elseif (is_string($value) && strpos($value,"'") !== FALSE)
+			return "'".str_replace("'","\\'",$value)."'";
+
+		else
+			return "'".$value."'";
+	}
    
 
 }
