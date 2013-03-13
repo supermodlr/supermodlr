@@ -581,7 +581,7 @@ abstract class Supermodlr_Core {
                     //could not find a valid field
                     else
                     {
-                        fbl($fieldclass .' class not found');
+                        //fbl($fieldclass .' class not found');
                     }
                 }
             }
