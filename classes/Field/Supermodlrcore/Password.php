@@ -1,5 +1,5 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrpasswordprotection_Password extends Field  implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Supermodlrcore_Password extends Field  implements Interface_Fieldstorage, Interface_Fielddatatype
 {
     use Trait_Fieldstorage_Single, Trait_Fielddatatype_String;
     public $name = 'password';
