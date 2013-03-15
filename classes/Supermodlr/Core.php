@@ -139,45 +139,49 @@ abstract class Supermodlr_Core {
         //setup default name config
         static::scfg('name',$name);
 
-        // Load all direct traits (and their traits), set all scfg values if they are not yet set
-        $traits = static::get_traits();
-
-        // Loop through all traits and traits of traits 
-        foreach ($traits as $trait)
+        // loop through class tree (skipping this class)
+        $class_tree = static::get_class_tree();
+        $called = get_called_class();
+        foreach ($class_tree as $class)
         {
-            // Get the name of this trait
-            $trait_name = Supermodlr::get_trait_name($trait);
+            // Load all direct traits (and their traits), set all scfg values if they are not yet set
+            $traits = static::get_traits($class);
 
-            // Get the name of the property that we expect to find scfg values on
-            $scfg_prop = '__'.$trait_name.'__scfg';
-
-            // If scfg property is set and is an array
-            if (isset($trait::$$scfg_prop) && is_array($trait::$$scfg_prop))
+            // Loop through all traits and traits of traits 
+            foreach ($traits as $trait)
             {
-                // Get the static __$trait__scfg property from the trait class
-                $trait_scfg = $trait::$$scfg_prop;
+                // Get the name of this trait
+                $trait_name = Supermodlr::get_trait_name($trait);
 
-                // Loop through all scfg values on this trait
-                foreach ($trait_scfg as $trait_scfg_key => $trait_scfg_value)
+                // Get the name of the property that we expect to find scfg values on
+                $scfg_prop = '__'.$trait_name.'__scfg';
+
+                // If scfg property is set and is an array
+                if (isset($trait::$$scfg_prop) && is_array($trait::$$scfg_prop))
                 {
-                    // If this scfg key is not set on this class
-                    if (!isset(static::$__scfg[$trait_scfg_key]))
+                    // Get the static __$trait__scfg property from the trait class
+                    $trait_scfg = $trait::$$scfg_prop;
+
+                    // Loop through all scfg values on this trait
+                    foreach ($trait_scfg as $trait_scfg_key => $trait_scfg_value)
                     {
-                        static::$__scfg[$trait_scfg_key] = $trait_scfg_value;
-                    }
-                    //if it is set and is an array, merge recursive
-                    else if (is_array(static::$__scfg[$trait_scfg_key]) && is_array($trait_scfg_value))
-                    {
-                        // static::$__scfg should override any values set in $trait_scfg_value
-                        static::$__scfg[$trait_scfg_key] = array_merge_recursive($trait_scfg_value,static::$__scfg[$trait_scfg_key]);
+                        // If this scfg key is not set on this class
+                        if (!isset(static::$__scfg[$trait_scfg_key]))
+                        {
+                            static::$__scfg[$trait_scfg_key] = $trait_scfg_value;
+                        }
+                        //if it is set and is an array, merge recursive
+                        else if (is_array(static::$__scfg[$trait_scfg_key]) && is_array($trait_scfg_value))
+                        {
+                            // static::$__scfg should override any values set in $trait_scfg_value
+                            static::$__scfg[$trait_scfg_key] = array_merge_recursive($trait_scfg_value,static::$__scfg[$trait_scfg_key]);
+                        }
                     }
                 }
             }
+
+
         }
-
-        // loop through class tree (skipping this class)
-
-            // loop through all parent::__scfg values and set them on self::__scfg if not already set (@todo decide recursive merge??)
 
         //setup default db_name config (table or collection name for this datatype)
         if (!isset(static::$__scfg['db_name']))
@@ -2078,20 +2082,59 @@ abstract class Supermodlr_Core {
      */
     public function model_event($key,$args=array())
     {
+        // method names cannot have a '.' in them so we use the '_'
         $key = str_replace('.','_',$key);
+
+        // remove all other non-allowed characters
         $key = preg_replace("/[^0-9a-z_]/i","",$key);
+
+        // Get the class tree
         $class_tree = $this->get_class_tree();
+
+        // Loop through the class tree
         foreach ($class_tree as $class)
         {
+            // create the expected key
             $event_key = $class.'__'.$key;
+
+            // create the expected method name
             $event_method = strtolower('event__'.$event_key);
+
+            // if this class or any of its traits implement this method
             if (method_exists($this,$event_method))
             {
+                // Call the method
                 $this->$event_method($args);
             }
+
+            // Trigger a generic supermodlr event
             Event::trigger('Supermodlr.'.$event_key,$args);
         }
 
+        // Get all traits from this class+traits and all parents + their traits
+        $all_traits = static::get_all_traits();
+
+        // loop through all traits
+        foreach ($all_traits as $trait)
+        {
+            // create the expected key
+            $event_key = $trait.'__'.$key;
+
+            // create the expected method name
+            $event_method = strtolower('event__'.$event_key);
+
+            // if this method exists
+            if (method_exists($this,$event_method))
+            {
+                // call the method
+                $this->$event_method($args);
+            }
+
+            // Trigger a generic supermodlr event
+            Event::trigger('Supermodlr.'.$event_key,$args);
+        }
+        
+        // Trigger a generic supermodlr event
         Event::trigger('Supermodlr.'.$key,$args);
     }
 
@@ -2292,37 +2335,6 @@ abstract class Supermodlr_Core {
         return $result_set;
     }
 
-
-
-    // @todo maybe all methods should be calculated at 'data-type' compile time and added as an array on the generated data type object model php class file
-    public static function get_trait_events($key = NULL) {
-        $called_class = get_called_class();
-        //get model data type name
-        $class = $called_class::get_model_class();
-        $trait_event_key = 'trait_events_'.$class;
-        //check if this event has already been run once
-        $trait_events = $called_class::scfg($trait_event_key);
-        //if we haven't searched for all methods
-        if (is_null($trait_events) || !isset($trait_events[$key])) {
-            if (is_null($trait_events)) {
-                $trait_events = array();
-            }
-            $trait_events[$key] = array();
-            //run methods on all traits
-            $traits = $called_class::traits();
-            foreach ($traits as $trait) {
-                $trait_method = $trait.'_'.$key;
-                if (method_exists($trait,$trait_method)) {
-                    $trait_events[$key][$trait][] = $trait_method;
-                }
-                $class_trait_method = $class.'_'.$trait.'_'.$key;
-                if (method_exists($class,$class_trait_method)) {
-                    $trait_events[$key][$trait][] = $class_trait_method;
-                }
-            }
-            $called_class::scfg($trait_event_key,$trait_events);
-        }
-    }
 
     public static function model_exists($model)
     {
@@ -2535,10 +2547,23 @@ abstract class Supermodlr_Core {
      *
      * @return mixed Value.
      */
-    public static function get_all_traits()
+    public static function get_all_traits($class = NULL)
     {
-
-
+        // If no class was sent
+        if ($class === NULL)
+        {
+            //get class name called
+            $class = get_called_class();            
+        }        
+        $class_tree = $class::get_class_tree();
+        $called = get_called_class();
+        $all_traits = array();
+        foreach ($class_tree as $class)
+        {
+            $traits = Supermodlr::get_traits($class);
+            $all_traits = array_merge($traits,$all_traits);
+        }
+        return $all_traits;
     }
     
     public static function get_trait_name($trait = NULL)
