@@ -17,10 +17,6 @@ class Field_Supermodlrcore_Password extends Field  implements Interface_Fieldsto
     public $hidden = FALSE;
     public $validtestvalue = FALSE;
     public $private = TRUE;
-    public $model = array (
-  'model' => 'trait',
-  '_id' => 'Trait_Supermodlrpasswordprotection',
-);
     public $readonly = FALSE;
 
 }
