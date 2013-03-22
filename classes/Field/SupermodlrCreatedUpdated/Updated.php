@@ -14,10 +14,10 @@ class Field_SupermodlrCreatedUpdated_Updated extends Field  implements Interface
     public $nullvalue = FALSE;
     public $hidden = TRUE;
     public $private = FALSE;
-    public $model = array (
+   /* public $model = array (
   'model' => 'trait',
   '_id' => 'Trait_SupermodlrCreatedUpdated',
-);
+); */
     public $readonly = FALSE;
 
 }

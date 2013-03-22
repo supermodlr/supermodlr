@@ -2315,9 +2315,10 @@ abstract class Supermodlr_Core {
             }
         }
         $class = get_called_class();
-        $o = new $class();
+        $o = $class::factory();
         $drivers = $o->cfg('drivers');
         $pk = $o->cfg('pk_name');
+
         //default to primary db
         if (!isset($params['driver'])) $params['driver'] = 0;
         if (!isset($params['count'])) $params['count'] = FALSE;
