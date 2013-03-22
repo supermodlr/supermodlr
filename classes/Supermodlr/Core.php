@@ -19,6 +19,11 @@ abstract class Supermodlr_Core {
     // Object config
     protected $__cfg = array();
 
+    public static function factory($id = NULL, $data = NULL)
+    {
+        return new static($id, $data);
+    }
+
     /**
     * core construct
     * 
@@ -59,12 +64,11 @@ abstract class Supermodlr_Core {
             //if we found this object in the database
             if ($data)
             {
-                     //load column values and field values
+                //load column values and field values
                 $this->load($data);
-                $this->cfg('loaded_data',$this->to_array(FALSE));
-                $this->cfg('loaded',TRUE);
-                $args = array('this'=> $this);
-                $this->model_event('loaded',$args);
+
+                // Mark this model as loaded from the primary source
+                $this->model_loaded();
             }
             else
             {
@@ -79,10 +83,25 @@ abstract class Supermodlr_Core {
             $this->cfg('loaded',FALSE);
             $this->cfg('new_object',TRUE);
         }
-        //init all traits.  loads traits from model and from data (if stored)
-        //$this->init_traits();
+
         //call event for construct end
         $this->model_event('construct_end',$this);
+    }
+
+    /**
+     * post_load sets all config values and runs 'loaded' event
+     * 
+     * @access public
+     *
+     * @return mixed Value.
+     */
+    public function model_loaded()
+    {
+        $this->cfg('loaded_data',$this->to_array());
+        $this->cfg('loaded',TRUE);
+        $this->cfg('new_object',FALSE);
+        $args = array('this'=> $this);
+        $this->model_event('loaded',$args);        
     }
 
     /**
@@ -90,15 +109,15 @@ abstract class Supermodlr_Core {
     */
     public static function get_model_class()
     {
-        return ucfirst(strtolower(get_called_class()));
+        return Supermodlr::get_name_case(get_called_class());
     }
 
     /**
-    * return lower cased called class name of this model
+    * return called class name of this model
     */
     public static function get_name()
     {
-          return preg_replace('/^model_/i','',strtolower(get_called_class()));
+        return static::scfg('name');
     }
 
     //given a name, return the expeted model name (uppercase all words seperated by '_' and lowercase everything else. prefix with 'Model_')
@@ -113,7 +132,8 @@ abstract class Supermodlr_Core {
     {
         //return everything after 'model_'
         $parts = explode('_',$class);
-        return strtolower(array_pop($parts));
+        $name = Supermodlr::get_name_case(array_pop($parts));
+        return $name;
     }
     
     /**
@@ -186,7 +206,7 @@ abstract class Supermodlr_Core {
         //setup default db_name config (table or collection name for this datatype)
         if (!isset(static::$__scfg['db_name']))
         {
-            static::scfg('db_name',$name);
+            static::scfg('db_name',strtolower($name));
         }
 
         //setup default primary_key (pk) column config
@@ -414,7 +434,7 @@ abstract class Supermodlr_Core {
             $framework = 'Default';
         }
         //create class name
-        $class = 'Framework_'.ucfirst(strtolower($framework));
+        $class = 'Framework_'. Supermodlr::get_name_case($framework);
         
         //return new instance
         $Framework = new $class();
@@ -452,10 +472,20 @@ abstract class Supermodlr_Core {
         }
     }
 
+    /**
+     * get_name_case ensures all "words" (separated by underscore) have a capitol letter (for PSR0 compatibility)
+     * 
+     * @param mixed $name Description.
+     *
+     * @access public
+     * @static
+     *
+     * @return mixed Value.
+     */
     public static function get_name_case($name)
     {
           $name = str_replace('_',' ',$name);
-          $name = ucwords(strtolower($name));
+          $name = ucwords($name);
           return str_replace(' ','_',$name);
     }
 
@@ -463,7 +493,7 @@ abstract class Supermodlr_Core {
      * selects an entry of data based on primary key from the primary db
      */
     public function select_by_id($id)
-    {
+    { 
         $Driver = $this->get_primary_db();
         $db_name = $this->cfg('db_name');
         $pk_name = $this->cfg('pk_name');
@@ -496,15 +526,15 @@ abstract class Supermodlr_Core {
     /**
      *
      */
-    public static function get_fields($for_model = NULL)
+    public static function get_fields(Supermodlr $Model = NULL)
     {
 
         // Get class name as called
         $called_class = get_called_class();
 
-        if ($for_model === NULL)
+        if ($Model === NULL)
         {
-            $for_model = $called_class;
+            $Model = $called_class::factory();
         }
 
         //get model name
@@ -545,7 +575,7 @@ abstract class Supermodlr_Core {
                 if (class_exists($fieldclass))
                 {
                     // Assign the instantiated field to the array of fields.  Create the field with $for_model's context
-                    $fields[$field_name] = new $fieldclass(array('model'=> 'model', '_id'=> $for_model));
+                    $fields[$field_name] = $fieldclass::factory($Model);
                 }
                 //try all direct traits or core
                 else 
@@ -566,7 +596,7 @@ abstract class Supermodlr_Core {
                         {
 
                             // assign the field
-                            $fields[$field_name] = new $traitfieldclass(array('model'=> 'model', '_id'=> $for_model));
+                            $fields[$field_name] = $traitfieldclass::factory($Model);
 
                             // mark it as found
                             $found_in_traits = TRUE;
@@ -580,7 +610,7 @@ abstract class Supermodlr_Core {
                     if (!$found_in_traits && class_exists($corefieldclass))
                     {
                         // use the core version of the field
-                        $fields[$field_name] = new $corefieldclass(array('model'=> 'model', '_id'=> $for_model));
+                        $fields[$field_name] = $corefieldclass::factory($Model);
                     }
                     //could not find a valid field
                     else
@@ -597,7 +627,7 @@ abstract class Supermodlr_Core {
             if ($parent_class !== FALSE)
             {
                 // Call get_fields on the parent (which will call it on it's parent, if any)
-                $parent_fields = $parent_class::get_fields($for_model);
+                $parent_fields = $parent_class::get_fields($Model);
 
                 // Merge in results, with the current fields overriding any below it
                 $fields = array_merge($parent_fields,$fields);                
@@ -804,7 +834,7 @@ abstract class Supermodlr_Core {
             if (is_array($Field) && isset($Field['_id']) && isset($Field['model']) && count($Field) === 2)
             {
                 //load the field
-                $Field = new $Field['_id']();
+                $Field = $Field['_id']::factory();
             }
             //get field key
             $field_key = $Field->name;
@@ -933,7 +963,7 @@ abstract class Supermodlr_Core {
             if (is_array($Field) && isset($Field['_id']) && isset($Field['model']) && count($Field) === 2)
             {
                 //load the field
-                $Field = new $Field['_id']();
+                $Field = $Field['_id']::factory();
             }
             $field_key = $Field->name;
                 //if a default was assigned to this data point and we are not setting a null value
@@ -947,7 +977,7 @@ abstract class Supermodlr_Core {
                          $pointer[$field_key] = $Field->defaultvalue();
                      }
                     else if (is_object($pointer))
-                    {
+                    { 
                          $pointer->$field_key = $Field->defaultvalue();
                      }
                 }
@@ -1203,106 +1233,130 @@ abstract class Supermodlr_Core {
     /**
      * @returns array all public columns and fields (skips hidden/cfg properties)
      */
-    public function to_array($check_access = TRUE,$display = FALSE)
+    public function to_array($args = []) // $check_access = TRUE,$display = FALSE)
     {
+        $def = [
+            'check_access' => array(
+                'type'=> 'bool',
+                'default'=> TRUE,
+            ),
+            'type' => array(
+                'type'=> 'string',
+                'default'=> 'internal',
+                'invalues'=> array('internal','export','storage'),
+            )            
+        ];
+
+        Args::check($args,$def);
+
         //set all defaults on object
         $this->defaults();
+
         //filter all values
         $this->filter();
+
         $fields = $this->get_fields();
+
         $cols = array();
+
         //loop through all set values
         foreach ($this as $col => $val)
         {
-            //skip hidden properties (ones that start with '_')
-            if (substr($col,0,2) == '__' && $col != $this->cfg('trait_column')) continue;
+            //skip hidden properties (ones that start with '__')
+            if (substr($col,0,2) == '__' && $col !== $this->cfg('trait_column')) continue;
+
             //only export valid fields
             if (!isset($fields[$col]))
             {
                 continue;
             }
+
+            $Field = $fields[$col];
+
             //if we want to check access before returning the data
-            if ($check_access)
+            if ($args['check_access'])
             { 
-                 //only users with admin access can see private fields.
-                 if ($fields[$col]->private === TRUE && !in_array('admin',$this->get_user_access_tags()))
+
+                 // If this field does not allow this user context to read
+                 if ($Field->access('read',$this->get_user_access_tags()) === FALSE)
                  {
+                     // skip the field value
                      continue;
                  }
             }
-            //ugly hack in place until we code for a "owner private" field access type that is update-able by the owner, but is never shown or returned
-            if ($display === TRUE && $col == 'password')
+
+            // if a field is marked private, the value is not shown unless user is admin 
+            if ($args['type'] == 'export' && $Field->private === TRUE && !in_array('admin',$this->get_user_access_tags()))
             {
-             continue;
-            }
-            //store values in array
-            if ($val InstanceOf DateTime)
-            {
-                $val = $val->getTimestamp();
-            }
-            $cols[$col] = $val;
-        }
-        //return array of values
-        return $cols;
-    }
-
-    public function to_display($check_access = TRUE)
-    {
-
-    }
-
-    public function to_storage($check_access = TRUE)
-    {
-
-        //set all defaults on object
-        $this->defaults();
-        //filter all values
-        $this->filter();
-
-        // Get field objects
-        $fields = $this->get_fields();
-
-        // init return array
-        $cols = array();
-
-        //loop through all set values
-        foreach ($this as $col => $val)
-        {
-            //skip hidden properties (ones that start with '_')
-            if (substr($col,0,2) == '__' && $col != $this->cfg('trait_column')) continue;
-
-            //only export valid fields
-            if (!isset($fields[$col]))
-            {
-                continue;
-            }
-
-            //if we want to check access before returning the data
-            if ($check_access)
-            {
-                 //only users with admin access can see private fields.
-                 if ($fields[$col]->private === TRUE && !in_array('admin',$this->get_user_access_tags()))
-                 {
-                     continue;
-                 }
+               continue;
             }
 
             // Skip any non-stored fields
-            if ($fields[$col]->stored === FALSE)
+            if ($args['type'] == 'storage' && $Field->stored === FALSE)
             {
                 continue;
             }
 
-            //store values in array
-            if ($val InstanceOf DateTime)
+            // if the value is null
+            if ($val === NULL)
             {
-                $val = $val->getTimestamp();
+                // if null is a valid value
+                if ($Field->nullvalue === TRUE)
+                {
+                    $cols[$col] = NULL;
+                }
+                //if null is not a valid value, we do not return it @todo should we throw an error instead of silently skipping this $col value?
             }
-            $cols[$col] = $val;
-        }
+            else
+            {
+                // If this is an export
+                if ($args['type'] == 'export')
+                { 
+                    // get the export value of the field from the FieldDataType trait
+                    $cols[$col] = $Field->store_value($val,'export', $this);   
+                } 
+                // If the value will be sent to a storage driver
+                else if ($args['type'] == 'storage')
+                {
+                    // get the storage value of the field from the FieldDataType trait
+                    $cols[$col] = $Field->store_value($val,'storage', $this);
+                }
+                // If the value is expected to be used as-is by the application
+                else if ($args['type'] == 'internal')
+                { 
+                    // set the raw value
+                    $cols[$col] = $Field->store_value($val, 'set', $this);
+                }                
+            }
 
+          
+        }
         //return array of values
         return $cols;
+    }
+
+    /**
+     * export method is a shortcut to the to_array method with type='export'
+     * 
+     * @access public
+     *
+     * @return mixed Value.
+     */
+    public function export()
+    {
+        return $this->to_array(['type'=> 'export']);
+    }
+
+    /**
+     * to_storage is a shortcut to the to_array method with type='storage'
+     * 
+     * @access public
+     *
+     * @return mixed Value.
+     */
+    public function to_storage()
+    {
+        return $this->to_array(['type'=> 'storage']);
     }
 
     /**
@@ -1348,10 +1402,10 @@ abstract class Supermodlr_Core {
     {
         //loop through each field key / value
         foreach ($data as $field_key => $val)
-        {
+        { 
             //assign column value to object by column key
             $this->set($field_key,$val);
-        }
+        } 
     }
 
     /**
@@ -1372,8 +1426,8 @@ abstract class Supermodlr_Core {
             if (stripos($key,'field__') === 0)
             {
                 $set_value = TRUE;
-                $field_key = strtolower(str_ireplace('field__','',$key));
-                $field_class = 'field_'.$model_name.'_'.ucfirst($field_key);
+                $field_key =  Supermodlr::get_name_case(str_ireplace('field__','',$key));
+                $field_class =  Supermodlr::get_name_case('field_'.$model_name.'_'.$field_key);
                 //ensure this field class exists
                 if (!class_exists($field_class) || !isset($fields[$field_key]))
                 {
@@ -1448,7 +1502,7 @@ abstract class Supermodlr_Core {
             //catch for checkboxes that are unchecked and aren't sent
             else if (stripos($key,'checkbox__') === 0)
             {
-                $field_key = strtolower(str_ireplace('checkbox__','',$key));
+                $field_key =  Supermodlr::get_name_case(str_ireplace('checkbox__','',$key));
                 //if a checkbox exists for this field, but no post value exists for it, assume 'off'
                 if (!isset($post['field__'.$field_key]))
                 {
@@ -1784,6 +1838,8 @@ abstract class Supermodlr_Core {
         $model_name = $this->get_name();
 
         $Field = NULL;
+        $direct_set = FALSE;
+        $action = NULL;
 
         //if this is a sub key (supports 'key1.key2[.key3...]' format
         if (strpos($key,'.') !== FALSE)
@@ -1818,19 +1874,30 @@ abstract class Supermodlr_Core {
             //@todo fix for sub-fields/sub models
             $Field = NULL;
         }
+        // If we are setting a direct property on this model
         else
         {
+            $direct_set = TRUE;
+
+            // If the key we are setting is a valid field
             if (isset($fields[$key]))
             {
+                // Get the field object
                 $Field = $fields[$key];
-                if (!isset($this->$key))
-                {
-                    $this->$key = NULL;
-                }                
-                $position = &$this->$key;
+            }
+
+            // this is an "update" action
+            if (isset($this->$key))
+            {
+                $action = 'update';
+            }
+            else
+            {
+                $sction = 'create';
             }
             
         }
+
         $set_value = TRUE;
 
         //ensure this field class exists
@@ -1841,8 +1908,14 @@ abstract class Supermodlr_Core {
             return ;
         }
 
-        //@todo check field permissions for create/update/delete
-        if ($value === NULL)
+        // If this field does not allow this user context to read
+        if ($Field->access($action,$this->get_user_access_tags()) === FALSE)
+        {
+            throw new Kohana_Exception('Not allowed to perform action :action on field :fieldkey', array(':action', $action, 'fieldkey'=> $fieldkey));
+        }
+
+        // if the value is null or NOT_SET
+        if ($value === NULL || $value === Field::NOT_SET)
         {
             //if null is not a valid value
             if ($Field->nullvalue !== TRUE)
@@ -1854,84 +1927,27 @@ abstract class Supermodlr_Core {
                 $casted_value = NULL;
             }
         }
-        else if (($Field->storage !== 'single' || $Field->datatype === 'object') && !is_array($value))
-        {
-            $set_value = FALSE;
-        }
+        // if we have a value to set
         else
         {
-            if ($Field->storage === 'single')
-            {
-                $values = array($value);
-            }
-            else
-            {
-                $values = $value;
-            }
-            $casted_values = array();
-            foreach ($values as $k => $value)
-            {
-                if ($Field->datatype === 'boolean')
-                {
-                    $casted_values[$k] = (bool) $value;
-                }
-                else if ($Field->datatype === 'int')
-                {
-                    $casted_values[$k] = (int) $value;
-                }
-                else if ($Field->datatype === 'float')
-                {
-                    $casted_values[$k] = (float) $value;
-                }
-                else if ($Field->datatype === 'string')
-                {
-                    //@todo cast at proper charset
-                    $casted_values[$k] = (string) $value;
-                }
-                else if ($Field->datatype === 'datetime')
-                {
-                    if ($value === '' || (is_string($value) && !strtotime($value)))
-                    {
-                        $set_value = FALSE;
-                    }
-                    else
-                    {
-                        $casted_values[$k] = $value;
-                    }
-                }
-                else if ($Field->datatype === 'timestamp')
-                {
-                    if ($value === '' || !is_numeric($value))
-                    {
-                        $set_value = FALSE;
-                    }
-                    else
-                    {
-                        $casted_values[$k] = (int) $value;
-                    }
-                }
-                //@todo relationship cast
-                //@todo binary cast
-                //uncastable datatype
-                else
-                {
-                    $casted_values[$k] = $value;
-                }
-            }
-            if ($Field->storage === 'single')
-            {
-                //get value back out of
-                $casted_value = reset($casted_values);
-            }
-            else
-            {
-                $casted_value = $casted_values;
-            }
+            // rely on FieldStorage trait to provide function to set a value
+            $casted_value = $Field->store_value($value, 'set', $this);
         }
         //if we want to set this value on the model
         if ($set_value)
         {
-            $position = $casted_value;
+            // if we don't have a by-reference position and are setting directly on $this->$key
+            if ($direct_set)
+            {
+                // set the value
+                $this->$key = $casted_value;
+            }
+            // if we have a position set by reference
+            else
+            {
+                $position = $casted_value;
+            }
+
         }
         $this->model_event('set_end',$params);
     }
@@ -2098,7 +2114,7 @@ abstract class Supermodlr_Core {
             $event_key = $class.'__'.$key;
 
             // create the expected method name
-            $event_method = strtolower('event__'.$event_key);
+            $event_method = 'event__'.$event_key;
 
             // if this class or any of its traits implement this method
             if (method_exists($this,$event_method))
@@ -2121,7 +2137,7 @@ abstract class Supermodlr_Core {
             $event_key = $trait.'__'.$key;
 
             // create the expected method name
-            $event_method = strtolower('event__'.$event_key);
+            $event_method = 'event__'.$event_key;
 
             // if this method exists
             if (method_exists($this,$event_method))
@@ -2218,10 +2234,20 @@ abstract class Supermodlr_Core {
             {
                 $owner = (((string) $User->$pk) === ((string) $owner_value['_id']));
             }
+            //relationship is set as an object on the context_object
+            else if (is_object($owner_value) && $owner_value InstanceOf Supermodlr && $owner_value->pk_value() !== NULL)
+            {
+                $owner = (((string) $User->$pk) === ((string) $owner_value->pk_value()));
+            }
             //assume raw value
-            else
+            else if (isset($User->$pk))
             {
                 $owner = (((string) $User->$pk) === ((string) $owner_value));
+            }
+            // bound user has no id set
+            else
+            {
+                $owner = FALSE;
             }
 
             // If a user was found and the id's exactly match
@@ -2335,22 +2361,24 @@ abstract class Supermodlr_Core {
         return $result_set;
     }
 
-
+    // @todo move this to a controller
     public static function model_exists($model)
     {
-        $model = ucfirst(strtolower($model));
+        $model = Supermodlr::get_name_case($model);
         return (class_exists('Model_'.$model)) ? 'Model_'.$model : FALSE ;
     }
 
+    // @todo move this to a controller
     public static function get_model_from_file($model_file)
     {
         //get file info
         $model_info = pathinfo($model_file);
         //build expected class name
-        $model_class_name = 'Model_'.ucfirst(strtolower($model_info['filename']));
+        $model_class_name = 'Model_'. Supermodlr::get_name_case($model_info['filename']);
         return array('model_file'=> $model_file, 'model_class'=> $model_class_name, 'model_name'=> $model_info['filename']);
     }
 
+    // @todo move this to a controller
     public static function get_models()
     {
         $called_class = get_called_class();
@@ -2409,8 +2437,8 @@ abstract class Supermodlr_Core {
             else
             {
                 $rel = $this->$field;
-                $rel_class = 'Model_'.ucfirst($rel['model']);
-                $Rel = new $rel_class($rel['_id']);
+                $rel_class = 'Model_'.Supermodlr::get_name_case($rel['model']);
+                $Rel = $rel_class::factory($rel['_id']);
 
             }
             //if no specific field was requested, return the entire rel object
@@ -2426,6 +2454,56 @@ abstract class Supermodlr_Core {
         }
         return NULL;
     }
+
+    /**
+     * __get will dynamically load an object if an id was set but the object wasn't loaded. provides lazy loading
+     * 
+     * @param string $name .
+     *
+     * @access public
+     *
+     * @return mixed Value.
+     */
+    /*public function __get($prop)
+    {
+        // get all fields
+        $fields = $this->get_fields();
+
+        // If the requested property is not a valid name for a field assigned to this model
+        if (!isset($fields[$prop]))
+        {
+            // throw an error
+            throw new Exception('Invalid field key: '.$prop);
+        }
+
+        // Get pk
+        $pk_name = $this->cfg('pk_name');
+
+        // If this object was not loaded from a db, but there is a value for the pk, load the object to return the value
+        if ($this->cfg('loaded') !== TRUE && isset($this->$pk_name))
+        {  
+            // Get the data from the db
+            $data = $this->select_by_id($this->$pk_name);
+
+            if ($data !== FALSE)
+            {
+                // Load the data
+                $this->load($data);
+
+                //mark the model as loaded
+                $this->model_loaded();                
+            }
+
+
+            if (isset($this->$prop))
+            {
+                return $this->$prop;
+            }
+        }
+
+        // if this is a valid field but there is no value, the only valid thing to return is NOT_SET
+        return Field::NOT_SET;
+    }*/
 
     /**
       * Gets the current bound user
@@ -2445,7 +2523,7 @@ abstract class Supermodlr_Core {
             $User = $Framework->get_user();
 
             // If a valid user was returned
-            if ($User InstanceOf Model_Supermodlruser)
+            if ($User InstanceOf Model_SupermodlrUser)
             {
                 // Bind the user
                 static::bind_user($User);
@@ -2465,7 +2543,7 @@ abstract class Supermodlr_Core {
       *
       * @param Model_Supermodlruser $User
       */
-    public static function bind_user(Model_Supermodlruser $User)
+    public static function bind_user(Model_SupermodlrUser $User)
     {
         static::scfg('bound_user',$User);
     }
@@ -2478,7 +2556,7 @@ abstract class Supermodlr_Core {
     public static function get_user_access_tags()
     {
         $User = static::get_bound_user();
-        if ($User !== NULL && $User InstanceOf Model_Supermodlruser && isset($User->useraccesstags))
+        if ($User !== NULL && $User InstanceOf Model_SupermodlrUser && isset($User->useraccesstags))
         {
                 return $User->useraccesstags;
         }
@@ -2568,6 +2646,6 @@ abstract class Supermodlr_Core {
     
     public static function get_trait_name($trait = NULL)
     {
-        return strtolower(preg_replace('/^Trait_/','',$trait));
+        return preg_replace('/^Trait_/','',$trait);
     }     
 }

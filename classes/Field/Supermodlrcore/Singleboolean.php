@@ -1,9 +1,9 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore_Singleboolean extends Field implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Supermodlrcore_SingleBoolean extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
-    use Trait_Fieldstorage_Single, Trait_Fielddatatype_Boolean;
+    use Trait_FieldStorage_Single, Trait_FieldDataType_Boolean;
 
-    public $name = 'singleboolean';
+    public $name = 'SingleBoolean';
     public $datatype = 'boolean';
     public $storage = 'single';
     public $required = FALSE;

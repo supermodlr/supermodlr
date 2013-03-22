@@ -1,9 +1,9 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore_Singlerelationship extends Field implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Supermodlrcore_SingleRelationship extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
-    use Trait_Fieldstorage_Single , Trait_Fielddatatype_Relationship;
+    use Trait_FieldStorage_Single , Trait_FieldDataType_Relationship;
 
-    public $name = 'singlerelationship';
+    public $name = 'SingleRelationship';
     public $datatype = 'relationship';
     public $multilingual = FALSE;
     public $charset = 'UTF-8';

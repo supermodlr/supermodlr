@@ -1,9 +1,9 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore_Arraymixed extends Field implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Supermodlrcore_ArrayMixed extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
-    use Trait_Fieldstorage_Array , Trait_Fielddatatype_Mixed;
+    use Trait_FieldStorage_Array , Trait_FieldDataType_Mixed;
 
-    public $name = 'arraymixed';
+    public $name = 'ArrayMixed';
     public $datatype = 'mixed';
     public $multilingual = FALSE;
     public $charset = 'UTF-8';

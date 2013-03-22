@@ -50,6 +50,7 @@ class Supermodlr_Field {
    public $pk = FALSE; //set tot true to indicate that this field is the primary key for the database
    public $access = NULL;// set to array to control access to this field. format: array('create'=>array(),'read'=>array(),'update'=>array(),'delete'=>array()).  admins are always allowed for all operations.
    public $private = NULL; //bool set to true if this field value should never be viewable in a public/non-admin interface (example: password, salt)
+
    public $model = NULL; //stores the model pk/class name for which model this field belongs to
    public $model_name = NULL; //stores the model name for this->model
    public $conditions = NULL; //controls conditional display for input forms and display. format: array('input'=> array('field1'=> 'value'), 'display'=> array()).  input/display array format is same as mongodb query syntax (supports: $and, $or, $ne, $not, $gt, $lt, $gte, $lte, $regex)
@@ -82,6 +83,21 @@ class Supermodlr_Field {
    
 
     /**
+     * factory
+     * 
+     * @param mixed \Supermodlr Description.
+     *
+     * @access public
+     * @static
+     *
+     * @return mixed Value.
+     */
+    public static function factory(Supermodlr $Model = NULL)
+    {
+        return new static($Model);
+    }
+
+    /**
      * __construct creates a field object instance.
      * 
      * @param mixed $model send a model relationship field value to bind a model to this field
@@ -90,14 +106,19 @@ class Supermodlr_Field {
      *
      * @return mixed Value.
      */
-    public function __construct($model = NULL)
+    public function __construct(Supermodlr $Model = NULL)
     {
+        if ($Model === NULL && isset($this->model) && is_array($this->model) && isset($this->model['_id']))
+        {
+            $class = $this->model['_id'];
+            $Model = $class::factory();
+        }
         // if a model was sent
-        if ($model !== NULL)
+        if ($Model instanceof Supermodlr)
         {
             // bind the model and model name to this field
-            $this->model = $model;
-            $this->model_name = Supermodlr::get_name_from_class($model['_id']);
+            $this->model = $Model;
+            $this->model_name = $Model->get_name();
         }
         //$this->value = self::NOT_SET;
         //$this->raw_value = self::NOT_SET;
@@ -124,8 +145,8 @@ class Supermodlr_Field {
          {
             if ($matches[1] !== Model_Field::scfg('core_prefix')) 
             {
-               $name = ucfirst(strtolower($matches[1]));
-               return array("model"=> "Model", "_id"=> 'Model_'.$name);
+               $model_class = Supermodlr::name_to_class_name($matches[1]);
+               return $model_class::factory();
             }
             else
             {
@@ -150,9 +171,9 @@ class Supermodlr_Field {
      */
     public function get_model_name()
     {
-        if (isset($this->model) && is_array($this->model) && isset($this->model['_id'])) 
+        if (isset($this->model) && $this->model instanceof Supermodlr) 
         {
-            return Supermodlr::get_name_from_class($this->model['_id']);
+            return $this->model->get_name();
         }
         else
         {
@@ -169,7 +190,7 @@ class Supermodlr_Field {
     public function validate($value, $fieldset = array()) 
    { 
       // check required.  if value is null and null value is not allowed, or this value was not set at all
-      if ($this->required && (($value === NULL && $this->nullvalue === FALSE) || $value === self::NOT_SET)) 
+      if ($this->required() && (($value === NULL && $this->nullvalue === FALSE) || $value === self::NOT_SET)) 
       {
          return new Status(FALSE,$this->message('required',$value));
       }
@@ -193,35 +214,14 @@ class Supermodlr_Field {
          return new Status(TRUE);
       }
       
-      // check storage type
-      if ($this->storage == 'single' && !in_array($this->datatype, array('mixed','relationship','object')) && is_array($value) && $this->datatype != 'relationship') 
-      { 
-         return new Status(FALSE,$this->message('storage.single',$value));
-      } else if ($this->storage == 'array' && (!is_array($value) || $this->is_assoc($value))) 
+      if ($this->validate_storage($value) === FALSE)
       {
-         return new Status(FALSE,$this->message('storage.array',$value));
-      } else if ($this->storage == 'keyed_array' && (!is_array($value) || !$this->is_assoc($value))) 
-      {
-         return new Status(FALSE,$this->message('storage.keyed_array',$value));
+         return new Status(FALSE,$this->message('storage.'.$this->storage,$value));
       }
 
-      // check datatype
-      if ($this->storage == 'single' && $this->validate_datatype($value,$this->datatype) === FALSE) 
+      if ($this->validate_datatype_values($value) === FALSE)
       {
          return new Status(FALSE,$this->message('datatype.'.$this->datatype,$value));
-         
-      // array or object storage
-      } else if ($this->storage == 'array' || $this->storage == 'keyed_array') {
-         if (is_array($value))
-         {
-            foreach ($value as $v) 
-            {
-               if ($this->validate_datatype($v,$this->datatype) === FALSE) 
-               {
-                  return new Status(FALSE,$this->message('datatype.'.$this->datatype,$value));
-               }
-            }
-         }
       }
 
       //check for value in values
@@ -244,9 +244,7 @@ class Supermodlr_Field {
         }
       }
 
-
-
-      
+     
       $data = array();
       if (!empty($fieldset)) 
       {
@@ -308,21 +306,35 @@ class Supermodlr_Field {
 
       }
 
-      //if string
-      
-         //validate charset
-      
+     
       return new Status(TRUE);
     }
    
    
     /**
     *
-    * @returns mixed default value property
+    * @return bool required property
+    */
+    public function required() 
+    {
+        //@todo if $this->required is not boolean, allow parsing of boolean logic to return bool required value
+        return $this->required;
+    }
+
+    /**
+    *
+    * @return mixed default value property
     */
     public function defaultvalue() 
-   {
-      return $this->defaultvalue;
+    {
+        if (method_exists($this, 'get_defaultvalue'))
+        {
+            return $this->get_defaultvalue();
+        }
+        else
+        {
+            return $this->defaultvalue;
+        }
     }
 
    /**
@@ -334,6 +346,13 @@ class Supermodlr_Field {
       return $this->nullvalue;
     }
 
+    /**
+     * value_isset
+     * 
+     * @access public
+     *
+     * @return mixed Value.
+     */
     public function value_isset() {
       return (isset($this->value) && $this->value !== self::NOT_SET);
     }
@@ -438,11 +457,11 @@ class Supermodlr_Field {
    }*/
 
     /**
-    * @param string $operation required. 'create', 'read', 'update', 'delete'
+    * @param string $action required. 'create', 'read', 'update', 'delete'
     * @param array $permissions required.  an array containing any permission keyword setup by app, username, and any user groups that the user belongs to
-    * @returns bool true if this array is an assocative array, false if it is an index array
+    * @return bool true if $action is allowed
     */      
-   public function access($operation, $permissions)
+   public function access($action, $user_access_tags)
    {
       //no restrictions
       if ($this->access === NULL || !is_array($this->access))
@@ -451,24 +470,24 @@ class Supermodlr_Field {
       }
       
       //admin, root, and owner are given all permissions
-      if (in_array('admin',$permissions) || in_array('root',$permissions) || in_array('owner',$permissions))
+      if (in_array('admin',$user_access_tags) || in_array('owner',$user_access_tags))
       {
          return TRUE;
       }
       
-      //if no permissions were given for this operation, grant access
-      if (!isset($this->access[$operation]))
+      //if no permissions were given for this action, grant access
+      if (!isset($this->access[$action]))
       {
          return TRUE;
       }
       
       //loop through all permissions
-      foreach ($permissions as $permission)
+      foreach ($user_access_tags as $tag)
       {
          //if the permission key sent exists in the permission list for this operation
-         if (in_array($permission,$this->access[$operation]))
+         if (in_array($tag,$this->access[$action]))
          {
-            //allow the operataion
+            //allow the action
             return TRUE;
          }
       }
@@ -493,13 +512,13 @@ class Supermodlr_Field {
     // returns the name path for ths field including all parent fields
     public function path($delimeter = '.')
     { 
-      $model = $this->get_model();
-      if ($model !== NULL)
+      //$Model = $this->get_model();
+      /*if ($model !== NULL)
       {
          //load field.model and check for a parent model
          $Model = new $model['_id'](); //@todo when a model is saved with a submodel field, we need to create the model specific submodel (model_company_address extends model_address) when that field is saved
 
-      }
+      }*/
       /*if ($this->parentmodel !== NULL) {
          $Parent_model= new $this->parentmodel['_id']();
          $parent_path = $Parent_model->path($delimeter);
@@ -651,27 +670,29 @@ class Supermodlr_Field {
     * @param mixed $value The value to be converted
     * @return mixed
     */
-	public static function generate_php_value($value)
-	{
-		// If value is not set
-		if (!isset($value) || $value === NULL)
-			return 'NULL';
+    public static function generate_php_value($value)
+    {
+        // If value is not set
+        if (!isset($value) || $value === NULL)
+            return 'NULL';
 
-		elseif (is_bool($value))
-			return ($value) ? 'TRUE' : 'FALSE';
+        elseif (is_bool($value))
+            return ($value) ? 'TRUE' : 'FALSE';
 
-		elseif (is_array($value))
-			return var_export($value,TRUE);
+        elseif (is_array($value))
+            return var_export($value,TRUE);
 
-		elseif (is_int($value))
-			return $value;
+        elseif (is_int($value))
+            return $value;
 
-		elseif (is_string($value) && strpos($value,"'") !== FALSE)
-			return "'".str_replace("'","\\'",$value)."'";
+        elseif (is_string($value) && strpos($value,"'") !== FALSE)
+            return "'".str_replace("'","\\'",$value)."'";
 
-		else
-			return "'".$value."'";
-	}
+        elseif (is_object($value) && $value instanceof Supermodlr)
+            return "array('model'=> '".$value->get_name()."', '_id'=> '".$value->pk_value()."')";
+        else
+            return "'".$value."'";
+    }
    
 
 }

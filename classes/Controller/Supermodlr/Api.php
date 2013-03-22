@@ -51,7 +51,7 @@ class Controller_Supermodlr_Api extends Controller {
         }
         else
         {
-            $Saved_status->data(NULL,$Model->to_array());
+            $Saved_status->data(NULL,$Model->export());
         }
         
         $this->log_response($Saved_status->to_json());
@@ -86,10 +86,10 @@ class Controller_Supermodlr_Api extends Controller {
         //set content type header
         $this->response->headers('content-type','application/json');        
         
-        $this->log_response(json_encode($Model->to_array()));
+        $this->log_response(json_encode($Model->export()));
 
         //return result     
-        $this->response->body(json_encode($Model->to_array()));
+        $this->response->body(json_encode($Model->export()));
     }   
     
     public function action_update()
@@ -140,7 +140,7 @@ class Controller_Supermodlr_Api extends Controller {
         }       
         else
         {
-            $Saved_status->data(NULL,$Model->to_array());   
+            $Saved_status->data(NULL,$Model->export());   
         }
         
         $this->log_response($Saved_status->to_json());    
@@ -189,7 +189,7 @@ class Controller_Supermodlr_Api extends Controller {
         }       
         else
         {
-            $Deleted_status->data(NULL,$Model->to_array()); 
+            $Deleted_status->data(NULL,$Model->export()); 
         }
         
         $this->log_response($Deleted_status->to_json());    
@@ -328,7 +328,7 @@ class Controller_Supermodlr_Api extends Controller {
         $field_name = $this->request->param('id');
 
         //build field class name
-        $field_class = 'Field_'.ucfirst(strtolower($this->model_name)).'_'.ucfirst(strtolower($field_name));
+        $field_class = 'Field_'.Supermodlr::get_name_case($this->model_name).'_'.Supermodlr::get_name_case($field_name);
 
         //get the field
         $Field = new $field_class();
@@ -353,13 +353,13 @@ class Controller_Supermodlr_Api extends Controller {
         {
 
             //build model class
-            $model_class = 'Model_'.ucfirst(strtolower($source['model']));
+            $model_class = 'Model_'.Supermodlr::get_name_case($source['model']);
 
             $model_label = $model_class::scfg('label');
 
             if ($model_label === NULL)
             {
-                $model_label = ucfirst(strtolower($source['model']));
+                $model_label = Supermodlr::get_name_case($source['model']);
             }
 
             //get additional where params if sent
@@ -502,7 +502,8 @@ class Controller_Supermodlr_Api extends Controller {
         else if ($action === 'create')
         {
             $form_action = 'create';
-            $New_Model = new $model_class();
+
+            $New_Model = $model_class::factory();
             $New_Model->cfg('external_api',TRUE);
 
             //look for additional data in query string so the form is preloaded

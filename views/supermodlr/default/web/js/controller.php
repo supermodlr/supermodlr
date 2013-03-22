@@ -19,7 +19,7 @@ function <?=$form_id ?>Ctrl($scope, $resource, $http) {
     $scope.server = $resource('<?=$controller->api_path()?><?=$model->get_name() ?>/<?=$action ?>/<?=$model->pk_value() ?>');
     $scope.$http = $http;
     $scope.data = {};
-    $scope.data[$scope.model_name] = <?php if ($model->to_array() === array()) { echo '{}'; } else { echo json_encode($model->to_array(TRUE,TRUE)); } ?>;
+    $scope.data[$scope.model_name] = <?php if ($model->to_array() === array()) { echo '{}'; } else { echo json_encode($model->export()); } ?>;
     $scope.submit = form_submit;
     $scope.serverError = {};
     $scope.modal_form = false;

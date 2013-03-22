@@ -1,9 +1,9 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore_Singlemixed extends Field implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Supermodlrcore_SingleMixed extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
-    use Trait_Fieldstorage_Single, Trait_Fielddatatype_Boolean;
+    use Trait_FieldStorage_Single, Trait_FieldDataType_Mixed;
 
-    public $name = 'singleboolean';
+    public $name = 'SingleMixed';
     public $datatype = 'boolean';
     public $storage = 'single';
     public $required = FALSE;
@@ -12,15 +12,6 @@ class Field_Supermodlrcore_Singlemixed extends Field implements Interface_Fields
     public $filterable = TRUE;
     public $maxlength = '4';
     public $nullvalue = FALSE;
-    public $validation = array (
-  0 => 
-  array (
-    0 => 'numeric',
-    1 => 
-    array (
-    ),
-  ),
-);
     public $hidden = FALSE;
     public $private = FALSE;
     public $readonly = FALSE;

@@ -1,9 +1,9 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore_Singlemultilingualtext extends Field implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Supermodlrcore_SingleMultilingualText extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
-    use Trait_Fieldstorage_Single , Trait_Fielddatatype_Multilingualstring;
+    use Trait_FieldStorage_Single , Trait_FieldDataType_MultilingualString;
 
-    public $name = 'singlemultilingualtext';
+    public $name = 'SingleMultilingualText';
     public $datatype = 'string';
     public $charset = 'UTF-8';
     public $storage = 'single';

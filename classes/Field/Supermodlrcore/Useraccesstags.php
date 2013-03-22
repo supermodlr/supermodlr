@@ -1,7 +1,7 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore_Useraccesstags extends Field implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Supermodlrcore_UserAccessTags extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
-    use Trait_Fieldstorage_Array, Trait_Fielddatatype_String;
+    use Trait_FieldStorage_Array, Trait_FieldDataType_String;
 
     public $name = 'useraccesstags';
     public $datatype = 'string';

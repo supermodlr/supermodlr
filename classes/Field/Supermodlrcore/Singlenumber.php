@@ -1,9 +1,9 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore_Singlenumber extends Field implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Supermodlrcore_SingleNumber extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
-    use Trait_Fieldstorage_Single, Trait_Fielddatatype_Int;
+    use Trait_FieldStorage_Single, Trait_FieldDataType_Int;
 
-    public $name = 'singlenumber';
+    public $name = 'SingleNumber';
     public $datatype = 'int';
     public $multilingual = FALSE;
     public $storage = 'single';

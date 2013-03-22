@@ -41,7 +41,7 @@ class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
     {
 
         $Request = Request::current();
-        if (method_exists($Request, 'get_user') && $Request->get_user() instanceof Model_Supermodlruser && !$this->loading_user)
+        if (method_exists($Request, 'get_user') && $Request->get_user() instanceof Model_SupermodlrUser && !$this->loading_user)
         {
 
             $this->loading_user = TRUE;
@@ -49,14 +49,14 @@ class Supermodlr_Framework_Kohana extends Supermodlr_Framework_Default {
             $this->loading_user = FALSE;
             return $User;
         }
-        else if (isset($Request->user) && $Request->user instanceof Model_Supermodlruser)
+        else if (isset($Request->user) && $Request->user instanceof Model_SupermodlrUser)
         {
             return $Request->user;
         }
         // Bind a dummy admin user to supermodlr. This should always be overridden by the application
         else
         {       
-            $User = new Model_Supermodlruser();
+            $User = new Model_SupermodlrUser();
             $User->useraccesstags = array('admin');
             return $User;
         }

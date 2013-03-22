@@ -1,7 +1,7 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Versionhistory_Changes extends Field  implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Versionhistory_Changes extends Field  implements Interface_FieldStorage, Interface_FieldDataType
 {
-    use Trait_Fieldstorage_Single, Trait_Fielddatatype_Mixed;
+    use Trait_FieldStorage_Single, Trait_FieldDataType_Mixed;
     public $name = 'changes';
     public $description = 'Changes';
     public $datatype = 'mixed';
@@ -17,7 +17,7 @@ class Field_Versionhistory_Changes extends Field  implements Interface_Fieldstor
     public $private = FALSE;
     public $model = array (
   'model' => 'model',
-  '_id' => 'Model_Versionhistory',
+  '_id' => 'Model_VersionHistory',
 );
     public $readonly = FALSE;
 

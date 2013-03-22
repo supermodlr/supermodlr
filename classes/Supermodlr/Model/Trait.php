@@ -9,6 +9,9 @@ when a trait is created
 
 class Supermodlr_Model_Trait extends Supermodlr {
         public static $__scfg = array(
+                'name'=> 'trait',
+                'label'=> 'Trait',
+                'description' => 'This model defines how traits are stored in the database and how the trait class code is generated',            
                 'field_keys'  => array(
                     '_id',
                     'name',
@@ -143,7 +146,7 @@ class Supermodlr_Model_Trait extends Supermodlr {
     {
                 
         $trait_class = $this->get_class_name();
-        $name = strtolower($this->name);
+        $name = $this->name;
         $pk_name = $this->cfg('pk_name');
         $file_contents = <<<EOF
 <?php defined('SYSPATH') or die('No direct script access.');
@@ -151,7 +154,6 @@ class Supermodlr_Model_Trait extends Supermodlr {
   * FileDescription: {$this->description}
   */
 trait {$trait_class} {
-    use Trait_Supertrait;
 
 EOF;
         //set all traits as 'use' statements
@@ -159,12 +161,18 @@ EOF;
         {
                 foreach ($this->traits as $trait)
                 {
-                    $file_contents .= "    use ".$trait['_id'].";".PHP_EOL;
+                    $file_contents .= "    use ".$trait->pk_value().";".PHP_EOL;
                 }  
 
         }
+        $name = Field::generate_php_value($this->name);
+        $label = Field::generate_php_value($this->label);
+        $desc = Field::generate_php_value($this->description);
         $file_contents .= <<<EOF
     public static \$__{$name}__scfg = array(
+            'traits__{$name}__name'=> {$name},
+            'traits__{$name}__label'=> {$label},
+            'traits__{$name}__description' => {$desc},            
             'field_keys' => array(
 
 EOF;
@@ -174,7 +182,8 @@ EOF;
         {
             foreach ($this->fields as $field)
             {
-                $field_obj = new $field['_id'];
+                $field_class = $field->pk_value();
+                $field_obj = $field_class::factory();
                 $file_contents .= "                 '".$field_obj->name."',".PHP_EOL;
             }       
         }
@@ -187,16 +196,17 @@ EOF;
         {
             foreach ($this->fields as $field)
             {
-                $field_obj = new $field['_id'];
+                $field_class = $field->pk_value()
+                $field_obj = $field_class::factory();
                 //if the default value should not be set to null and defaultvalue is null
-                if ($field_obj->defaultvalue === NULL && $field_obj->nullvalue === FALSE)
+                if ($field_obj->defaultvalue() === NULL && $field_obj->nullvalue === FALSE)
                 {
                     //skip defining this field so it has no default value
                     continue;
                 }
                 else
                 {
-                    $file_contents .= "   public \$".$field_obj->name." = ".Field::generate_php_value($field_obj->defaultvalue).";".PHP_EOL;
+                    $file_contents .= "   public \$".$field_obj->name." = ".Field::generate_php_value($field_obj->export_value($field_obj->defaultvalue())).";".PHP_EOL;
                 }
                 
             }
@@ -282,7 +292,6 @@ class Field_Trait_Name extends Field_Supermodlrcore_Name {
     public $searchable = TRUE;
     public $filterable = TRUE;
     public $values = NULL;
-    public $filters = array('strtolower');
     public $defaultvalue = NULL;
     public $nullvalue = FALSE; 
     public $validation = NULL;
@@ -294,6 +303,26 @@ class Field_Trait_Name extends Field_Supermodlrcore_Name {
     public $validtestvalue = 'test field name'; 
     public $invalidtestvalues = NULL; 
 }
+
+class Field_Trait_Label extends Field_Supermodlrcore_Label {
+    public $name = 'label'; 
+    public $charset = 'UTF-8'; 
+    public $required = FALSE;
+    public $unique = FALSE;
+    public $searchable = TRUE;
+    public $filterable = TRUE;
+    public $values = NULL;
+    public $nullvalue = FALSE; 
+    public $validation = array(); //array('alpha_numeric',array('regex',array(':value','/^[a-z][^\s]*$/i'))); @todo fix this for _id field
+    public $messages = NULL;
+    public $templates = NULL;
+    public $hidden = FALSE; 
+    public $extends = NULL;
+    public $fields = NULL;
+    public $invalidtestvalues = NULL; 
+    public $readonly = FALSE;
+}
+
 
 class Field_Trait_Description extends Field_Supermodlrcore_Description {
     public $name = 'description'; 
@@ -309,7 +338,7 @@ class Field_Trait_Description extends Field_Supermodlrcore_Description {
     public $hidden = FALSE; 
 }
 
-class Field_Trait_Fields extends Field_Supermodlrcore_Arrayrelationship {
+class Field_Trait_Fields extends Field_Supermodlrcore_ArrayRelationship {
     public $name = 'fields'; 
     public $source = array(array('model'=> 'field','search_field'=> 'name', 'where'=> array('model'=> NULL)));
     public $multilingual = FALSE; 
@@ -324,7 +353,7 @@ class Field_Trait_Fields extends Field_Supermodlrcore_Arrayrelationship {
     public $hidden = FALSE; 
 }
 
-class Field_Trait_Methods extends Field_Supermodlrcore_Arraymixed {
+class Field_Trait_Methods extends Field_Supermodlrcore_ArrayMixed {
     public $name = 'methods'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
@@ -337,7 +366,7 @@ class Field_Trait_Methods extends Field_Supermodlrcore_Arraymixed {
     public $hidden = TRUE; 
 }
 
-class Field_Trait_Traits extends Field_Supermodlrcore_Arrayrelationship {
+class Field_Trait_Traits extends Field_Supermodlrcore_ArrayRelationship {
     public $name = 'traits'; 
     public $source = array(array('model'=> 'trait','search_field'=> 'name'));
     public $multilingual = FALSE; 

@@ -5,15 +5,15 @@ if (isset($field->values) && is_array($field->values) && count($field->values) >
     //
 ?><select ui-select2 class='input input-medium' id="<?=$form_id; ?>__field__<?=$field->path('_'); ?>" name="field__<?=$field->path('_'); ?>" 
         ng-model="data.<?=$field->get_model_name(); ?>.<?=$field->path('.'); ?>" 
-        <?php if ($field->nullvalue !== FALSE || $field->value_isset() || $field->defaultvalue) 
+        <?php if ($field->nullvalue !== FALSE || $field->value_isset() || $field->defaultvalue()) 
         { ?>ng-init='data.<?=$field->get_model_name(); ?>.<?=$field->path('.'); ?>=<?php 
             if ($field->value_isset()) 
             { 
                 echo json_encode($field->value); 
             } 
-            else if ($field->defaultvalue) 
+            else if ($field->defaultvalue()) 
             { 
-                echo json_encode($field->defaultvalue); 
+                echo json_encode($field->defaultvalue()); 
             } 
             else if ($field->nullvalue !== FALSE) 
             {
@@ -28,7 +28,7 @@ if (isset($field->values) && is_array($field->values) && count($field->values) >
     foreach ($field->values as $k => $option_value)
     {
         //@todo support keys and multiple languages for the label and optgroups
-        ?><option value="<?php echo $option_value; ?>"<?php if (($field->raw_value == $option_value) || (!$field->value_isset() && $option_value === $field->defaultvalue)) { echo 'selected="selected"'; }?>><?php echo ucfirst($option_value); ?></option>
+        ?><option value="<?php echo $option_value; ?>"<?php if (($field->raw_value == $option_value) || (!$field->value_isset() && $option_value === $field->defaultvalue())) { echo 'selected="selected"'; }?>><?php echo ucfirst($option_value); ?></option>
         <?php
     }
     ?></select><?php
@@ -79,7 +79,7 @@ if ($field->value_isset())
 {
         echo $field->value; 
 }?>" <?php
-if ($field->nullvalue !== FALSE || $field->defaultvalue !== NULL || $field->value_isset()) 
+if ($field->nullvalue !== FALSE || $field->defaultvalue() !== NULL || $field->value_isset()) 
 { 
     ?>ng-init='data.<?=$field->get_model_name(); ?>.<?=$field->path('.'); ?>=<?php 
     if ($field->value_isset()) 
@@ -94,9 +94,9 @@ if ($field->nullvalue !== FALSE || $field->defaultvalue !== NULL || $field->valu
         }
         
     } 
-    else if ($field->defaultvalue) 
+    else if ($field->defaultvalue()) 
     { 
-        echo json_encode($field->defaultvalue); 
+        echo json_encode($field->defaultvalue()); 
     }
     else if ($field->nullvalue !== FALSE) 
     {

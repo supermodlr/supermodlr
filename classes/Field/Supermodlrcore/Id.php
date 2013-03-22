@@ -1,7 +1,7 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore__Id extends Field implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Supermodlrcore__Id extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
-    use Trait_Fieldstorage_Single, Trait_Fielddatatype_String;
+    use Trait_FieldStorage_Single, Trait_FieldDataType_String;
     public $name = '_id';
     public $datatype = 'string';
     public $multilingual = FALSE;

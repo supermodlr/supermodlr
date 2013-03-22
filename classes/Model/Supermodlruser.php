@@ -2,7 +2,7 @@
 /**
   * FileDescription: 
   */
-class Model_Supermodlruser extends Supermodlr {
+class Model_SupermodlrUser extends Supermodlr {
         public static $__scfg = array(
                 'field_keys' => array(
                   '_id',

@@ -1,9 +1,9 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore_Arraytext extends Field implements Interface_Fieldstorage, Interface_Fielddatatype
+class Field_Supermodlrcore_ArrayText extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
-    use Trait_Fieldstorage_Array , Trait_Fielddatatype_String;
+    use Trait_FieldStorage_Array , Trait_FieldDataType_String;
 
-    public $name = 'arraytext';
+    public $name = 'ArrayText';
     public $datatype = 'string';
     public $multilingual = FALSE;
     public $charset = 'UTF-8';

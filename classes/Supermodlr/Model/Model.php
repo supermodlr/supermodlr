@@ -9,9 +9,13 @@ when a model is created
 
 class Supermodlr_Model_Model extends Supermodlr {
         public static $__scfg = array(
+                'name'=> 'model',
+                'label'=> 'Model',
+                'description' => 'This model defines how other models are stored in the database and how the model class code is generated',
                 'field_keys'  => array(
                     '_id',
                     'name',
+                    'label',
                     'description',
                     'fields',//this is an array of all field objects included in the saved model.  the field object would only contain key/value pairs for field properties that are changed
                     'extends',//what model file does this model extend.  should have a special auto-completer that searchs on all available models (except self). defaults to 'Supermodlr'
@@ -181,9 +185,9 @@ class Supermodlr_Model_Model extends Supermodlr {
     public function generate_class_file_contents()
     {
         
-        if (isset($this->extends) && isset($this->extends['_id'])) 
+        if (isset($this->extends) && $this->extends instanceof Supermodlr) 
         {
-            $extends = $this->extends['_id'];
+            $extends = $this->extends->pk_value();
         }
         else 
         {
@@ -206,12 +210,18 @@ EOF;
         {
                 foreach ($this->traits as $trait)
                 {
-                    $file_contents .= "    use ".$trait['_id'].";".PHP_EOL;
+                    $file_contents .= "    use ".$trait->get_pk_value().";".PHP_EOL;
                 }  
 
         }
+        $name = Field::generate_php_value($this->name);
+        $label = Field::generate_php_value($this->label);
+        $desc = Field::generate_php_value($this->description);
         $file_contents .= <<<EOF
     public static \$__scfg = array(
+            'name'=> {$name},
+            'label'=> {$label},
+            'description' => {$desc},
             'field_keys' => array(
                 '$pk_name',
 
@@ -222,7 +232,8 @@ EOF;
         {
             foreach ($this->fields as $field)
             {
-                $field_obj = new $field['_id'];
+                $field_class = $field->pk_value();
+                $field_obj = $field_class::factory();
                 $file_contents .= "                 '".$field_obj->name."',".PHP_EOL;
             }       
         }
@@ -235,16 +246,17 @@ EOF;
         {
             foreach ($this->fields as $field)
             {
-                $field_obj = new $field['_id'];
+                $field_class = $field->pk_value();
+                $field_obj = $field_class::factory();
                 //if the default value should not be set to null and defaultvalue is null
-                if ($field_obj->defaultvalue === NULL && $field_obj->nullvalue === FALSE)
+                if ($field_obj->defaultvalue() === NULL && $field_obj->nullvalue === FALSE)
                 {
                     //skip defining this field so it has no default value
                     continue;
                 }
                 else
                 {
-                    $file_contents .= "   public \$".$field_obj->name." = ".Field::generate_php_value($field_obj->defaultvalue).";".PHP_EOL;
+                    $file_contents .= "   public \$".$field_obj->name." = ".Field::generate_php_value($field_obj->export_value($field_obj->defaultvalue())).";".PHP_EOL;
                 }
                 
             }
@@ -295,7 +307,7 @@ EOF;
         $controller_class_name = $this->get_controller_class_name();
 
         // If this model extends another, get that model name
-        $extends = ($this->extends) ? str_replace('Model_', 'Controller_', $this->extends['_id']) : "Controller_Scaffold";
+        $extends = (isset($this->extends) && $this->extends instanceof Supermodlr) ? preg_replace('/^Model_/', 'Controller_', $this->extends->pk_value()) : "Controller_Scaffold";
 
         $file_contents = <<<EOF
 <?php defined('SYSPATH') or die('No direct script access.');
@@ -361,8 +373,8 @@ EOF;
         //if a parent field is set, include the parent field name and the parent model name in the class name
         if (isset($this->parentfield) && is_array($this->parentfield))
         {
-            $parentfield = Supermodlr::get_name_case(Model_Field::get_name_from_class($this->parentfield['_id'])).'_';
-            $parentmodel = Supermodlr::get_name_case(Model_Field::get_modelname_from_class($this->parentfield['_id'])).'_';
+            $parentfield = '';//Supermodlr::get_name_case(Model_Field::get_name_from_class($this->parentfield['_id'])).'_';
+            $parentmodel = '';//Supermodlr::get_name_case(Model_Field::get_modelname_from_class($this->parentfield['_id'])).'_';
         }
         else
         {
@@ -388,6 +400,7 @@ class Field_Model__Id extends Field_Supermodlrcore__Id {
     public $templates = array('input'=> 'hidden');      
     public $hidden = TRUE; 
     public $pk = TRUE;  
+    public $model = array('model' => 'model', '_id'=> 'Model_Model');
 }
 class Field_Model_Name extends Field_Supermodlrcore_Name {
     public $name = 'name'; 
@@ -398,7 +411,6 @@ class Field_Model_Name extends Field_Supermodlrcore_Name {
     public $searchable = TRUE;
     public $filterable = TRUE;
     public $values = NULL;
-    public $filters = array('strtolower');
     public $defaultvalue = NULL;
     public $nullvalue = FALSE; 
     public $validation = NULL;
@@ -409,7 +421,24 @@ class Field_Model_Name extends Field_Supermodlrcore_Name {
     public $fields = NULL;
     public $validtestvalue = 'test field name'; 
     public $invalidtestvalues = NULL; 
+    public $model = array('model' => 'model', '_id'=> 'Model_Model');
 }
+
+class Field_Model_Label extends Field_Supermodlrcore_Label {
+    public $name = 'label'; 
+    public $multilingual = TRUE; 
+    public $charset = 'UTF-8'; 
+    public $required = FALSE;
+    public $unique = FALSE;
+    public $searchable = TRUE;
+    public $filterable = FALSE;
+    public $validation = NULL;
+    public $templates = NULL;   
+    public $hidden = FALSE; 
+    public $model = array('model' => 'model', '_id'=> 'Model_Model');
+}
+
+
 
 class Field_Model_Description extends Field_Supermodlrcore_Description {
     public $name = 'description'; 
@@ -423,9 +452,10 @@ class Field_Model_Description extends Field_Supermodlrcore_Description {
     public $validation = NULL;
     public $templates = NULL;   
     public $hidden = FALSE; 
+    public $model = array('model' => 'model', '_id'=> 'Model_Model');
 }
 
-class Field_Model_Fields extends Field_Supermodlrcore_Arrayrelationship {
+class Field_Model_Fields extends Field_Supermodlrcore_ArrayRelationship {
     public $name = 'fields'; 
     public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'field','search_field'=> 'name', 'where'=> array('model'=> NULL)));
@@ -441,9 +471,10 @@ class Field_Model_Fields extends Field_Supermodlrcore_Arrayrelationship {
     public $templates = array('input' => 'model_fields');   
     public $hidden = FALSE; 
     public $filters = array('model_model::filter_fields');
+    public $model = array('model' => 'model', '_id'=> 'Model_Model');
 }
 
-class Field_Model_Methods extends Field_Supermodlrcore_Arraymixed {
+class Field_Model_Methods extends Field_Supermodlrcore_ArrayMixed {
     public $name = 'methods'; 
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
@@ -454,10 +485,11 @@ class Field_Model_Methods extends Field_Supermodlrcore_Arraymixed {
     public $nullvalue = FALSE;
     public $validation = NULL;
     public $hidden = TRUE; 
+    public $model = array('model' => 'model', '_id'=> 'Model_Model');
 }
 
 
-class Field_Model_Extends extends Field_Supermodlrcore_Singlerelationship {
+class Field_Model_Extends extends Field_Supermodlrcore_SingleRelationship {
     public $name = 'extends';
     public $datatype = 'relationship';
     public $source = array(array('model'=> 'model','search_field'=> 'name'));
@@ -472,10 +504,11 @@ class Field_Model_Extends extends Field_Supermodlrcore_Singlerelationship {
     public $validation = NULL;
     public $templates = array('input' => 'model_extends');
     public $hidden = FALSE;
+    public $model = array('model' => 'model', '_id'=> 'Model_Model');
 }
 
 
-class Field_Model_Parentfield extends Field_Supermodlrcore_Singlerelationship {
+class Field_Model_Parentfield extends Field_Supermodlrcore_SingleRelationship {
     public $name = 'parentfield'; 
     public $description = 'If this model is assigned to a model via an "object" field and this is the "model" specific copy, this field stores the relationship to that field.';
     public $datatype = 'relationship'; 
@@ -489,10 +522,11 @@ class Field_Model_Parentfield extends Field_Supermodlrcore_Singlerelationship {
     public $filterable = TRUE;
     public $nullvalue = FALSE;  
     public $hidden = TRUE;
+    public $model = array('model' => 'model', '_id'=> 'Model_Model');
     //public $conditions = array('$hidden'=> TRUE, '$showif'=> array('datatype'=> 'object'));       
 }
 
-class Field_Model_Traits extends Field_Supermodlrcore_Arrayrelationship {
+class Field_Model_Traits extends Field_Supermodlrcore_ArrayRelationship {
     public $name = 'traits'; 
     public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'trait','search_field'=> 'name'));
@@ -506,6 +540,7 @@ class Field_Model_Traits extends Field_Supermodlrcore_Arrayrelationship {
     public $nullvalue = FALSE;
     public $validation = NULL;
     public $hidden = FALSE; 
+    public $model = array('model' => 'model', '_id'=> 'Model_Model');
 }
 
 

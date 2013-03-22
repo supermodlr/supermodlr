@@ -3,16 +3,16 @@
 if (isset($field->values) && is_array($field->values) && count($field->values) > 0)
 {
     //
-?><select ui-select2 class='input input-medium' id="<?=$form_id; ?>__field__<?php echo $field->path('_'); ?>" 
-name="field__<?php echo $field->path('_'); ?>" ng-model="data.<?php echo $field->get_model_name(); ?>.<?php echo $field->path('.'); ?>" 
-ng-init="<?php echo $field->get_model_name(); ?>.<?php echo $field->name; ?>='<?php 
+?><select ui-select2 class='input input-medium' id="<?=$form_id; ?>__field__<?=$field->path('_'); ?>" 
+name="field__<?=$field->path('_'); ?>" ng-model="data.<?=$field->get_model_name(); ?>.<?=$field->path('.'); ?>" 
+ng-init="<?=$field->get_model_name(); ?>.<?=$field->name; ?>='<?php 
 if ($field->value_isset()) 
     { 
         echo $field->value; 
     } 
-    else if ($field->defaultvalue) 
+    else if ($field->defaultvalue()) 
     { 
-        echo $field->defaultvalue; 
+        echo $field->defaultvalue(); 
     }?>'" multiple="multiple"><?php
     if (($field->value_isset() && $field->value === '') || !$field->value_isset()) 
     {
@@ -21,8 +21,8 @@ if ($field->value_isset())
     foreach ($field->values as $k => $option_value)
     {
         //@todo support keys and multiple languages for the label and optgroups
-        ?><option value="<?php echo $option_value; ?>"<?php 
-        if (($field->raw_value == $option_value) || (!$field->value_isset() && $option_value === $field->defaultvalue) || (is_array($field->php_value) && in_array($option_value, $field->php_value))) 
+        ?><option value="<?=$option_value; ?>"<?php 
+        if (($field->raw_value == $option_value) || (!$field->value_isset() && $option_value === $field->defaultvalue()) || (is_array($field->php_value) && in_array($option_value, $field->php_value))) 
         { 
             echo 'selected="selected"'; 
         }?>><?php echo ucfirst($option_value); ?></option>
@@ -107,8 +107,8 @@ else
     id="<?=$form_id; ?>__field__<?=$field->path('_'); ?>" 
     name="field__<?=$field->path('_'); ?>"value="<?php 
     if ($field->value_isset()) echo $field->value; ?>" <?php
-    if ($field->nullvalue !== FALSE || $field->defaultvalue !== NULL) { 
-        ?>ng-init="<?=$field->get_model_name(); ?>.<?=$field->path('.'); ?>='<?php if ($field->value_isset()) { echo $field->value; } else if ($field->defaultvalue) { echo $field->defaultvalue; }?>'"<?php
+    if ($field->nullvalue !== FALSE || $field->defaultvalue() !== NULL) { 
+        ?>ng-init="<?=$field->get_model_name(); ?>.<?=$field->path('.'); ?>='<?php if ($field->value_isset()) { echo $field->value; } else if ($field->defaultvalue()) { echo $field->defaultvalue(); }?>'"<?php
     } ?> autocomplete="off"<?php
     //check for required
     if ($field->required || (is_array($field->validation) && in_array(array('not_empty'),$field->validation))) 

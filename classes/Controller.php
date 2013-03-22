@@ -14,7 +14,7 @@ class Controller extends Kohana_Controller {
         if ($this->model_name !== NULL)
         {
 
-            $this->model_name = ucfirst(strtolower($this->model_name));
+            $this->model_name = Supermodlr::get_name_case($this->model_name);
 
             //check if model exists
             if (!$this->model_class = Supermodlr::model_exists($this->model_name))
@@ -103,7 +103,8 @@ class Controller extends Kohana_Controller {
 
         $field_templates = array();
         
-        $model_data = $Model->to_array(TRUE,TRUE);
+        $model_data = $Model->export();
+
 
         //loop through all fields
         foreach ($fields as $Field)
@@ -140,7 +141,7 @@ class Controller extends Kohana_Controller {
             }
             
             //get field objects for all submodel.fields
-            if ($Field->datatype == 'object' && isset($Field->submodel) && is_array($Field->submodel) && isset($Field->submodel['_id']) && class_exists($Field->submodel['_id'])) 
+       /*     if ($Field->datatype == 'object' && isset($Field->submodel) && is_array($Field->submodel) && isset($Field->submodel['_id']) && class_exists($Field->submodel['_id'])) 
             {
                 $Field->sub_fields = array();
                 //get related model
@@ -187,7 +188,7 @@ class Controller extends Kohana_Controller {
                     $Field->sub_fields[$sub_field->name] = $sub_field;
                 }                   
 
-            }
+            }*/
 
             //store rendered template for form template
             $field_templates[$field_key] = $Field;
@@ -236,7 +237,7 @@ class Controller extends Kohana_Controller {
             $pointer = &$data[$field_key];
         }
 
-        if ($Field->storage !== 'single' || $Field->datatype === 'object' || $Field->datatype == 'relationship')
+        if (!is_scalar($pointer) || is_array($pointer))
         {
             $value = HTML::chars(json_encode($pointer));
             $raw_value = json_encode($pointer);
@@ -272,9 +273,10 @@ class Controller extends Kohana_Controller {
             foreach ($items as $item) 
             {
                 $rel_class = 'Model_'.Supermodlr::get_name_case($item['model']);
-                $rel = new $rel_class($item['_id']);
+                $rel = $rel_class::factory($item['_id']);
                 $label_field_key = 'name';
-                foreach ($Field->source as $source) {
+                foreach ($Field->source as $source) 
+                {
                     if ($source['model'] == $item['model']) {
                         $label_field_key = $source['search_field'];
                         break;
@@ -289,9 +291,9 @@ class Controller extends Kohana_Controller {
                     $labels[$item['model'].$item['_id']] = $rel_class;
                 }
                 
-            }
+            } 
             $Field->source['labels'] = json_encode($labels);                    
-        }
+        } 
         return $Field;
     }
 

@@ -2,15 +2,18 @@
 /**
   * FileDescription: 
   */
-class Model_Versionhistory extends Supermodlr {
-	public static $__scfg = array(
-		'field_keys' => array(
-			'_id',
-			'modelid',
-			'changes',
-		)
-	);
-	public $modelid = FALSE;
-	public $changes = FALSE;
+class Model_SupermodlrVersionHistory extends Supermodlr {
+    public static $__scfg = array(
+        'name'=> 'VersionHistory',
+        'label' => 'Version History',
+        'description' => '',
+        'field_keys' => array(
+            '_id',
+            'modelid',
+            'changes',
+        )
+    );
+    public $modelid = FALSE;
+    public $changes = FALSE;
    
 }
