@@ -2,7 +2,7 @@
 class Field_SupermodlrUser_UserAccessTags extends Field_Supermodlrcore_UserAccessTags {
     public $model = array (
           'model' => 'model',
-          '_id' => 'Model_User',
+          '_id' => 'Model_SupermodlrUser',
     );
 
 }

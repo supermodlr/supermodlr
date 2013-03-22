@@ -17,10 +17,10 @@ class Field_Supermodlrpasswordprotection_Password extends Field  implements Inte
     public $hidden = FALSE;
     public $validtestvalue = FALSE;
     public $private = TRUE;
-    public $model = array (
+   /* public $model = array (
   'model' => 'trait',
   '_id' => 'Trait_SupermodlrPasswordProtection',
-);
+); */
     public $readonly = FALSE;
 
 }
