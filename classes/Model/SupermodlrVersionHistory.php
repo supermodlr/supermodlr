@@ -9,11 +9,9 @@ class Model_SupermodlrVersionHistory extends Supermodlr {
         'description' => '',
         'field_keys' => array(
             '_id',
-            'modelid',
+            'modelId',
             'changes',
         )
     );
-    public $modelid = FALSE;
-    public $changes = FALSE;
-   
+  
 }

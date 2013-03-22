@@ -2464,7 +2464,7 @@ abstract class Supermodlr_Core {
      *
      * @return mixed Value.
      */
-    /*public function __get($prop)
+    public function __get($prop)
     {
         // get all fields
         $fields = $this->get_fields();
@@ -2503,7 +2503,7 @@ abstract class Supermodlr_Core {
 
         // if this is a valid field but there is no value, the only valid thing to return is NOT_SET
         return Field::NOT_SET;
-    }*/
+    }
 
     /**
       * Gets the current bound user

@@ -196,7 +196,7 @@ EOF;
         {
             foreach ($this->fields as $field)
             {
-                $field_class = $field->pk_value()
+                $field_class = $field->pk_value();
                 $field_obj = $field_class::factory();
                 //if the default value should not be set to null and defaultvalue is null
                 if ($field_obj->defaultvalue() === NULL && $field_obj->nullvalue === FALSE)
