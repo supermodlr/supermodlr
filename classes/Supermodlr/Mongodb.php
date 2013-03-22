@@ -16,39 +16,54 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
     public $updates = 0;
     public $reads = 0;
     public $deletes = 0;
+    
     /**
-      * 
-      * @returns bool
-      */
-    public function driver_connect($params = array()) {
+     * 
+     * @returns bool Returns TRUE if a connection was made, FALSE if the connection failed.
+     */
+    public function driver_connect($args = array()) {
+        $definitions = array(
+            'host' => array(
+                'default' => $this->host,
+                'type'    => 'string',
+            ),
+            'dbname' => array(
+                'default' => $this->dbname,
+                'type'    => 'string',
+            ),
+            'port' => array(
+                'default' => $this->port,
+                'type'    => 'string',
+            ),
+            'user' => array(
+                'default' => $this->user,
+                'type'    => 'string',
+            ),
+            'pass' => array(
+                'default' => $this->pass,
+                'type'    => 'string',
+            ),
+            'replset' => array(
+                'default' => $this->replset,
+                'type'    => 'bool',
+            ),
+            'slaveOkay' => array(
+                'default' => $this->slaveOkay,
+                'type'    => 'bool',
+            ),
+            'safe' => array(
+                'default' => $this->safe,
+                'type'    => 'bool',
+            ),
+            'fsync' => array(
+                'default' => $this->fsync,
+                'type'    => 'bool',
+            ),
+        );
+        Args::check($args, $definitions);
+        foreach ($args as $var => $val) $$var = $val;
     
         if (is_null($this->connection)) {
-            //host
-            $host = (isset($params['host'])) ? $params['host'] : $this->host;
-            
-            //dbname
-            $dbname = (isset($params['dbname'])) ? $params['dbname'] : $this->dbname;
-            
-            //port
-            $port = (isset($params['port'])) ? $params['port'] : $this->port;
-            
-            //user
-            $user = (isset($params['user'])) ? $params['user'] : $this->user;
-            
-            //pass
-            $pass = (isset($params['pass'])) ? $params['pass'] : $this->pass;
-            
-            //replset
-            $replset = (isset($params['replset'])) ? $params['replset'] : $this->replset;   
-
-            //slaveOkay
-            $slaveOkay = (isset($params['slaveOkay'])) ? $params['slaveOkay'] : $this->slaveOkay;
-            
-            //safe
-            $safe = (isset($params['safe'])) ? $params['safe'] : $this->safe;       
-
-            //fsync
-            $fsync = (isset($params['fsync'])) ? $params['fsync'] : $this->fsync;       
             
             try {
             
@@ -65,7 +80,8 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
                 $this->set_error($Error);
             }
         }
-        //return TRUE if a connection was made.  return FALSE if the connection failed
+
+        // Return TRUE if a connection was made. Return FALSE if the connection failed.
         return (!is_null($this->connection));
     }
 
