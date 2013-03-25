@@ -1099,10 +1099,10 @@ abstract class Supermodlr_Core {
                     'allowed' => TRUE,
                 ));
                 //if we found a record
-                if ($result && isset($data[$pk]))
+                if ($result)
                 {
-                    //if there is no pk or there is a pk but it does not match the returned row
-                    if (!isset($result->$pk) || (isset($result->$pk) && (string) $result->$pk !== (string) $data[$pk]))
+                    //if there is no pk on the sent data (it is a "create") or there is a pk but it does not match the returned row
+                    if (!isset($data[$pk]) || (isset($result->$pk) && isset($data[$pk]) && (string) $result->$pk !== (string) $data[$pk]))
                     {
                         $messages[$field_key] = $Field->message('unique');
                         $validate_result = FALSE;
