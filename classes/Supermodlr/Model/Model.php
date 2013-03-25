@@ -388,7 +388,8 @@ EOF;
 
 
 class Field_Model__Id extends Field_Supermodlrcore__Id {
-    public $name = '_id'; 
+    public $name = '_id';
+    public $label = 'Id';
     public $datatype = 'string'; 
     public $multilingual = FALSE; 
     public $storage = 'single';
@@ -403,7 +404,8 @@ class Field_Model__Id extends Field_Supermodlrcore__Id {
     public $model = array('model' => 'model', '_id'=> 'Model_Model');
 }
 class Field_Model_Name extends Field_Supermodlrcore_Name {
-    public $name = 'name'; 
+    public $name = 'name';
+    public $label = 'Name';
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
     public $required = TRUE;
@@ -425,7 +427,8 @@ class Field_Model_Name extends Field_Supermodlrcore_Name {
 }
 
 class Field_Model_Label extends Field_Supermodlrcore_Label {
-    public $name = 'label'; 
+    public $name = 'label';
+    public $label = 'Label';
     public $multilingual = TRUE; 
     public $charset = 'UTF-8'; 
     public $required = FALSE;
@@ -441,7 +444,8 @@ class Field_Model_Label extends Field_Supermodlrcore_Label {
 
 
 class Field_Model_Description extends Field_Supermodlrcore_Description {
-    public $name = 'description'; 
+    public $name = 'description';
+    public $label = 'Description';
     public $multilingual = TRUE; 
     public $charset = 'UTF-8'; 
     public $required = FALSE;
@@ -456,7 +460,8 @@ class Field_Model_Description extends Field_Supermodlrcore_Description {
 }
 
 class Field_Model_Fields extends Field_Supermodlrcore_ArrayRelationship {
-    public $name = 'fields'; 
+    public $name = 'fields';
+    public $label = 'Fields';
     public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'field','search_field'=> 'name', 'where'=> array('model'=> NULL)));
     public $multilingual = FALSE; 
@@ -475,7 +480,8 @@ class Field_Model_Fields extends Field_Supermodlrcore_ArrayRelationship {
 }
 
 class Field_Model_Methods extends Field_Supermodlrcore_ArrayMixed {
-    public $name = 'methods'; 
+    public $name = 'methods';
+    public $label = 'Methods';
     public $multilingual = FALSE; 
     public $charset = 'UTF-8'; 
     public $unique = FALSE;
@@ -491,6 +497,7 @@ class Field_Model_Methods extends Field_Supermodlrcore_ArrayMixed {
 
 class Field_Model_Extends extends Field_Supermodlrcore_SingleRelationship {
     public $name = 'extends';
+    public $label = 'Extends';
     public $datatype = 'relationship';
     public $source = array(array('model'=> 'model','search_field'=> 'name'));
     public $multilingual = FALSE;
@@ -509,7 +516,8 @@ class Field_Model_Extends extends Field_Supermodlrcore_SingleRelationship {
 
 
 class Field_Model_Parentfield extends Field_Supermodlrcore_SingleRelationship {
-    public $name = 'parentfield'; 
+    public $name = 'parentfield';
+    public $label = 'Parent Field';
     public $description = 'If this model is assigned to a model via an "object" field and this is the "model" specific copy, this field stores the relationship to that field.';
     public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'field','search_field'=> 'name'));
@@ -527,7 +535,8 @@ class Field_Model_Parentfield extends Field_Supermodlrcore_SingleRelationship {
 }
 
 class Field_Model_Traits extends Field_Supermodlrcore_ArrayRelationship {
-    public $name = 'traits'; 
+    public $name = 'traits';
+    public $label = 'Traits';
     public $datatype = 'relationship'; 
     public $source = array(array('model'=> 'trait','search_field'=> 'name'));
     public $multilingual = FALSE; 
