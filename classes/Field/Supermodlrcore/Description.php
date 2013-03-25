@@ -1,10 +1,11 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 class Field_Supermodlrcore_Description extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
-    use Trait_FieldStorage_Single, Trait_FieldDataType_String;    
+    use Trait_FieldStorage_Single, Trait_FieldDataType_String;
     public $name = 'description';
+    public $label = 'Description';
+    public $description = 'Description';
     public $datatype = 'string';
-    public $multilingual = TRUE;
     public $charset = 'UTF-8';
     public $storage = 'single';
     public $required = FALSE;
@@ -15,6 +16,5 @@ class Field_Supermodlrcore_Description extends Field implements Interface_FieldS
     public $hidden = FALSE;
     public $private = FALSE;
     public $readonly = FALSE;
-    public $core = TRUE;
 
 }

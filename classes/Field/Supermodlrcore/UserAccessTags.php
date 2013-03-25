@@ -2,10 +2,10 @@
 class Field_Supermodlrcore_UserAccessTags extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
     use Trait_FieldStorage_Array, Trait_FieldDataType_String;
-
     public $name = 'useraccesstags';
+    public $label = 'User Access Tags';
+    public $description = 'User Access Tags';
     public $datatype = 'string';
-    public $multilingual = FALSE;
     public $charset = 'UTF-8';
     public $storage = 'array';
     public $required = FALSE;
@@ -16,7 +16,5 @@ class Field_Supermodlrcore_UserAccessTags extends Field implements Interface_Fie
     public $hidden = TRUE;
     public $private = TRUE;
     public $readonly = FALSE;
-    public $core = TRUE;
-    public $defaultvalue = array('auth');
-    public $stored = FALSE;
+
 }

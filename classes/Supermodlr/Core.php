@@ -1897,7 +1897,7 @@ abstract class Supermodlr_Core {
             }
             else
             {
-                $sction = 'create';
+                $action = 'create';
             }
             
         }

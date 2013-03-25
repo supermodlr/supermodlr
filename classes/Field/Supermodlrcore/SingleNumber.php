@@ -2,10 +2,10 @@
 class Field_Supermodlrcore_SingleNumber extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
     use Trait_FieldStorage_Single, Trait_FieldDataType_Int;
-
     public $name = 'SingleNumber';
+    public $label = 'SingleNumber';
+    public $description = 'SingleNumber';
     public $datatype = 'int';
-    public $multilingual = FALSE;
     public $storage = 'single';
     public $required = FALSE;
     public $unique = FALSE;
@@ -14,6 +14,7 @@ class Field_Supermodlrcore_SingleNumber extends Field implements Interface_Field
     public $maxlength = 4;
     public $nullvalue = FALSE;
     public $hidden = FALSE;
+    public $validtestvalue = '';
     public $private = FALSE;
     public $readonly = FALSE;
 
