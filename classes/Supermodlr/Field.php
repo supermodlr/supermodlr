@@ -18,6 +18,7 @@ class Supermodlr_Field {
    const NOT_SET = 'Supermodlr_FIELD_VALUE_NOT_SET';
 
    public $name = NULL; //app name of field (alpha-numeric)
+   public $label = NULL;
    public $description = NULL;
    public $datatype = NULL; //string,int,float,timestamp,datetime,boolean,relationship,binary,resource,object.   datatype of object means that this field is related to a model and expects to embed the fields (based on storage value)
    public $multilingual = NULL; //TRUE|FALSE
