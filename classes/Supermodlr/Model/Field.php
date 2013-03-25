@@ -448,6 +448,10 @@ EOF;
         {
             if (isset($this->$col))
             {
+
+                // @todo Remove this condition once the angular side is properly handling (not sending)
+                if ($col == 'defaultvalue' && empty($val)) continue;
+
                 $Field_field_class = 'Field_Field_'.Supermodlr::get_name_case($col);
                 $Field_field_object = $Field_field_class::factory();
                 $file_contents .= "    public \$$col = ".Field::generate_php_value($Field_field_object->export_value($this->$col)).";".PHP_EOL;
