@@ -18,7 +18,7 @@ trait Trait_SupermodlrVersions {
         if (count($changed) >= 0)
         {
             
-            $Versionhistory = new Model_Versionhistory();
+            $Versionhistory = new Model_SupermodlrVersionHistory();
 
             // Change the db_name
             $db_name = $this->get_name().'_versionhistory';
