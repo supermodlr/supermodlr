@@ -54,7 +54,7 @@ window.<?=$form_id ?>_angular_modules = ['ngResource','ui','<?=$form_id ?>'];
 function form_submit() {
     $scope = this;
     //submit form
-    save_response = $scope.server.save($scope.data[$scope.model_name],function() {
+    save_response = $scope.server.save($scope.data[$scope.model_name],function(obj) {
         //if save worked
         if (save_response.status == true) {
             $scope.$emit('saved',save_response);
@@ -73,11 +73,11 @@ function form_submit() {
             }
         //if save failed
         } else {
-            $scope.invalid(save_response);
+            $scope.invalid(obj.data);
         }
     },
-    function() {
-        $scope.invalid(save_response);
+    function(obj) {
+        $scope.invalid(obj.data);
     });
 
 }
@@ -91,12 +91,19 @@ function form_invalid(save_response) {
     form.$setValidity('server',false);
 
     //invalidate all invalid fields
-    if (save_response && typeof save_response.data != 'undefined') {
-        for (field in save_response.messages) {
+    if (save_response && typeof save_response.messages != 'undefined') {
+         for (field in save_response.messages) {
+             //if this message is attached to a specific field
+             var form = $scope[$scope.form_id+'Form'];
+             $scope.serverError[field] = save_response.messages[field];      
+             form['field__'+field].$setValidity('server',false);
+         }
+    } else if (save_response && typeof save_response.data != 'undefined') {
+        for (field in save_response.data) {
             //if this message is attached to a specific field
-            if (typeof $scope.data[$scope.model_name][field] != 'undefined') {
-
-            }
+            var form = $scope[$scope.form_id+'Form'];
+            $scope.serverError[field] = save_response.data[field];      
+            form['field__'+field].$setValidity('server',false);
         }
     }
 
