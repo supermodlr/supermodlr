@@ -1,5 +1,5 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore_SingleBoolean extends Field  implements Interface_FieldStorage, Interface_FieldDataType
+class Field_Supermodlrcore_SingleBoolean extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
     use Trait_FieldStorage_Single, Trait_FieldDataType_Boolean;
     public $name = 'SingleBoolean';
@@ -15,13 +15,6 @@ class Field_Supermodlrcore_SingleBoolean extends Field  implements Interface_Fie
     public $nullvalue = FALSE;
     public $validation = array (
   0 => 
-  array (
-    0 => 'numeric',
-    1 => 
-    array (
-    ),
-  ),
-  1 => 
   array (
     0 => 'numeric',
     1 => 

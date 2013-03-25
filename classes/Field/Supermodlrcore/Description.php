@@ -1,5 +1,5 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_Supermodlrcore_Description extends Field  implements Interface_FieldStorage, Interface_FieldDataType
+class Field_Supermodlrcore_Description extends Field implements Interface_FieldStorage, Interface_FieldDataType
 {
     use Trait_FieldStorage_Single, Trait_FieldDataType_String;
     public $name = 'description';
