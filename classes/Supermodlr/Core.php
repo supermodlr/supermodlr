@@ -246,6 +246,9 @@ abstract class Supermodlr_Core {
                 $non_primary = array();
                 foreach ($drivers_config as $i => $driver)
                 {
+                    // Skip a driver if it is disabled for this model
+                    if ((isset($driver['enabled']) && $driver['enabled'] === FALSE) || (isset($driver['disabled']) && $driver['disabled'] === TRUE)) continue;
+
                     //if there is only one driver, make it primary
                     if (count($drivers_config) == 1)
                     {
@@ -253,7 +256,7 @@ abstract class Supermodlr_Core {
                         $drivers_config[$i] = $driver;
                     }
                     //if this driver is marked as primary
-                    if (isset($driver['primary']) && $driver['primary'] == TRUE || $i === 'primary')
+                    if ((isset($driver['primary']) && $driver['primary'] == TRUE) || $i === 'primary')
                     {
                         //store driver object in primary driver var
                         $primary_driver = $Framework->get_driver($driver['driver'],$driver);
