@@ -717,8 +717,8 @@ abstract class Supermodlr_Core {
      */
     public function pk_value()
     {
-         $pk_name = $this->cfg('pk_name');
-          return (isset($this->$pk_name)) ? $this->$pk_name : NULL;
+        $pk_name = $this->cfg('pk_name');
+        return (isset($this->$pk_name)) ? $this->$pk_name : NULL;
     }
 
     /**
@@ -1610,7 +1610,7 @@ abstract class Supermodlr_Core {
         }
 
         //loop through all drivers (primary first)
-        foreach ($drivers as $Driver) {
+        foreach ($drivers as $driver_key => $Driver) {
             //if this db supports transactions
             if ($Driver->supports_transactions())
             {
@@ -1677,21 +1677,22 @@ abstract class Supermodlr_Core {
                 //run create
                 $result = $Driver->create($create);
             }
-            //if result is ok && either no transaction or ok transaction
+            // If result is ok && either no transaction or ok transaction
             if ($result !== FALSE && (!$internal_transaction || $Driver->transaction_status()))
             {
-                if ($is_insert)
+                if ($is_insert && ($driver_key == 'primary' || $driver_key == 0))
                 {
-                    //set the primary key
+                    // Set the primary key
                     $this->$pk = $result;
                 }
-                //commit transaction
+
+                // Commit transaction
                 if ($internal_transaction)
                 {
                     $Driver->end_transaction();
                 }
             }
-            //insert/update failed for this driver
+            // Insert/update failed for this driver
             else
             {
                 $saves_result = FALSE;
