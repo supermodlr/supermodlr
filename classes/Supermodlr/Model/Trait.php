@@ -15,6 +15,7 @@ class Supermodlr_Model_Trait extends Supermodlr {
                 'field_keys'  => array(
                     '_id',
                     'name',
+                    'label',
                     'description',
                     'fields',//this is an array of all field objects included in the saved trait.  the field object would only contain key/value pairs for field properties that are changed
                          //'drivers OR cfg??',
