@@ -11,9 +11,9 @@ trait Trait_FieldStorage_Single {
         return $this->validate_datatype($value);
     }
 
-    public function store_value($value, $method = 'set', $Model = NULL)
+    public function store_value($value, $method = 'set', $args = NULL)
     {
         $method = $method.'_value';
-        return $this->$method($value, $Model);
+        return $this->$method($value, $args);
     }    
 }

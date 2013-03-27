@@ -3,14 +3,23 @@
   * FileDescription: Password Protection
   */
 trait Trait_SupermodlrPasswordProtection {
-    public static $__SupermodlrPasswordProtection__scfg = array(
-        'field_keys' => array(
+    public static $__SupermodlrPasswordProtection__scfg = array (
+		'traits__SupermodlrPasswordProtection__name' => 'SupermodlrPasswordProtection',
+		'traits__SupermodlrPasswordProtection__label' => 'Password Protection',
+		'traits__SupermodlrPasswordProtection__description' => 'Password Protection',    	
+        'field_keys' => array (
             'password',
-        )
+        ),
     );
 
     /**
-     * compares a sent password against the stored password
+     * check_password compares a sent password against the stored password
+     * 
+     * @param mixed $raw_sent_password Description.
+     *
+     * @access public
+     *
+     * @return mixed Value.
      */
     public function check_password($raw_sent_password)
     {
@@ -20,12 +29,31 @@ trait Trait_SupermodlrPasswordProtection {
         return ($this->hash_password($raw_sent_password, $salt) === $password.'.'.$salt);
     }
 
+    /**
+     * field_set_password
+     * 
+     * @param mixed $value Description.
+     *
+     * @access public
+     *
+     * @return mixed Value.
+     */
     public function field_set_password($value)
     {
         return $this->hash_password($value);
     }
 
-
+    /**
+     * hash_password
+     * 
+     * @param mixed $raw_sent_password Description.
+     * @param mixed $salt              Description.
+     *
+     * @access public
+     * @static
+     *
+     * @return mixed Value.
+     */
     public static function hash_password($raw_sent_password, $salt = NULL)
     {
         $salt = (is_null($salt)) ? $this->generate_salt() : $salt;
@@ -33,19 +61,29 @@ trait Trait_SupermodlrPasswordProtection {
         return $encrypted_password.'.'.$salt;
     }
 
+    /**
+     * generate_salt
+     * 
+     * @access public
+     *
+     * @return mixed Value.
+     */
     public function generate_salt()
     {
         return '12345';
     }
 
     /**
-     * on-before-save hook
-     * encrypts the password if its been changed
+     * event__trait__SupermodlrPasswordProtection__save on-before-save hook. encrypts the password if its been changed
+     * 
+     * @param mixed $params Description.
+     *
+     * @access public
+     *
+     * @return mixed Value.
      */
     public function event__trait__SupermodlrPasswordProtection__save($params) 
     {
-        fbl('event__trait__supermodlrpasswordprotection__save', 'on save');
-
         $password = $params['set']['password'];
 
         // If this is a new user, we encrypt their password

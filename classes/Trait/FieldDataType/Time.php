@@ -5,7 +5,7 @@ trait Trait_FieldDataType_Time {
         return ((is_object($value) && $value InstanceOf DateTime));
     }
 
-    public function set_value($value, $Model = NULL)
+    public function set_value($value, $args = NULL)
     {
         if ($this->validate_datatype($value) === FALSE) 
         {
@@ -14,13 +14,13 @@ trait Trait_FieldDataType_Time {
         return $value; 
     }
 
-    public function export_value($value, $Model = NULL) 
+    public function export_value($value, $args = NULL) 
     {
         return $value->format('H:i:s');
     }
 
 
-    public function storage_value($value, $Model = NULL) 
+    public function storage_value($value, $args = NULL) 
     {
         return $value;
     }        

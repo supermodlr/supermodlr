@@ -725,6 +725,15 @@ abstract class Supermodlr_Core {
     }
 
     /**
+     * returns TRUE if the pk field is set this object
+     */
+    public function pk_isset()
+    {
+        $pk_name = $this->cfg('pk_name');
+        return isset($this->$pk_name);
+    }
+
+    /**
      * detects data changes compared to loaded data
      */
     public function changes($new_data = NULL)
@@ -1236,7 +1245,7 @@ abstract class Supermodlr_Core {
     /**
      * @returns array all public columns and fields (skips hidden/cfg properties)
      */
-    public function to_array($args = []) // $check_access = TRUE,$display = FALSE)
+    public function to_array($args = []) 
     {
         $def = [
             'check_access' => array(
@@ -1247,10 +1256,31 @@ abstract class Supermodlr_Core {
                 'type'=> 'string',
                 'default'=> 'internal',
                 'invalues'=> array('internal','export','storage'),
-            )            
+            ),
+            'expand' => array(
+                'type'=> 'bool',
+                'default'=> FALSE,
+            ),
+            'expand_parents' => array(
+                'type'=> 'bool',
+                'default'=> FALSE,
+            ),       
+            'load' => array(
+                'type'=> 'bool',
+                'default'=> FALSE,
+            ),                 
         ];
 
         Args::check($args,$def);
+
+        // If we want to check the extends field or parents, or load is forced, but this object hasn't been fully loaded yet, load it
+        if (($args['expand_parents'] === TRUE || $args['load'] === TRUE) && $this->pk_isset() === TRUE && $this->loaded() === FALSE)
+        {
+            $this->reload();
+        }
+
+        //Add the model instance to the $args (to be sent to the field traits)
+        $args['this'] = $this;
 
         //set all defaults on object
         $this->defaults();
@@ -1262,9 +1292,22 @@ abstract class Supermodlr_Core {
 
         $cols = array();
 
-        //loop through all set values
-        foreach ($this as $col => $val)
+        // if we want to expand all parents (based on "extends" field, if set on this model)
+        if ($args['expand_parents'] === TRUE)
         {
+            // setup arry to loop through all possible fields
+            $arry = $fields;
+        }
+        // if we only want to return properties set directly set on this model
+        else
+        {
+            $arry = $this;
+        }
+
+        //loop through $arry of selected fields
+        foreach ($arry as $col => $val)
+        {
+
             //skip hidden properties (ones that start with '__')
             if (substr($col,0,2) == '__' && $col !== $this->cfg('trait_column')) continue;
 
@@ -1274,12 +1317,12 @@ abstract class Supermodlr_Core {
                 continue;
             }
 
+            // get field object
             $Field = $fields[$col];
 
             //if we want to check access before returning the data
             if ($args['check_access'])
             { 
-
                  // If this field does not allow this user context to read
                  if ($Field->access('read',$this->get_user_access_tags()) === FALSE)
                  {
@@ -1300,6 +1343,9 @@ abstract class Supermodlr_Core {
                 continue;
             }
 
+            // set $val to the value on this model (will access __get method for potential parents or to load the object if passively loaded)
+            $val = $this->$col;
+
             // if the value is null
             if ($val === NULL)
             {
@@ -1310,28 +1356,27 @@ abstract class Supermodlr_Core {
                 }
                 //if null is not a valid value, we do not return it @todo should we throw an error instead of silently skipping this $col value?
             }
-            else
+            else if ($val !== Field::NOT_SET)
             {
                 // If this is an export
                 if ($args['type'] == 'export')
                 { 
                     // get the export value of the field from the FieldDataType trait
-                    $cols[$col] = $Field->store_value($val,'export', $this);   
+                    $cols[$col] = $Field->store_value($val,'export', $args);   
                 } 
                 // If the value will be sent to a storage driver
                 else if ($args['type'] == 'storage')
                 {
                     // get the storage value of the field from the FieldDataType trait
-                    $cols[$col] = $Field->store_value($val,'storage', $this);
+                    $cols[$col] = $Field->store_value($val,'storage', $args);
                 }
                 // If the value is expected to be used as-is by the application
                 else if ($args['type'] == 'internal')
                 { 
                     // set the raw value
-                    $cols[$col] = $Field->store_value($val, 'set', $this);
+                    $cols[$col] = $Field->store_value($val, 'set', $args);
                 }                
             }
-
           
         }
         //return array of values
@@ -2331,6 +2376,10 @@ abstract class Supermodlr_Core {
         if (!isset($params['array'])) $params['array'] = FALSE;
         if (!isset($params['fields'])) $params['fields'] = $class::get_fields();
         if (!isset($params['model'])) $params['model'] = $o;
+        if (!isset($params['expand'])) $params['expand'] = FALSE;
+        if (!isset($params['expand_parents'])) $params['expand_parents'] = FALSE;
+        if (!isset($params['response_type'])) $params['response_type'] = NULL;
+
         //if (!isset($params['cache'])) $params['cache'] = $o->cfg('read_cache');
         //get driver @todo add support to select driver by driver.id stored in driver_config
         $Driver = $drivers[$params['driver']];
@@ -2345,11 +2394,36 @@ abstract class Supermodlr_Core {
                 {
                     if ($params['array'] === TRUE)
                     {
-                        $result_set[] = $row;
+                        // if we want to export additional data
+                        if ($params['expand'] === TRUE || $params['expand_parents'] === TRUE || $params['response_type'] !== NULL)
+                        {
+                            $Object = $class::factory($row[$pk], $row);
+                            $to_array_args = array();
+                            // if allowed=true was sent (bypassing all security) and this is not an external api request
+                            if (isset($params['allowed']) && $params['allowed'] === TRUE && static::scfg('external_api') !== TRUE)
+                            {
+                                $to_array_args['check_access'] = FALSE;
+                            }
+                            $to_array_args['expand'] = $params['expand'];
+                            $to_array_args['expand_parents'] = $params['expand_parents'];
+                            if ($params['response_type'] !== NULL)
+                            {
+                                $to_array_args['type'] = $params['response_type'];
+                            }
+                            $result_set[] = $Object->to_array($to_array_args);
+
+                        }
+                        // if we just want the data as represented by the database
+                        else
+                        {
+                            $result_set[] = $row;
+                        }
+                        
+
                     }
                     else
                     {
-                        $result_set[] = new $class($row[$pk], $row);
+                        $result_set[] = $class::factory($row[$pk], $row);
                     }
                 }
                 if ($params['limit'] == 1)
@@ -2485,29 +2559,83 @@ abstract class Supermodlr_Core {
         $pk_name = $this->cfg('pk_name');
 
         // If this object was not loaded from a db, but there is a value for the pk, load the object to return the value
-        if ($this->cfg('loaded') !== TRUE && isset($this->$pk_name))
+        if ($this->cfg('loaded') !== TRUE && $this->pk_isset())
         {  
-            // Get the data from the db
-            $data = $this->select_by_id($this->$pk_name);
+            $this->reload();
 
-            if ($data !== FALSE)
-            {
-                // Load the data
-                $this->load($data);
-
-                //mark the model as loaded
-                $this->model_loaded();                
-            }
-
-
+            // if this property was found on this direct load
             if (isset($this->$prop))
             {
                 return $this->$prop;
             }
         }
 
+        //if this model extends another model
+        if (isset($this->extends) && $this->extends instanceOf Supermodlr)
+        {
+            //get the parent
+            $parent_class = $this->extends->pk_value();
+            $has_parent = TRUE;
+            //loop until we run out of parents to check
+            while ($has_parent)
+            {
+                //get parent field model from db
+                $Parent_Model = $this->factory($parent_class);
+                //if this model has the var, return it
+                if (isset($Parent_Model->$var))
+                {
+                    $has_parent = FALSE;
+                    return $Parent_Model->$var;
+                }
+                //if this parent doesn't have the var, but it also extends a model
+                else if (isset($Parent_Model->extends) && $Parent_Model->extends instanceOf Supermodlr)
+                {
+                    //get the parent
+                    $parent_class = $Parent_Model->extends->pk_value();
+                    //continue the loop
+                    $has_parent = TRUE;
+                }
+                //no more parents to check
+                else
+                {
+                    $has_parent = FALSE;
+                }
+            }
+        }
+
+
         // if this is a valid field but there is no value, the only valid thing to return is NOT_SET
         return Field::NOT_SET;
+    }
+
+    /**
+     * reload an object from the db. can only run this method if a valid pk is set
+     * 
+     * @access public
+     *
+     * @return mixed Value.
+     */
+    public function reload()
+    {
+        if (!$this->pk_isset())
+        {
+            throw new Exception('cannot reload an object if there is no pk set');
+        }
+        // Get pk
+        $pk_name = $this->cfg('pk_name');
+
+        // Get the data from the db
+        $data = $this->select_by_id($this->$pk_name);
+
+        // if the data was loaded from the db
+        if ($data !== FALSE)
+        {
+            // Load the data
+            $this->load($data);
+
+            //mark the model as loaded
+            $this->model_loaded();                
+        }        
     }
 
     /**

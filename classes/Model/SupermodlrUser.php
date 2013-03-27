@@ -3,13 +3,13 @@
   * FileDescription: 
   */
 class Model_SupermodlrUser extends Supermodlr {
-        public static $__scfg = array(
+        public static $__scfg = array (
                 'name' => 'SupermodlrUser',
                 'label' => 'User',                
                 'description' => '',
-                'field_keys' => array(
+                'field_keys' => array (
                   '_id',
-                  'useraccesstags',
+                  'UserAccessTags',
                 ),
    );
 

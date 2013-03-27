@@ -279,6 +279,7 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
         $params['safe'] = (isset($params['safe'])) ? $params['safe'] : $this->safe;
         $params['fsync'] = (isset($params['fsync'])) ? $params['fsync'] : $this->fsync;
         $params['where'] = (isset($params['where'])) ? $params['where'] : array();              
+        $params['overwrite'] = (isset($params['overwrite'])) ? $params['overwrite'] : FALSE;
         $params['fix_id'] = (isset($params['fix_id'])) ? $params['fix_id'] : TRUE;
         
         //remove pk on set
@@ -288,7 +289,18 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
         }
         
         //move data to update to $set command
-        $params['set'] = array('$set'=> $params['set']);
+        if ($params['overwrite'] === FALSE)
+        {
+			$params['set'] = array('$set'=> $params['set']);
+        }
+        // must only set one if overwriting a specific object
+        else
+        {
+			if (isset($params['where']['_id']))
+			{
+				$params['limit'] = 1;
+			}
+        }
         
         if (isset($params['where']['_id']) && is_string($params['where']['_id']) && $params['fix_id'] !== FALSE && ((string) new MongoId($params['where']['_id'])) === $params['where']['_id'])
         {

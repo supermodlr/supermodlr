@@ -109,11 +109,24 @@ class Supermodlr_Field {
      */
     public function __construct(Supermodlr $Model = NULL)
     {
-        if ($Model === NULL && isset($this->model) && is_array($this->model) && isset($this->model['_id']))
+    	// If no model object was passed and the set $model property is an array
+        if ($Model === NULL	&& isset($this->model) && is_array($this->model) && isset($this->model['_id']))
         {
-            $class = $this->model['_id'];
+            $pk = $this->model['_id'];
+            $class = 'Model_'.Supermodlr::get_name_case($this->model['model']);
             $Model = $class::factory();
+            $pk_name = $Model->cfg('pk_name');
+            $Model->$pk_name = $pk;
         }
+        else if (is_array($Model) && isset($Model['_id']) && isset($Model['model']))
+        {
+            $pk = $Model['_id'];
+            $class = 'Model_'.Supermodlr::get_name_case($Model['model']);
+            $Model = $class::factory();
+            $pk_name = $Model->cfg('pk_name');
+            $Model->$pk_name = $pk;
+        }
+
         // if a model was sent
         if ($Model instanceof Supermodlr)
         {
@@ -130,7 +143,7 @@ class Supermodlr_Field {
    public function get_model() 
    {
       //if thie model property is set
-      if (isset($this->model) && $this->model !== NULL)
+      if (isset($this->model) && $this->model !== NULL && $this->model InstanceOf Supermodlr)
       {
          return $this->model;
       }
@@ -139,9 +152,10 @@ class Supermodlr_Field {
       {
          //get the class name used to call this object
          $called_class = get_called_class();
-         
          //find the model name from the called class, if set
-         //if the class name is field_[{$model}_]{$field}
+         //if the class name is field_[{$model}_]{$field}         
+         
+
          if (preg_match("/^field_([^_]+)_/i",$called_class,$matches))
          {
             if ($matches[1] !== Model_Field::scfg('core_prefix')) 

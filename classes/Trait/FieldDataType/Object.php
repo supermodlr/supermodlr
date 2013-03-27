@@ -1,8 +1,8 @@
 <?php
 
-trait Trait_FieldDataType_Float {
+trait Trait_FieldDataType_Object {
     public function validate_datatype($value) {
-        return is_float($value);
+        return (is_array($value) || $value instanceof Supermodlr);
 
     }
 
@@ -12,17 +12,17 @@ trait Trait_FieldDataType_Float {
         {
             throw new Exception('Invalid value, cannot set');
         }
-        return (float) $value; 
+        return $value; 
     }      
 
     public function export_value($value, $args = NULL) 
     {
-        return (float) $value;
+        return $value;
     }
 
 
     public function storage_value($value, $args = NULL) 
     {
-        return (float) $value;
+        return $value;
     }        
 }

@@ -17,5 +17,5 @@ interface Interface_FieldStorage {
      *
      * @return mixed Value.
      */
-    public function store_value($value, $method = 'set', $Model = NULL);
+    public function store_value($value, $method = 'set', $args = NULL);
 }

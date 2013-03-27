@@ -1,18 +1,28 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 /**
-  * FileDescription: Created Updated trait adds auto created datetime and updated datatime fields to a model
+  * FileDescription: The Created Updated trait adds auto created datetime and updated datatime fields to a model
   */
 trait Trait_SupermodlrCreatedUpdated {
 
-    public static $__SupermodlrCreatedUpdated__scfg = array(
-        'field_keys' => array(
-            'Created',
-            'Updated',
-        )
+    public static $__SupermodlrCreatedUpdated__scfg = array (
+		'traits__SupermodlrCreatedUpdated__name' => 'SupermodlrCreatedUpdated',
+		'traits__SupermodlrCreatedUpdated__label' => 'Created Updated Fields',
+		'traits__SupermodlrCreatedUpdated__description' => 'The Created Updated trait adds auto created datetime and updated datatime fields to a model',    	
+        'field_keys' => array (
+            'created',
+            'updated',
+        ),
     );
 
-    // check for updated and created fields and set them if not already set
-    //$params = array('this'=> $this, 'drivers'=> &$drivers, 'is_insert'=> &$is_insert, 'set'=> &$set, 'result', &$saves_result, 'messages'=> &$messages);
+    /**
+     * check for updated and created fields and set them if not already set
+     * 
+     * @param mixed $params = array('this'=> $this, 'drivers'=> &$drivers, 'is_insert'=> &$is_insert, 'set'=> &$set, 'result', &$saves_result, 'messages'=> &$messages);
+     *
+     * @access public
+     *
+     * @return mixed Value.
+     */
     public function event__SupermodlrCreatedUpdated__save($params)
     {
         // Get fields

@@ -16,7 +16,7 @@ class Supermodlr_Model_Field extends Supermodlr {
             'storage',
             'multilingual',
             'charset',
-            //'submodel',
+            'submodel',
             //'submodeladd',
             'required',
             'unique',
@@ -397,15 +397,15 @@ class Supermodlr_Model_Field extends Supermodlr {
         //if we are generating a field class for a specific model, than we are extending an existing core model
         else
         {
-            //look for manually set extends
-            if (isset($this->extends) && $this->extends instanceOf Supermodler) 
+            //look for manually set extends as object
+            if (isset($this->extends) && $this->extends instanceOf Supermodlr) 
             {
                 $extends = $this->extends->pk_value();   
             }
-            //extend a core field by the same name
-            else if (class_exists('Field_'.self::scfg('core_prefix').'_'.$this->name))
-            {
-                $extends = 'Field_'.self::scfg('core_prefix').'_'.$this->name;
+            //look for extends set as a relationship storage version
+            else if (isset($this->extends) && is_array($this->extends) && isset($this->extends['_id']) && isset($this->extends['model']))
+            { 
+            	return $this->extends['_id'];
             }
             else
             {
@@ -420,9 +420,8 @@ class Supermodlr_Model_Field extends Supermodlr {
     {
 
         $field_class = $this->get_class_name();
-        
         $extends = $this->get_extends();
-        
+//fbl($extends,'$extends');
         // If this field extends the core Field class, implement datatype and storage interfaces and use the datatype and storage traits
         if ($extends === 'Field')
         {
@@ -444,11 +443,14 @@ class {$field_class} extends {$extends} {$implements}
 {
 {$use}
 EOF;
+//fbl($this->to_storage());
+		// Loop through all Field properties
         foreach ($Field as $col => $val) 
         {
+        	// If this property is set on this model
             if (isset($this->$col))
             {
-
+//fbl($col.' is set');
                 // @todo Remove this condition once the angular side is properly handling (not sending)
                 if ($col == 'defaultvalue' && empty($val)) continue;
 
@@ -515,7 +517,7 @@ EOF;
             while ($has_parent)
             {
                 //get parent field model from db
-                $Parent_Model_Field = new Model_Field($parent_class);
+                $Parent_Model_Field = Model_Field::factory($parent_class);
                 //if this model has the var, return it
                 if (isset($Parent_Model_Field->$var))
                 {
@@ -696,11 +698,6 @@ address:[
     {city:'',state:'',zip:''}   
 ]
 
-storage=keyed_array
-address:{
-    "key1": {city:'',state:'',zip:''},
-    "key2": {city:'',state:'',zip:''}   
-]
 
 
 
@@ -752,7 +749,7 @@ when a model extends another model ( modelB extends modelA)
 
 */
 
-/*class Field_Field_Submodel extends Field {
+class Field_Field_Submodel extends Field_Supermodlrcore_SingleObject {
     public $name = 'submodel'; 
     public $description = 'If datatype = "object", this is a relationship to the model that should be included as a sub/embedded model';
     public $datatype = 'relationship'; 
@@ -766,7 +763,7 @@ when a model extends another model ( modelB extends modelA)
     public $filterable = TRUE;
     public $nullvalue = FALSE;  
     public $conditions = array('$hidden'=> TRUE, '$showif'=> array('datatype'=> 'object', '_id'=> array('$ne'=> NULL)));        
-    public $templates = array('input' => 'field_submodel'); 
+    //public $templates = array('input' => 'field_submodel'); 
     /*
     this template needs to autocomplete on models that have no parentfield and return a link that opens an "add model" window, prepopulating "extends" with the selected model 
     and "parentfield" with the parentfield
@@ -774,7 +771,7 @@ when a model extends another model ( modelB extends modelA)
             - add a field that only stores the parent model _id relationship and is used to auto-create the submodel relationship if populated on-save end
 
     */
-//}
+}
 
 /*class Field_Field_Submodeladd extends Field {
     public $name = 'submodeladd'; 

@@ -218,11 +218,11 @@ EOF;
         $label = Field::generate_php_value($this->label);
         $desc = Field::generate_php_value($this->description);
         $file_contents .= <<<EOF
-    public static \$__scfg = array(
-            'name'=> {$name},
-            'label'=> {$label},
+    public static \$__scfg = array (
+            'name' => {$name},
+            'label' => {$label},
             'description' => {$desc},
-            'field_keys' => array(
+            'field_keys' => array (
                 '$pk_name',
 
 EOF;
@@ -238,7 +238,7 @@ EOF;
             }       
         }
 
-        $file_contents .= "        )".PHP_EOL;
+        $file_contents .= "        ),".PHP_EOL;
         $file_contents .= "    );".PHP_EOL;
 
         //set all default values for each field on the model

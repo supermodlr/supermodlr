@@ -6,7 +6,7 @@ trait Trait_FieldDataType_Date {
 
     }
 
-    public function set_value($value, $Model = NULL)
+    public function set_value($value, $args = NULL)
     {
         if ($this->validate_datatype($value) === FALSE) 
         {
@@ -15,13 +15,13 @@ trait Trait_FieldDataType_Date {
         return $value; 
     }      
 
-    public function export_value($value, $Model = NULL) 
+    public function export_value($value, $args = NULL) 
     {
         return $value->format("Y-m-d");
     }
 
 
-    public function storage_value($value, $Model = NULL) 
+    public function storage_value($value, $args = NULL) 
     {
         return $value;
     }        

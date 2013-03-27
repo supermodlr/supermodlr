@@ -1,5 +1,5 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-class Field_SupermodlrVersionhistory__Id extends Field_Supermodlrcore__Id 
+class Field_SupermodlrVersionHistory__Id extends Field_Supermodlrcore__Id 
 {
     public $name = '_id';
     public $extends = array (
@@ -8,7 +8,7 @@ class Field_SupermodlrVersionhistory__Id extends Field_Supermodlrcore__Id
 );
     public $model = array (
   'model' => 'model',
-  '_id' => 'Model_SupermodlrVersionhistory',
+  '_id' => 'Model_SupermodlrVersionHistory',
 );
 
 }

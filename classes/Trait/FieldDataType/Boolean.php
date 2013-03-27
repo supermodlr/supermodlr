@@ -5,7 +5,7 @@ trait Trait_FieldDataType_Boolean {
         return (is_bool($value) || in_array(strtolower($value), array('true','false',1,0,'1','0')));
 
     }
-    public function set_value($value, $Model = NULL)
+    public function set_value($value, $args = NULL)
     {
         if ($this->validate_datatype($value) === FALSE) 
         {
@@ -25,13 +25,13 @@ trait Trait_FieldDataType_Boolean {
         return (bool) $value; 
     }      
 
-    public function export_value($value, $Model = NULL) 
+    public function export_value($value, $args = NULL) 
     {
         return (bool) $value;
     }
 
 
-    public function storage_value($value, $Model = NULL) 
+    public function storage_value($value, $args = NULL) 
     {
         return (bool) $value;
     }        

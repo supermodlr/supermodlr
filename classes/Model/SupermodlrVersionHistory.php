@@ -3,15 +3,14 @@
   * FileDescription: 
   */
 class Model_SupermodlrVersionHistory extends Supermodlr {
-    public static $__scfg = array(
-        'name'=> 'VersionHistory',
+    public static $__scfg = array (
+        'name' => 'SupermodlrVersionHistory',
         'label' => 'Version History',
         'description' => '',
-        'field_keys' => array(
+        'field_keys' => array (
             '_id',
             'modelId',
             'changes',
-        )
+        ),
     );
-  
 }

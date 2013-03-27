@@ -18,13 +18,13 @@ trait Trait_FieldStorage_Array {
         }
     }
 
-    public function store_value($value,$method = 'set', $Model = NULL)
+    public function store_value($value,$method = 'set', $args = NULL)
     {
         $values = array();
         $method = $method.'_value';
         foreach ($value as $i => $v)
         {
-            $values[] = $this->$method($v);
+            $values[] = $this->$method($v, $args);
         }
         return $values;
     }

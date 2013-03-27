@@ -14,7 +14,7 @@ interface Interface_FieldDataType {
      *
      * @return mixed Value.
      */
-    public function set_value($value, $Model = NULL);
+    public function set_value($value, $args = NULL);
 
     /**
      * export_value takes value from set_value and returns it in the format expected for api usage
@@ -25,7 +25,7 @@ interface Interface_FieldDataType {
      *
      * @return mixed Value.
      */
-    public function export_value($value, $Model = NULL);
+    public function export_value($value, $args = NULL);
 
 
     /**
@@ -37,5 +37,5 @@ interface Interface_FieldDataType {
      *
      * @return mixed Value.
      */
-    public function storage_value($value, $Model = NULL);
+    public function storage_value($value, $args = NULL);
 }

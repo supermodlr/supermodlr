@@ -15,6 +15,7 @@ class Supermodlr_Model_Trait extends Supermodlr {
                 'field_keys'  => array(
                     '_id',
                     'name',
+                    'label',
                     'description',
                     'fields',//this is an array of all field objects included in the saved trait.  the field object would only contain key/value pairs for field properties that are changed
                          //'drivers OR cfg??',
@@ -165,15 +166,15 @@ EOF;
                 }  
 
         }
-        $name = Field::generate_php_value($this->name);
-        $label = Field::generate_php_value($this->label);
-        $desc = Field::generate_php_value($this->description);
+        $quoted_name = Field::generate_php_value($this->name);
+        $quoted_label = Field::generate_php_value($this->label);
+        $quoted_desc = Field::generate_php_value($this->description);
         $file_contents .= <<<EOF
-    public static \$__{$name}__scfg = array(
-            'traits__{$name}__name'=> {$name},
-            'traits__{$name}__label'=> {$label},
-            'traits__{$name}__description' => {$desc},            
-            'field_keys' => array(
+    public static \$__{$this->name}__scfg = array (
+            'traits__{$this->name}__name' => {$quoted_name},
+            'traits__{$this->name}__label' => {$quoted_label},
+            'traits__{$this->name}__description' => {$quoted_desc},            
+            'field_keys' => array (
 
 EOF;
 
@@ -188,7 +189,7 @@ EOF;
             }       
         }
 
-        $file_contents .= "                )".PHP_EOL;
+        $file_contents .= "                ),".PHP_EOL;
         $file_contents .= " );".PHP_EOL;
 
         //set all default values for each field on the trait

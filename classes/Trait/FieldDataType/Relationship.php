@@ -8,8 +8,9 @@ trait Trait_FieldDataType_Relationship {
         {
             return (isset($value['model']) && is_string($value['model']) && isset($value['_id']) && count($value) === 2);
         }
-        else if ($value instanceof Supermodlr && isset($this->source) && is_array($this->source)) 
+        else if ($value instanceof Supermodlr && isset($this->source) && is_array($this->source) && $value->pk_isset() && $value->pk_value() !== NULL) 
         {
+
             $ok = FALSE;
             foreach ($this->source as $source)
             {
@@ -39,7 +40,7 @@ trait Trait_FieldDataType_Relationship {
      *
      * @return mixed Value.
      */
-    public function set_value($value, $Model = NULL)
+    public function set_value($value, $args = NULL)
     { 
         if ($this->validate_datatype($value) === FALSE) 
         {
@@ -47,7 +48,7 @@ trait Trait_FieldDataType_Relationship {
         }
 
         if (is_array($value))
-        { 
+        {
             $model_class_name = Supermodlr::name_to_class_name($value['model']);
             $Dummy_Model = $model_class_name::factory();
             $pk = $Dummy_Model->cfg('pk_name');
@@ -66,29 +67,103 @@ trait Trait_FieldDataType_Relationship {
         
     }    
 
-    public function export_value($value, $Model = NULL) 
+    public function export_value($value, $args = NULL) 
     {
+        if ($this->validate_datatype($value) === FALSE) 
+        {
+            throw new Exception('Invalid value, cannot return for export');
+        }
+
         if (is_array($value))
         {
-            return $value;
+        	// if we want to expand this relationship
+        	if (is_array($args) && isset($args['expand']) && $args['expand'] === TRUE)
+        	{
+        		// get the model class name
+	            $model_class_name = Supermodlr::name_to_class_name($value['model']);
+
+	            // load the related model
+	            $Model = $model_class_name::factory($value['_id']);
+
+	            // we cannot pass expand=true or we'll get into a never ending recursive loop
+	            $args['expand'] = FALSE;
+	            $args['type'] = 'export';
+	            // return the full related object
+	            return $Model->to_array($args);
+        	}
+        	// if we are not expanding, just return the array version of the relationship
+        	else
+        	{
+        		return $value;
+        	}
+            
         }
         else if ($value instanceof Supermodlr)
         {
-            return array('model'=> $value->get_name(), '_id'=> $value->pk_value());
+        	// if we want to expand this relationship
+        	if (is_array($args) && isset($args['expand']) && $args['expand'] === TRUE)
+        	{
+	            // we cannot pass expand=true or we'll get into a never ending recursive loop
+	            $args['expand'] = FALSE;
+				$args['type'] = 'export';
+	            // return the full related object
+	            return $value->to_array($args);        		
+        	}
+        	else
+        	{
+				return array('model'=> $value->get_name(), '_id'=> $value->pk_value());
+        	}        	
+            
         }
         
     }
 
 
-    public function storage_value($value, $Model = NULL) 
+    public function storage_value($value, $args = NULL) 
     {
+        if ($this->validate_datatype($value) === FALSE) 
+        {
+            throw new Exception('Invalid value, cannot return for storage');
+        }
+
         if (is_array($value))
         {
-            return $value;
+        	// if we want to expand this relationship
+        	if (is_array($args) && isset($args['expand']) && $args['expand'] === TRUE)
+        	{
+        		// get the model class name
+	            $model_class_name = Supermodlr::name_to_class_name($value['model']);
+
+	            // load the related model
+	            $Model = $model_class_name::factory($value['_id']);
+
+	            // we cannot pass expand=true or we'll get into a never ending recursive loop
+	            $args['expand'] = FALSE;
+	            $args['type'] = 'storage';
+	            // return the full related object
+	            return $Model->to_array($args);
+        	}
+        	// if we are not expanding, just return the array version of the relationship
+        	else
+        	{
+        		return $value;
+        	}
         }
         else if ($value instanceof Supermodlr)
         {
-            return array('model'=> $value->get_name(), '_id'=> $value->pk_value());
+        	// if we want to expand this relationship
+        	if (is_array($args) && isset($args['expand']) && $args['expand'] === TRUE)
+        	{
+	            // we cannot pass expand=true or we'll get into a never ending recursive loop
+	            $args['expand'] = FALSE;
+				$args['type'] = 'storage';
+	            // return the full related object
+	            return $value->to_array($args);        		
+        	}
+        	else
+        	{
+				return array('model'=> $value->get_name(), '_id'=> $value->pk_value());
+        	}   
         }
     }        
 }
