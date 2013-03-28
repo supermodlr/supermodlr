@@ -210,7 +210,7 @@ EOF;
         {
                 foreach ($this->traits as $trait)
                 {
-                    $file_contents .= "    use ".$trait->get_pk_value().";".PHP_EOL;
+                    $file_contents .= "    use ".$trait->pk_value().";".PHP_EOL;
                 }  
 
         }
