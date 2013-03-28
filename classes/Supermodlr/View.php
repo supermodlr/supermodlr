@@ -43,7 +43,6 @@ class Supermodlr_View extends SHMVC_View {
 		}
 		
 		$template_path = NULL;
-		fbl($template_paths,'$template_paths');
 		//loop through all paths
 		foreach ($template_paths as $path)
 		{
