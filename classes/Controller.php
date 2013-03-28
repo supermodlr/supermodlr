@@ -418,9 +418,9 @@ class Controller extends Kohana_Controller {
             $sub_type = '/'.$sub_type;
         }
 
-        if (isset($Field->model) && is_array($Field->model))
+        if (isset($Field->model) && $Field->model instanceOf Supermodlr)
         {
-            $model_name = Supermodlr::get_name_from_class($Field->model['_id']);       
+            $model_name = Supermodlr::get_name_from_class($Field->model->get_name());       
         }
         else
         {
@@ -464,7 +464,7 @@ class Controller extends Kohana_Controller {
     public static function get_rel_labels($field_id_array) {
         $label_array = array();
         foreach ($field_id_array as $_id) {
-            $Field = new Model_Field($_id);
+            $Field = Model_Field::factory($_id);
             if ($Field->loaded()) {
                 $label_array[$_id] = $Field->name; //@todo change this to label once field labels are added             
             }

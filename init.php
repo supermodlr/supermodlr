@@ -8,3 +8,5 @@ Route::set('supermodlr_api', 'supermodlr/api/<model>(/<action>(/<id>(/<id_action
 
 //include firebug for logging (@todo wrap this around some security)
 require_once('lib/FirePHPCore/fb.php');
+
+Event::register('shmvc_view_factory',array('Superutil','shmvc_view_factory'));

@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-class View extends Kohana_View {
+class Supermodlr_View extends SHMVC_View {
 
 	public function get_view($template = 'default', $theme = NULL, $media = NULL)
 	{
@@ -43,7 +43,7 @@ class View extends Kohana_View {
 		}
 		
 		$template_path = NULL;
-		
+		fbl($template_paths,'$template_paths');
 		//loop through all paths
 		foreach ($template_paths as $path)
 		{
@@ -94,8 +94,8 @@ class View extends Kohana_View {
 		if ($template_path)
 		{
 			//create the view object
-			$View = new View($file_path,$this->_data);
-			
+			$View = View::factory($file_path,$this->_data);
+
 			//bind view to itself
 			$View->set('view',$View);
 
