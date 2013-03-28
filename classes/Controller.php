@@ -420,7 +420,7 @@ class Controller extends Kohana_Controller {
 
         if (isset($Field->model) && $Field->model instanceOf Supermodlr)
         {
-            $model_name = Supermodlr::get_name_from_class($Field->model->get_name());       
+            $model_name = $Field->model->get_name();       
         }
         else
         {
