@@ -737,10 +737,10 @@ class model_company_billaddress_address extends model_address {
 
 
 when a model extends another model ( modelB extends modelA)
-    - fields is overridden by the child model so we don't inheirit the fields from the parent
+    - fields is overridden by the child model so we don't inherit the fields from the parent
         - when 'extends' is first populated, we'd have to pull in all fields from the direct parent and make modelB versions of all these fields
             - this means that changes to field order and add/removes of a field on the parent modelA won't be reflected in modelB
-                - a model save will have to recursivly find any models that extend it and remove a field if it is removed on the parent
+                - a model save will have to recursively find any models that extend it and remove a field if it is removed on the parent
                 - adds? added as the last field on child models?
                 - order changed? can be ignored since the child controls the field order
 
@@ -768,26 +768,10 @@ class Field_Field_Submodel extends Field_Supermodlrcore_SingleObject {
     this template needs to autocomplete on models that have no parentfield and return a link that opens an "add model" window, prepopulating "extends" with the selected model 
     and "parentfield" with the parentfield
         - this means that this field must be saved before "submodel" can be added
-            - add a field that only stores the parent model _id relationship and is used to auto-create the submodel relationship if populated on-save end
+            - add a field that only stores the parent model _id relationship and is used to auto-create the submodel relationship if populated on-save end: no don't create a field for an interface problem
 
     */
 }
-
-/*class Field_Field_Submodeladd extends Field {
-    public $name = 'submodeladd'; 
-    public $description = 'If datatype = "object", this is a relationship to the parent of the model that should be included as a sub/embedded model. This field can be set even if the field is not saved.  It tells the save_end event to create the submodel class based on the details of the saved field.';
-    public $datatype = 'relationship'; 
-    public $source = array(array('model'=> 'model','search_field'=> 'name','where'=> array('parentfield'=> NULL)));
-    public $multilingual = FALSE; 
-    public $charset = 'UTF-8'; 
-    public $storage = 'single';
-    public $required = FALSE;
-    public $unique = FALSE;     
-    public $searchable = FALSE;
-    public $filterable = TRUE;
-    public $nullvalue = FALSE;  
-    public $conditions = array('$hidden'=> TRUE, '$showif'=> array('datatype'=> 'object', 'submodel'=> NULL));      
-}*/
 
 class Field_Field_Required extends Field_Supermodlrcore_SingleBoolean {
     public $name = 'required';

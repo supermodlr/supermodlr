@@ -123,7 +123,7 @@ class Controller extends Kohana_Controller {
             $field_key = $Field->name;
 
             //if a custom label is set for this lang @todo maybe move this to a field method
-            if (isset($Field->label[$ilang]))
+            /*if (isset($Field->label[$ilang]))
             {
                 $Field->label = $Field->label[$ilang];
             }
@@ -131,7 +131,9 @@ class Controller extends Kohana_Controller {
             else if (!isset($Field->label))
             {
                 $Field->label = ucfirst($Field->name);
-            }
+            }*/
+
+            $this->load_submodels($Model,$Field,$model_data);
 
 
             //if value is set on the current object
@@ -140,56 +142,6 @@ class Controller extends Kohana_Controller {
                 $Field = $this->field_set_value($model_data,$Field);
             }
             
-            //get field objects for all submodel.fields
-       /*     if ($Field->datatype == 'object' && isset($Field->submodel) && is_array($Field->submodel) && isset($Field->submodel['_id']) && class_exists($Field->submodel['_id'])) 
-            {
-                $Field->sub_fields = array();
-                //get related model
-                $submodel = new $Field->submodel['_id']();
-
-                //get all submodel fields
-                $submodel_fields = $submodel->get_fields();
-
-                //loop through that model's field
-                foreach ($submodel_fields as $sub_field_key => $sub_field) 
-                {
-
-                    //skip the pk field
-                    if ($sub_field->name == $submodel->cfg('pk_name'))
-                    {
-                        continue;
-                    }
-
-                    //if a custom label is set for this lang @todo maybe move this to a field method
-                    if (isset($sub_field->label[$ilang]))
-                    {
-                        $sub_field->label = $sub_field->label[$ilang];
-                    }
-                    //else uccase the name
-                    else 
-                    {
-                        $sub_field->label = ucfirst($sub_field->name);
-                    }
-                    //if this field is set on the model
-                    if (isset($model_data[$field_key]))
-                    {                   
-                        //set a pointer to the field object
-                        $pointer = &$model_data[$field_key];
-
-                        //check to see if this submodel field is set on the parent model
-                        if (isset($pointer[$sub_field->name])) 
-                        {
-                            //set the value on the submodel field object to be sent to templates
-                            $sub_field = $this->field_set_value($model_data,$sub_field,$pointer[$sub_field->name]);
-                        }
-                    }
-                    
-
-                    $Field->sub_fields[$sub_field->name] = $sub_field;
-                }                   
-
-            }*/
-
             //store rendered template for form template
             $field_templates[$field_key] = $Field;
         }
@@ -225,6 +177,68 @@ class Controller extends Kohana_Controller {
 
         //return model view
         return $Model_Wrapper_View;
+    }
+
+    public function load_submodels($Model, &$Field, &$model_data)
+    {
+        //get field objects for all submodel.fields
+        if ($Field->datatype == 'object' && isset($Field->submodel) && is_array($Field->submodel) && isset($Field->submodel['_id']) && class_exists($Field->submodel['_id'])) 
+        {
+            $Field->sub_fields = array();
+
+			$field_key = $Field->name;
+
+            //get related model
+            $submodel = $Field->get_submodel();
+
+            //get all submodel fields
+            $submodel_fields = $submodel->get_fields();
+
+            //loop through that model's field
+            foreach ($submodel_fields as $sub_field_key => $sub_field) 
+            {
+                //skip the pk field
+                if ($sub_field->name == $submodel->cfg('pk_name'))
+                {
+                    continue;
+                }
+
+                $sub_field->parentmodel($Model);
+
+                $sub_field->parentfield($Field);
+
+                //if a custom label is set for this lang @todo maybe move this to a field method
+               /* if (isset($sub_field->label[$ilang]))
+                {
+                    $sub_field->label = $sub_field->label[$ilang];
+                }
+                //else uccase the name
+                else 
+                {
+                    $sub_field->label = ucfirst($sub_field->name);
+                }*/
+
+                $this->load_submodels($Model,$sub_field,$model_data);
+
+                //if this field is set on the model
+                if (isset($model_data[$field_key]))
+                {                   
+                    //set a pointer to the field object
+                    $pointer = &$model_data[$field_key];
+
+                    //check to see if this submodel field is set on the parent model
+                    if (isset($pointer[$sub_field->name])) 
+                    {
+                        //set the value on the submodel field object to be sent to templates
+                        $sub_field = $this->field_set_value($model_data,$sub_field,$pointer[$sub_field->name]);
+                    }
+                }
+                
+
+                $Field->sub_fields[$sub_field->name] = $sub_field;
+            }                   
+
+        }
     }
 
     public function field_set_value($data,$Field, &$pointer = NULL) 

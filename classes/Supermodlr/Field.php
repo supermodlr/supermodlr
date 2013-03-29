@@ -23,7 +23,7 @@ class Supermodlr_Field {
    public $datatype = NULL; //string,int,float,timestamp,datetime,boolean,relationship,binary,resource,object.   datatype of object means that this field is related to a model and expects to embed the fields (based on storage value)
    public $multilingual = NULL; //TRUE|FALSE
    public $charset = NULL; //UTF-8 (if datatype = string)
-   public $storage = NULL;//single|array|keyed_array storage of object means that the values are stored in an associative array
+   public $storage = NULL;//single|array
    public $required = NULL;//TRUE|FALSE|array indicates if this field must be on an object before it can be saved. array indicates a conditional that must be met if this is true or not.  array format: array('{$field_key'=> '{$value}') || array('$callback'=> array('method1','method2')) - method1/method2 must be methods on the model class and are sent 1 param containing the value or field::NOT_SET 
    public $unique = NULL;//TRUE|FALSE|array indicates if the value of this field can not be the same as any other value of the same field in the same data set.  if array, it will contain an array of all other field names that make the entry unique
    public $searchable = NULL;//TRUE|FALSE indicates if this field value should be available in text searches
@@ -44,8 +44,8 @@ class Supermodlr_Field {
    public $extends = NULL;//name of field that this field extends
    //public $fields = NULL; //if this is a storage of type 'keyed_array' or an 'array' storage of 'datatype':object, this is an array of Field objects available to that object
    public $submodel = NULL; //if datatype = 'object', this field tells us which model to embed
-   //public $parentmodel = MULL;// if this field is assigned to model Address, and that model is assigned as a sub model to model "Company", this field exists on Address.field1 to reference "Company"
-   //public $parentfield = NULL; //indicates the parent field if this field is a sub field of a parent "keyed array" field or datatype:object field
+   public $parentmodel = NULL;// if this field is assigned to model Address, and that model is assigned as a sub model to model "Company", this field exists on Address.field1 to reference "Company"
+   public $parentfield = NULL; //indicates the parent field if this field is a sub field of a parent datatype:object field
    public $validtestvalue = NULL; //a value that should be valid.  used for test saves if there is no default
    public $invalidtestvalues = NULL; //a set of values that should fail validation. used for test validation
    public $pk = FALSE; //set tot true to indicate that this field is the primary key for the database
@@ -527,21 +527,108 @@ class Supermodlr_Field {
     // returns the name path for ths field including all parent fields
     public function path($delimeter = '.')
     { 
-      //$Model = $this->get_model();
-      /*if ($model !== NULL)
-      {
+      $ParentField = $this->parentfield();
+      //if ($ParentModel !== NULL)
+      //{
          //load field.model and check for a parent model
-         $Model = new $model['_id'](); //@todo when a model is saved with a submodel field, we need to create the model specific submodel (model_company_address extends model_address) when that field is saved
+        // $Model = new $model['_id'](); //@todo when a model is saved with a submodel field, we need to create the model specific submodel (model_company_address extends model_address) when that field is saved
 
-      }*/
-      /*if ($this->parentmodel !== NULL) {
-         $Parent_model= new $this->parentmodel['_id']();
-         $parent_path = $Parent_model->path($delimeter);
-         return $parent_path.$delimeter.$this->name;
-      } else {*/
-         return $this->name;
       //}
+      if ($ParentField !== NULL) 
+      {
+         //$Parent_model= new $this->parentmodel['_id']();
+         $parent_path = $ParentField->path($delimeter);
+         return $parent_path.$delimeter.$this->name;
+      } else {
+         return $this->name;
+      }
     }
+
+    public function parentmodel(Supermodlr $ParentModel = NULL)
+    {
+    	// Act as getter
+    	if ($ParentModel === NULL)
+    	{
+    		return $this->parentmodel;
+    	}
+    	// Act as setter
+    	else 
+    	{
+			$this->parentmodel = $ParentModel;
+    	}
+    }
+
+    public function parentfield(Field $ParentField = NULL)
+    {
+    	// Act as getter
+    	if ($ParentField === NULL)
+    	{
+    		return $this->parentfield;
+    	}
+    	// Act as setter
+    	else 
+    	{
+			$this->parentfield = $ParentField;
+    	}
+    }
+
+    public static function get_field_from_path($ParentModel, $field_path, $delim = '_')
+    {
+    	// Examples:
+    	// model:       company
+    	// submodel:    address
+    	// parentfield: billaddress
+    	// field:       city
+    	if (strpos($field_path, $delim) !== FALSE)
+    	{
+    		// billaddress_city
+    		// {$object_field}_{$object_field}_{$field}
+    		// each {$object_field} maps to a model
+    		$field_path_parts = explode($delim,$field_path);
+
+    		// city
+    		$field_name = Supermodlr::get_name_case(array_pop($field_path_parts));
+
+    		// billaddress
+			$field_parentfield_name = Supermodlr::get_name_case($field_path_parts[count($field_path_parts) - 1]);
+
+			//get "submodel" (address)
+
+//@todo get parent field class/object, then get submodel class/object
+
+			$Parent_Field = 'Field_';
+
+			foreach ($field_path_parts as $i => $part)
+			{
+				$field_path_parts[$i] = Supermodlr::get_name_case($part);
+			}
+
+    		$parent_model_name = Supermodlr::get_name_case($ParentModel->get_name());
+
+    		// 
+    		$found_class = FALSE;
+    		// Look for class Field_{$Model}_{Object_field0}[_{Object_field1}..]_{$field} (Field_Company_Address_City)
+    		// Look for class Field_{Object_field1's Model}_{Object_field1}_{$field} (Field_Address_Address_City)
+    		// Look for class Field_{Object_field1's Model}_{$field} (Field_Address_City)    		
+    		$class_paths = array(
+    			'Field_'.$parent_model_name.'_'.implode('_',$field_path_parts).'_'.$field_name,
+    			'Field_',
+    		);
+			if (class_exists($class))
+			{
+				$found_class = TRUE;
+			}
+
+
+    	}
+    	else
+    	{
+    		$model_name = Supermodlr::get_name_case($Model->get_name());
+    		$class_name = 'Field_'.$model_name.'_'.$field_path;
+    		return $class_name::factory($ParentModel);
+    	}
+    }
+
 
     /**
     * @returns string containing javascript logic to be executed whenever any other field is updated to determine if this field should be shown, hidden, disabled, or enabled

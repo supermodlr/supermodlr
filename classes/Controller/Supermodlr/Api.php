@@ -217,7 +217,7 @@ class Controller_Supermodlr_Api extends Controller {
 		if ($id !== '*')
 		{
 			//load model by id
-			$Model = new $model_class($id);
+			$Model = $model_class::factory($id);
 			
 			//ensure model loaded
 			if ($Model->loaded() === FALSE)
@@ -232,7 +232,7 @@ class Controller_Supermodlr_Api extends Controller {
 		else
 		{
 			//create blank object
-			$Model = new $model_class();
+			$Model = $model_class::factory();
 		}
 		
 		$Model->cfg('external_api',TRUE);
@@ -243,8 +243,33 @@ class Controller_Supermodlr_Api extends Controller {
 		//load posted data onto model
 		$Model->load($data);	
 
+		// If field_name is a path to a sub field
+		if (strpos($field_name, '_') !== FALSE)
+		{
+			// get all field name parts
+			$field_parts = explode('_',$field_name);
+
+			// get the last element, which is the field name (city)
+			$field_name = $field_parts[count($field_parts)-1];
+
+			// get field object (populated with parent model and parent field)
+
+//@todo finish this : wip in Field::get_field_from_path
+
+			// get the parent_field @todo fix for unlimited sub field levels (address)
+			$parent_field_name = $field_parts[count($field_parts)-2];
+
+
+		}
+
 		//get the fields
 		$fields = $Model->get_fields();
+
+		// ensure this field exists on this model
+		if (!isset($field[$field_name]))
+		{
+
+		}
 
 		$single_field_array = array($fields[$field_name]);
 		
