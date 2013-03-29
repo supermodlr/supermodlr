@@ -455,14 +455,22 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
     {
         if (is_object($params['value']) && $params['value'] instanceOf DateTime)
         {
-            $datetime = $params['value']->getTimestamp();
+            $datetime = $params['value'];
         }
-        else if (is_string($params['value']) && !is_numeric($params['value'])) 
+        else if (is_string($params['value']) && !is_numeric($params['value']) && strtotime($params['value']) !== FALSE) 
         {
-            $datetime = strtotime($params['value']);
+            $datetime = new DateTime($params['value']);
             if (!$datetime) $params['value'] = NULL;
         }
-        $params['value'] = new MongoDate($datetime);
+        else if (is_numeric($params['value']))
+        {
+        	$datetime = new DateTime();
+        	$datetime->setTimestamp($params['value']);
+        }
+
+        $Timezone = new DateTimeZone('UTC');
+        $datetime->setTimezone($Timezone);
+        $params['value'] = new MongoDate($datetime->getTimestamp());
     }
 
     /**
@@ -471,7 +479,15 @@ class Supermodlr_Mongodb extends Supermodlr_Db {
       */
     public function driver_datetime_fromdb($params) 
     {
-        $params['value'] = new DateTime($params['value']->sec);
+    	if (isset($params['value']) && $params['value'] instanceof MongoDate)
+    	{
+    		$datetime = new DateTime();
+    		$datetime->setTimestamp($params['value']->sec);
+        	$Timezone = new DateTimeZone(date_default_timezone_get());
+        	$datetime->setTimezone($Timezone);
+    		$params['value'] = $datetime;
+    	}
+        
     }
     
     

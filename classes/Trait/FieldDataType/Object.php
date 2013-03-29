@@ -28,16 +28,17 @@ trait Trait_FieldDataType_Object {
 
     public function get_submodel()  
     {
-        if (is_array($this->submodel))
+        if (isset($this->submodel) && is_array($this->submodel))
         {
             $model_class_name = $this->submodel['_id'];
             $Dummy_Model = $model_class_name::factory();
             return $Dummy_Model;
         }
-        else if ($value instanceof Supermodlr) 
+        else if ($this->submodel instanceof Supermodlr) 
         {
-            return $value; 
+            return $this->submodel; 
         }
+        return NULL;
     }
 
 }

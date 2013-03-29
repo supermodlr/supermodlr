@@ -11,7 +11,24 @@ trait Trait_FieldDataType_Datetime {
         {
             throw new Exception('Invalid value, cannot set');
         }
-        return $value; 
+        if (is_object($value) && $value InstanceOf DateTime)
+        {
+        	$Datetime = $value; 
+        }
+        else if (is_numeric($value)) 
+        {
+        	$Datetime = new DateTime();
+        	$Datetime->setTimestamp($value);
+        }
+        else if (is_string($value) && strtotime($value) !== FALSE)
+        {
+        	$Datetime = new DateTime($value);
+        }
+
+    	$Timezone = new DateTimeZone(date_default_timezone_get());
+    	$Datetime->setTimezone($Timezone);
+    	return $Datetime;
+        
     }      
 
     public function export_value($value, $args = NULL) 

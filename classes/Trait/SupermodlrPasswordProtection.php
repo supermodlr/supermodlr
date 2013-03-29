@@ -82,7 +82,7 @@ trait Trait_SupermodlrPasswordProtection {
      *
      * @return mixed Value.
      */
-    public function event__trait__SupermodlrPasswordProtection__save($params) 
+    public function event__Trait_SupermodlrPasswordProtection__save($params) 
     {
         $password = $params['set']['password'];
 

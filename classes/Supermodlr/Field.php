@@ -46,6 +46,7 @@ class Supermodlr_Field {
    public $submodel = NULL; //if datatype = 'object', this field tells us which model to embed
    public $parentmodel = NULL;// if this field is assigned to model Address, and that model is assigned as a sub model to model "Company", this field exists on Address.field1 to reference "Company"
    public $parentfield = NULL; //indicates the parent field if this field is a sub field of a parent datatype:object field
+   public $subfields = NULL;
    public $validtestvalue = NULL; //a value that should be valid.  used for test saves if there is no default
    public $invalidtestvalues = NULL; //a set of values that should fail validation. used for test validation
    public $pk = FALSE; //set tot true to indicate that this field is the primary key for the database
@@ -579,6 +580,16 @@ class Supermodlr_Field {
     	// submodel:    address
     	// parentfield: billaddress
     	// field:       city
+    	/*
+		company
+			billaddress
+				.submodel = address
+				city
+					.parentfield = billaddress
+
+
+
+    	*/
     	if (strpos($field_path, $delim) !== FALSE)
     	{
     		// billaddress_city
@@ -595,6 +606,7 @@ class Supermodlr_Field {
 			//get "submodel" (address)
 
 //@todo get parent field class/object, then get submodel class/object
+			//Field_Company_billaddress
 
 			$Parent_Field = 'Field_';
 

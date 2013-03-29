@@ -8,9 +8,9 @@
 * @package  Supermodlr
 * @author   Justin Shanks <jshanman@gmail.com>
 */    
-abstract class Supermodlr_Core {
+abstract class Supermodlr_Core implements ArrayAccess {
 
-    // We want to use the core Supermodlr_Trait_Supertrait so that only traits use the Trait_Supertrait trait
+    // We want to use the core Supermodlr_Trait_Supertrait
     use Supermodlr_Trait_Supertrait;
     
     // Static config for vars that apply to all data types and can be loaded once
@@ -621,6 +621,13 @@ abstract class Supermodlr_Core {
                         //fbl($fieldclass .' class not found');
                     }
                 }
+
+                // if we found the field
+                if (isset($fields[$field_name]))
+                {
+
+                	$fields[$field_name] = static::load_submodel($Model,$fields[$field_name]);
+                }
             }
 
             // Get the direct parent of this class
@@ -646,6 +653,61 @@ abstract class Supermodlr_Core {
             return array();
         }
     }
+
+
+    /**
+	 * load_submodels on a field that implements the get_submodel call
+     * 
+     * @param mixed $Model Description.
+     * @param mixed $Field Description.
+     *
+     * @access public
+     * @static
+     *
+     * @return mixed Value.
+     */
+	public static function load_submodel($Model, $Field)
+	{
+		// get any sub fields
+		if (method_exists($Field, 'get_submodel'))
+		{
+	        //get related model
+	        $SubModel = $Field->get_submodel();
+
+	        if ($SubModel === NULL)
+	        {
+	        	return $Field;
+	        }
+	        $Field->subfields = array();
+
+	        //get all submodel fields
+	        $submodel_fields = $SubModel->get_fields();
+
+	        //loop through that model's field
+	        foreach ($submodel_fields as $sub_field_key => $SubField) 
+	        {
+	            //skip the pk field
+	            if ($SubField->name == $SubModel->cfg('pk_name'))
+	            {
+	                continue;
+	            }
+
+	            // Add $Model as the parent model
+	            $SubField->parentmodel($Model);
+
+	            // Add parent field
+	            $SubField->parentfield($Field);
+
+	            // recursively call self
+	            $SubField = static::load_submodel($Model,$SubField);
+
+	            // assign all sub fields
+	            $Field->subfields[$SubField->name] = $SubField;
+	        }
+		}	
+		// return field object
+		return $Field;
+	}
 
     public static function get_class_tree()
     {
@@ -2582,10 +2644,10 @@ abstract class Supermodlr_Core {
                 //get parent field model from db
                 $Parent_Model = $this->factory($parent_class);
                 //if this model has the var, return it
-                if (isset($Parent_Model->$var))
+                if (isset($Parent_Model->$prop))
                 {
                     $has_parent = FALSE;
-                    return $Parent_Model->$var;
+                    return $Parent_Model->$prop;
                 }
                 //if this parent doesn't have the var, but it also extends a model
                 else if (isset($Parent_Model->extends) && $Parent_Model->extends instanceOf Supermodlr)
@@ -2781,4 +2843,24 @@ abstract class Supermodlr_Core {
     {
         return preg_replace('/^Trait_/','',$trait);
     }     
+
+	public function offsetSet($offset, $value) 
+	{
+		$this->$offset = $value;
+	}
+
+    public function offsetExists($var) 
+    {
+    	return isset($this->$var);
+    }
+
+    public function offsetUnset($var) 
+    {
+        unset($this->$var);
+    }
+
+    public function offsetGet($var) 
+    {
+    	return $this->$var;
+    }    
 }

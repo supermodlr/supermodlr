@@ -23,8 +23,9 @@ trait Trait_SupermodlrCreatedUpdated {
      *
      * @return mixed Value.
      */
-    public function event__SupermodlrCreatedUpdated__save($params)
+    public function event__Trait_SupermodlrCreatedUpdated__save($params)
     {
+    	
         // Get fields
         $fields = $this->get_fields();
 
@@ -32,22 +33,22 @@ trait Trait_SupermodlrCreatedUpdated {
         $time = $Datetime->getTimestamp();
 
         // If the 'created' field exists, is not set, and this is an insert
-        if (isset($fields['Created']) && !isset($params['set']['Created']) && $params['is_insert'])
+        if (isset($fields['created']) && !isset($params['set']['created']) && $params['is_insert'])
         {
             // Set the current time as the created time
-            $this->Created = $Datetime;
-            $params['set']['Created'] = $this->Created;
+            $this->created = $Datetime;
+            $params['set']['created'] = $this->created;
         }
 
         // Get originally loaded data from db
         $loaded_data = $this->cfg('loaded_data');
 
         // If the 'updated' field exists and it matches the loaded value for updated and a different updated date was not sent to &$params['set']
-        if (isset($fields['Updated']) && ((isset($params['set']['Updated']) && $params['set']['Updated'] === $loaded_data['Updated']) || !isset($params['set']['Updated'])))
+        if (isset($fields['updated']) && ((isset($params['set']['updated']) && $params['set']['updated'] == $loaded_data['updated']) || !isset($params['set']['updated'])))
         {
             // Set the current time as the updated time
-            $this->Updated = $Datetime;
-            $params['set']['Updated'] = $this->Updated;
+            $this->updated = $Datetime;
+            $params['set']['updated'] = $this->updated;
         }
 
     }
