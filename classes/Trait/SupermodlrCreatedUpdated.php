@@ -23,34 +23,34 @@ trait Trait_SupermodlrCreatedUpdated {
      *
      * @return mixed Value.
      */
-    public function event__Trait_SupermodlrCreatedUpdated__save($params)
-    {
+	public function event__Trait_SupermodlrCreatedUpdated__save($params)
+	{
     	
-        // Get fields
-        $fields = $this->get_fields();
+		// Get fields
+		$fields = $this->get_fields();
 
-        $Datetime = new DateTime();
-        $time = $Datetime->getTimestamp();
+		$Datetime = new DateTime();
+		$time = $Datetime->getTimestamp();
 
-        // If the 'created' field exists, is not set, and this is an insert
-        if (isset($fields['created']) && !isset($params['set']['created']) && $params['is_insert'])
-        {
-            // Set the current time as the created time
-            $this->created = $Datetime;
-            $params['set']['created'] = $this->created;
-        }
+		// If the 'created' field exists, is not set, and this is an insert
+		if (isset($fields['created']) && !isset($params['set']['created']) && $params['is_insert'])
+		{
+			// Set the current time as the created time
+			$this->created = $Datetime;
+			$params['set']['created'] = $this->created;
+		}
 
-        // Get originally loaded data from db
-        $loaded_data = $this->cfg('loaded_data');
+		// Get originally loaded data from db
+		$loaded_data = $this->cfg('loaded_data');
 
-        // If the 'updated' field exists and it matches the loaded value for updated and a different updated date was not sent to &$params['set']
-        if (isset($fields['updated']) && ((isset($params['set']['updated']) && $params['set']['updated'] == $loaded_data['updated']) || !isset($params['set']['updated'])))
-        {
-            // Set the current time as the updated time
-            $this->updated = $Datetime;
-            $params['set']['updated'] = $this->updated;
-        }
+		// If the 'updated' field exists and it matches the loaded value for updated and a different updated date was not sent to &$params['set']
+		if (isset($fields['updated']) && ((isset($params['set']['updated']) && $params['set']['updated'] == $loaded_data['updated']) || !isset($params['set']['updated'])))
+		{
+			// Set the current time as the updated time
+			$this->updated = $Datetime;
+			$params['set']['updated'] = $this->updated;
+		}
 
-    }
+	}
 
 }
