@@ -21,7 +21,7 @@ trait Trait_SupermodlrVersions {
      *
      * @return mixed Value.
      */
-    public function event__trait_SupermodlrVersions__save_end($params)
+    public function event__Trait_SupermodlrVersions__save_end($params)
     {
 
         $changed = $this->changed();
