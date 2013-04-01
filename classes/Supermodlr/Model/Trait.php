@@ -273,110 +273,117 @@ EOF;
 
 
 class Field_Trait__Id extends Field_Supermodlrcore__Id {
-    public $name = '_id'; 
-    public $multilingual = FALSE; 
-    public $required = TRUE;
-    public $unique = TRUE;
-    public $searchable = TRUE;
-    public $filterable = TRUE;
-    public $nullvalue = FALSE; 
-    public $templates = array('input'=> 'hidden');      
-    public $hidden = TRUE; 
-    public $pk = TRUE;  
+	public $name = '_id';
+	public $label = 'Id';
+	public $multilingual = FALSE; 
+	public $required = TRUE;
+	public $unique = TRUE;
+	public $searchable = TRUE;
+	public $filterable = TRUE;
+	public $nullvalue = FALSE; 
+	public $templates = array('input'=> 'hidden');      
+	public $hidden = TRUE; 
+	public $pk = TRUE;  
 }
 class Field_Trait_Name extends Field_Supermodlrcore_Name {
-    public $name = 'name'; 
-    public $multilingual = FALSE; 
-    public $charset = 'UTF-8'; 
-    public $required = TRUE;
-    public $unique = FALSE;
-    public $searchable = TRUE;
-    public $filterable = TRUE;
-    public $values = NULL;
-    public $defaultvalue = NULL;
-    public $nullvalue = FALSE; 
-    public $validation = NULL;
-    public $messages = NULL;
-    public $templates = NULL;
-    public $hidden = FALSE; 
-    public $extends = NULL;
-    public $fields = NULL;
-    public $validtestvalue = 'test field name'; 
-    public $invalidtestvalues = NULL; 
+	public $name = 'name';
+	public $label = 'Name';
+	public $multilingual = FALSE; 
+	public $charset = 'UTF-8'; 
+	public $required = TRUE;
+	public $unique = FALSE;
+	public $searchable = TRUE;
+	public $filterable = TRUE;
+	public $values = NULL;
+	public $defaultvalue = NULL;
+	public $nullvalue = FALSE; 
+	public $validation = NULL;
+	public $messages = NULL;
+	public $templates = NULL;
+	public $hidden = FALSE; 
+	public $extends = NULL;
+	public $fields = NULL;
+	public $validtestvalue = 'test field name'; 
+	public $invalidtestvalues = NULL; 
 }
 
 class Field_Trait_Label extends Field_Supermodlrcore_Label {
-    public $name = 'label'; 
-    public $charset = 'UTF-8'; 
-    public $required = FALSE;
-    public $unique = FALSE;
-    public $searchable = TRUE;
-    public $filterable = TRUE;
-    public $values = NULL;
-    public $nullvalue = FALSE; 
-    public $validation = array(); //array('alpha_numeric',array('regex',array(':value','/^[a-z][^\s]*$/i'))); @todo fix this for _id field
-    public $messages = NULL;
-    public $templates = NULL;
-    public $hidden = FALSE; 
-    public $extends = NULL;
-    public $fields = NULL;
-    public $invalidtestvalues = NULL; 
-    public $readonly = FALSE;
+	public $name = 'label';
+	public $label = 'Label';
+	public $charset = 'UTF-8'; 
+	public $required = FALSE;
+	public $unique = FALSE;
+	public $searchable = TRUE;
+	public $filterable = TRUE;
+	public $values = NULL;
+	public $nullvalue = FALSE; 
+	public $validation = array();
+	public $messages = NULL;
+	public $templates = NULL;
+	public $hidden = FALSE; 
+	public $extends = NULL;
+	public $fields = NULL;
+	public $invalidtestvalues = NULL; 
+	public $readonly = FALSE;
 }
 
 
 class Field_Trait_Description extends Field_Supermodlrcore_Description {
-    public $name = 'description'; 
-    public $multilingual = TRUE; 
-    public $charset = 'UTF-8'; 
-    public $required = FALSE;
-    public $unique = FALSE;
-    public $searchable = TRUE;
-    public $filterable = FALSE;
-    public $defaultvalue = NULL;
-    public $validation = NULL;
-    public $templates = NULL;   
-    public $hidden = FALSE; 
+	public $name = 'description';
+	public $label = 'Description';
+	public $multilingual = TRUE; 
+	public $charset = 'UTF-8'; 
+	public $required = FALSE;
+	public $unique = FALSE;
+	public $searchable = TRUE;
+	public $filterable = FALSE;
+	public $defaultvalue = NULL;
+	public $validation = NULL;
+	public $templates = NULL;   
+	public $hidden = FALSE; 
 }
 
 class Field_Trait_Fields extends Field_Supermodlrcore_ArrayRelationship {
-    public $name = 'fields'; 
-    public $source = array(array('model'=> 'field','search_field'=> 'name', 'where'=> array('model'=> NULL)));
-    public $multilingual = FALSE; 
-    public $charset = 'UTF-8'; 
-    public $unique = FALSE;
-    public $searchable = TRUE;
-    public $filterable = FALSE;
-    public $defaultvalue = NULL;
-    public $nullvalue = FALSE;
-    public $validation = NULL;
-    public $templates = array('input' => 'trait_fields');   
-    public $hidden = FALSE; 
+	public $name = 'fields';
+	public $label = 'Fields';
+	public $source = array(array('model'=> 'field','search_field'=> 'name', 'where'=> array('model'=> NULL)));
+	public $multilingual = FALSE; 
+	public $charset = 'UTF-8'; 
+	public $unique = FALSE;
+	public $searchable = TRUE;
+	public $filterable = FALSE;
+	public $defaultvalue = NULL;
+	public $nullvalue = FALSE;
+	public $validation = NULL;
+	public $templates = array('input' => 'trait_fields');   
+	public $hidden = FALSE; 
 }
 
 class Field_Trait_Methods extends Field_Supermodlrcore_ArrayMixed {
-    public $name = 'methods'; 
-    public $multilingual = FALSE; 
-    public $charset = 'UTF-8'; 
-    public $unique = FALSE;
-    public $searchable = TRUE;
-    public $filterable = FALSE;
-    public $defaultvalue = NULL;
-    public $nullvalue = FALSE;
-    public $validation = NULL;
-    public $hidden = TRUE; 
+	public $name = 'methods';
+	public $label = 'Methods';
+	public $multilingual = FALSE; 
+	public $charset = 'UTF-8'; 
+	public $unique = FALSE;
+	public $searchable = TRUE;
+	public $filterable = FALSE;
+	public $defaultvalue = NULL;
+	public $nullvalue = FALSE;
+	public $validation = NULL;
+	public $hidden = TRUE; 
 }
 
 class Field_Trait_Traits extends Field_Supermodlrcore_ArrayRelationship {
-    public $name = 'traits'; 
-    public $source = array(array('model'=> 'trait','search_field'=> 'name'));
-    public $multilingual = FALSE; 
-    public $charset = 'UTF-8'; 
-    public $unique = FALSE;
-    public $searchable = FALSE;
-    public $filterable = FALSE;
-    public $defaultvalue = NULL;
-    public $nullvalue = FALSE;
-    public $validation = NULL;
-    public $hidden = FALSE; 
+	public $name = 'traits';
+	public $label = 'Traits';
+	public $source = array(array('model'=> 'trait','search_field'=> 'name'));
+	public $multilingual = FALSE; 
+	public $charset = 'UTF-8'; 
+	public $unique = FALSE;
+	public $searchable = FALSE;
+	public $filterable = FALSE;
+	public $defaultvalue = NULL;
+	public $nullvalue = FALSE;
+	public $validation = NULL;
+	public $hidden = FALSE; 
 }
