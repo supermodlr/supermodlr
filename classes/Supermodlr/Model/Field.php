@@ -415,55 +415,63 @@ class Supermodlr_Model_Field extends Supermodlr {
         return $extends;
     }
 
-    // this field model is generating a field class.
-    public function generate_class_file_contents()
-    {
+   
 
-        $field_class = $this->get_class_name();
-        $extends = $this->get_extends();
-//fbl($extends,'$extends');
-        // If this field extends the core Field class, implement datatype and storage interfaces and use the datatype and storage traits
-        if ($extends === 'Field')
-        {
-            $storage = Supermodlr::get_name_case($this->storage);        
-            $datatype = Supermodlr::get_name_case($this->datatype);            
-            $use = "    use Trait_FieldStorage_{$storage}, Trait_FieldDataType_{$datatype};".PHP_EOL;
-            $implements = ' implements Interface_FieldStorage, Interface_FieldDataType';
-        }
-        else
-        {
-            $use = '';
-            $implements = '';
-        }
+    /**
+     * generate_class_file_contents
+     * 
+     * @access public
+     *
+     * @return string The class file contents.
+     */
+	public function generate_class_file_contents()
+	{
 
-        $Field = Field::factory();
-        $file_contents = <<<EOF
+		$field_class = $this->get_class_name();
+		$extends = $this->get_extends();
+
+		// If this field extends the core Field class, implement datatype and storage interfaces and use the datatype and storage traits
+		if ($extends === 'Field')
+		{
+			$storage = Supermodlr::get_name_case($this->storage);        
+			$datatype = Supermodlr::get_name_case($this->datatype);            
+			$use = "	use Trait_FieldStorage_{$storage}, Trait_FieldDataType_{$datatype};".PHP_EOL;
+			$implements = ' implements Interface_FieldStorage, Interface_FieldDataType';
+		}
+		else
+		{
+			$use = '';
+			$implements = '';
+		}
+
+		$Field = Field::factory();
+		$file_contents = <<<EOF
 <?php defined('SYSPATH') or die('No direct script access.');
-class {$field_class} extends {$extends} {$implements}
+
+class {$field_class} extends {$extends}{$implements}
 {
+
 {$use}
 EOF;
-//fbl($this->to_storage());
+		
 		// Loop through all Field properties
-        foreach ($Field as $col => $val) 
-        {
-        	// If this property is set on this model
-            if (isset($this->$col))
-            {
-//fbl($col.' is set');
-                // @todo Remove this condition once the angular side is properly handling (not sending)
-                if ($col == 'defaultvalue' && empty($val)) continue;
+		foreach ($Field as $col => $val) 
+		{
+			// If this property is set on this model
+			if (isset($this->$col))
+			{
+				// @todo Remove this condition once the angular side is properly handling (not sending)
+				if ($col == 'defaultvalue' && empty($val)) continue;
 
-                $Field_field_class = 'Field_Field_'.Supermodlr::get_name_case($col);
-                $Field_field_object = $Field_field_class::factory();
-                $file_contents .= "    public \$$col = ".Field::generate_php_value($Field_field_object->export_value($this->$col)).";".PHP_EOL;
-            }
-        }
-        $file_contents .= PHP_EOL."}";
+				$Field_field_class = 'Field_Field_'.Supermodlr::get_name_case($col);
+				$Field_field_object = $Field_field_class::factory();
+				$file_contents .= "	public \$$col = ".Field::generate_php_value($Field_field_object->export_value($this->$col)).";".PHP_EOL;
+			}
+		}
+		$file_contents .= PHP_EOL."}";
 
-
-        return $file_contents;
-    }
+		return $file_contents;
+	}
     
     public function get_class_file_path()
     {
