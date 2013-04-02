@@ -3,12 +3,13 @@
   * FileDescription: SupermodlrUnifiedCollection
   */
 trait Trait_SupermodlrUnifiedCollection {
-	
+
 	public static $__SupermodlrUnifiedCollection__scfg = array(
 		'traits__SupermodlrUnifiedCollection__name' => 'SupermodlrUnifiedCollection',
 		'traits__SupermodlrUnifiedCollection__label' => 'SupermodlrUnifiedCollection',
 		'traits__SupermodlrUnifiedCollection__description' => 'SupermodlrUnifiedCollection',            
 		'field_keys' => array(
+			'ModelId',
 		),
 	);
 
@@ -25,6 +26,7 @@ trait Trait_SupermodlrUnifiedCollection {
 		$Model = $model_name::factory(array('where' => array('ModelId' => $this->pk_value())));
 
 		$fields = $this->get_fields();
+		fbl($fields, 'fields');
 		$set = array();
 		foreach ($this->to_storage() as $key => $val)
 		{
@@ -41,4 +43,5 @@ trait Trait_SupermodlrUnifiedCollection {
 		$r = $Model->save();
 
 	}
+
 }

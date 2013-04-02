@@ -3,47 +3,48 @@
   * FileDescription: Versions
   */
 trait Trait_SupermodlrVersions {
-    public static $__SupermodlrVersions__scfg = array(
-    		'traits__SupermodlrVersions__name'=> 'SupermodlrVersions',
-			'traits__SupermodlrVersions__label'=> 'Versions',
-			'traits__SupermodlrVersions__description'=> 'Versions',
-            'field_keys' => array(
-        )
-    );
 
+	public static $__SupermodlrVersions__scfg = array(
+		'traits__SupermodlrVersions__name' => 'SupermodlrVersions',
+		'traits__SupermodlrVersions__label' => 'Versions',
+		'traits__SupermodlrVersions__description' => 'Versions',            
+		'field_keys' => array(
+			'ModelId',
+		),
+	);
 
     /**
-     * event__trait_SupermodlrVersions__save_end writes a copy of the changes to a separate "history" collection
-     * 
-     * @param mixed $params 
-     *
-     * @access public
-     *
-     * @return mixed Value.
-     */
-    public function event__Trait_SupermodlrVersions__save_end($params)
-    {
+	 * event__trait_SupermodlrVersions__save_end writes a copy of the changes to a separate "history" collection
+	 * 
+	 * @param mixed $params 
+	 *
+	 * @access public
+	 *
+	 * @return mixed Value.
+	 */
+	public function event__Trait_SupermodlrVersions__save_end($params)
+	{
 
-        $changed = $this->changed();
+		$changed = $this->changed();
 
-        // If there were any changes, save a copy
-        if (count($changed) >= 0)
-        {
-            
-            $Versionhistory = Model_SupermodlrVersionHistory::factory();
+		// If there were any changes, save a copy
+		if (count($changed) >= 0)
+		{
 
-            // Change the db_name
-            $db_name = $this->get_name().'_versionhistory';
-            $Versionhistory->cfg('db_name', $db_name);
+			$Versionhistory = Model_SupermodlrVersionHistory::factory();
 
-            // Add the model id and changes
-            $Versionhistory->set('modelid', $this->_id);
-            $Versionhistory->set('changes', $changed);
+			// Change the db_name
+			$db_name = $this->get_name().'_versionhistory';
+			$Versionhistory->cfg('db_name', $db_name);
 
-            // Save the changes
-            $r = $Versionhistory->save();
-            
-        }
-    }
+			// Add the model id and changes
+			$Versionhistory->set('ModelId', $this->pk_key());
+			$Versionhistory->set('changes', $changed);
+
+			// Save the changes
+			$r = $Versionhistory->save();
+
+		}
+	}
 
 }
