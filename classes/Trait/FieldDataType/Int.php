@@ -1,9 +1,9 @@
-<?php
+<?php defined('SYSPATH') or die('No direct script access.');
 
 trait Trait_FieldDataType_Int {
+	
     public function validate_datatype($value) {
         return is_int($value);
-
     }
 
     public function set_value($value, $args = NULL)
