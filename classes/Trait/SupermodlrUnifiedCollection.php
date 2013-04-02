@@ -26,7 +26,6 @@ trait Trait_SupermodlrUnifiedCollection {
 		$Model = $model_name::factory(array('where' => array('ModelId' => $this->pk_value())));
 
 		$fields = $this->get_fields();
-		fbl($fields, 'fields');
 		$set = array();
 		foreach ($this->to_storage() as $key => $val)
 		{
@@ -34,7 +33,6 @@ trait Trait_SupermodlrUnifiedCollection {
 			if ($fields[$key]->filterable || $key == 'Name' || $key == '_id')
 			{
 				if ($key == '_id') $key = 'ModelId';
-				fbl($val, $key);
 				$Model->set($key, $val);
 			}
 			
