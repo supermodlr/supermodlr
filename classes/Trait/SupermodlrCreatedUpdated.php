@@ -4,15 +4,15 @@
   */
 trait Trait_SupermodlrCreatedUpdated {
 
-    public static $__SupermodlrCreatedUpdated__scfg = array (
+	public static $__SupermodlrCreatedUpdated__scfg = array(
 		'traits__SupermodlrCreatedUpdated__name' => 'SupermodlrCreatedUpdated',
 		'traits__SupermodlrCreatedUpdated__label' => 'Created Updated Fields',
 		'traits__SupermodlrCreatedUpdated__description' => 'The Created Updated trait adds auto created datetime and updated datatime fields to a model',    	
-        'field_keys' => array (
-            'created',
-            'updated',
-        ),
-    );
+		'field_keys' => array(
+			'created',
+			'updated',
+		),
+	);
 
     /**
      * check for updated and created fields and set them if not already set
