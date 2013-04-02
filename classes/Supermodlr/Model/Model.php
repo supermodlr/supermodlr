@@ -345,27 +345,13 @@ EOF;
         return $supermodlr_path.$controller_class_name.EXT;
     }
 
-    /**
-     * 
-     */
-    public function save_class_file($full_file_path, $file_contents)
-    {
-        $file_info = pathinfo($full_file_path);
-        if (!is_dir($file_info['dirname']))
-        {
-            $dir_created = mkdir($file_info['dirname'],(int) 0777,TRUE);//@todo fix server issues at server level
-        }   
-        $saved = file_put_contents($full_file_path,$file_contents);
-        return $saved;
-    }
-
-    /**
-     * 
-     */
-    public function get_controller_class_name()
-    {
-        return 'Controller_'.Supermodlr::get_name_case($this->name);
-    }
+	/**
+	 * 
+	 */
+	public function get_controller_class_name()
+	{
+		return 'Controller_'.Supermodlr::get_name_case($this->name);
+	}
 
     //generate and return the class name to be used for this model
     public function get_class_name()

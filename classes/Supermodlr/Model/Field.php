@@ -482,27 +482,7 @@ EOF;
         
         $field_file_name = str_replace('_',DIRECTORY_SEPARATOR,$field_file_name);
         return $Supermodlr_path.$field_file_name.'.php';
-    }   
-    
-    public function save_class_file($full_file_path, $file_contents)
-    {
-        $file_info = pathinfo($full_file_path); 
-
-        if (!is_dir($file_info['dirname']))
-        {
-
-            $dir_created = mkdir($file_info['dirname'],(int) 0777,TRUE);//@todo fix permissions issues on server level
-
-        }
-
-        $saved = file_put_contents($full_file_path,$file_contents);
-
-        if (!$saved)
-        {
-            throw new Exception('model_field::save_class_file FAILED ');
-        }       
-        return $saved;
-    }       
+    }      
 
     //if a property is accessed, but it isn't set on the model, check for extends and recursively load parents until no parent is found, or until the property is found.
     public function __get($var)

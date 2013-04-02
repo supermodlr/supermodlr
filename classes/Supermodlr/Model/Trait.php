@@ -1,4 +1,4 @@
-<?php
+<?php defined('SYSPATH') or die('No direct script access.');
 
 
 /*
@@ -8,43 +8,43 @@ when a trait is created
 */
 
 class Supermodlr_Model_Trait extends Supermodlr {
-        public static $__scfg = array(
-                'name'=> 'trait',
-                'label'=> 'Trait',
-                'description' => 'This model defines how traits are stored in the database and how the trait class code is generated',            
-                'field_keys'  => array(
-                    '_id',
-                    'name',
-                    'label',
-                    'description',
-                    'fields',//this is an array of all field objects included in the saved trait.  the field object would only contain key/value pairs for field properties that are changed
-                         //'drivers OR cfg??',
-                    'methods',
-                    'traits',
-                ),
-            'core_models' => array('model','field','trait'), 
-        );
+	
+	public static $__scfg = array(
+		'name'=> 'trait',
+		'label'=> 'Trait',
+		'description' => 'This model defines how traits are stored in the database and how the trait class code is generated',            
+		'field_keys'  => array(
+			'_id',
+			'name',
+			'label',
+			'description',
+			'fields', // this is an array of all field objects included in the saved trait. the field object would only contain key/value pairs for field properties that are changed
+			//'drivers OR cfg??',
+			'methods',
+			'traits',
+		),
+		'core_models' => array('model','field','trait'), 
+	);
 
-    //when a trait is created/updated/deleted, we need to re-create/delete the generated class file
-    public function event__model_trait__save_end($params)
-    {
-        $create_file = $this->cfg('create_file');
+	// When a trait is created/updated/deleted, we need to re-create/delete the generated class file
+	public function event__model_trait__save_end($params)
+	{
+		$create_file = $this->cfg('create_file');
 
-        if ($create_file === NULL || $create_file === TRUE)
-        {        
-            // Get changes
-            $changed = $this->changed();
-            
-            // If there were any changes, re-write the trait class file
-            if (count($changed) > 0 || $params['is_insert'] === TRUE)
-            {
-                $this->write_trait_class_file();
-            }
-        }
+		if ($create_file === NULL || $create_file === TRUE)
+		{        
+			// Get changes
+			$changed = $this->changed();
 
-    }
+			// If there were any changes, re-write the trait class file
+			if (count($changed) > 0 || $params['is_insert'] === TRUE)
+			{
+				$this->write_trait_class_file();
+			}
+		}
+	}
 
-    //if this object is deleted, delete the file and all the field files
+    // If this object is deleted, delete the file and all the field files
     public function event__model_trait__delete_end($params)
     {
         //if the delete worked
@@ -156,7 +156,9 @@ class Supermodlr_Model_Trait extends Supermodlr {
   */
 trait {$trait_class} {
 
+
 EOF;
+
         //set all traits as 'use' statements
         if (isset($this->traits) && is_array($this->traits)) 
         {
@@ -170,11 +172,11 @@ EOF;
         $quoted_label = Field::generate_php_value($this->label);
         $quoted_desc = Field::generate_php_value($this->description);
         $file_contents .= <<<EOF
-    public static \$__{$this->name}__scfg = array (
-            'traits__{$this->name}__name' => {$quoted_name},
-            'traits__{$this->name}__label' => {$quoted_label},
-            'traits__{$this->name}__description' => {$quoted_desc},            
-            'field_keys' => array (
+	public static \$__{$this->name}__scfg = array(
+		'traits__{$this->name}__name' => {$quoted_name},
+		'traits__{$this->name}__label' => {$quoted_label},
+		'traits__{$this->name}__description' => {$quoted_desc},            
+		'field_keys' => array(
 
 EOF;
 
@@ -185,12 +187,12 @@ EOF;
             {
                 $field_class = $field->pk_value();
                 $field_obj = $field_class::factory();
-                $file_contents .= "                 '".$field_obj->name."',".PHP_EOL;
+                $file_contents .= "			'".$field_obj->name."',".PHP_EOL;
             }       
         }
 
-        $file_contents .= "                ),".PHP_EOL;
-        $file_contents .= " );".PHP_EOL;
+        $file_contents .= "		),".PHP_EOL;
+        $file_contents .= "	);".PHP_EOL;
 
         //set all default values for each field on the trait
         if (isset($this->fields) && is_array($this->fields)) 
@@ -207,14 +209,14 @@ EOF;
                 }
                 else
                 {
-                    $file_contents .= "   public \$".$field_obj->name." = ".Field::generate_php_value($field_obj->export_value($field_obj->defaultvalue())).";".PHP_EOL;
+                    $file_contents .= "	public \$".$field_obj->name." = ".Field::generate_php_value($field_obj->export_value($field_obj->defaultvalue())).";".PHP_EOL;
                 }
                 
             }
 
         }
 
-        //loop through all stored methods
+        // Loop through all stored methods
         if (isset($this->methods) && is_array($this->methods))
         {
             foreach ($this->methods as $method)
@@ -232,42 +234,42 @@ EOF;
     }
     
 
-    public function get_trait_class_file_path()
-    {
-        $trait_file_name = $this->get_class_name();
-        
-        //do not overwrite any core files
-        if (in_array($trait_file_name,$this->cfg('core_models')))
-        {
-            return FALSE;
-        }
+    /**
+     * get_trait_class_file_path
+     * 
+     * @access public
+     *
+     * @return mixed Value.
+     */
+	public function get_trait_class_file_path()
+	{
+		$trait_file_name = $this->get_class_name();
 
-        $Framework = $this->get_framework();
-        $Supermodlr_path = $Framework->saved_classes_root();
-        //replace all underbars with / to build file path
-        $trait_file_name = str_replace('_',DIRECTORY_SEPARATOR, $trait_file_name);
-        return $Supermodlr_path.$trait_file_name.EXT;
-    }
+		// Do not overwrite any core files
+		if (in_array($trait_file_name,$this->cfg('core_models')))
+		{
+			return FALSE;
+		}
+
+		$Framework = $this->get_framework();
+		$Supermodlr_path = $Framework->saved_classes_root();
+
+		// Replace all underbars with / to build file path
+		$trait_file_name = str_replace('_',DIRECTORY_SEPARATOR, $trait_file_name);
+		return $Supermodlr_path.$trait_file_name.EXT;
+	}
 
     /**
+     * get_class_name
      * 
+     * @access public
+     *
+     * @return string Name of the trait class.
      */
-    public function save_class_file($full_file_path, $file_contents)
-    {
-        $file_info = pathinfo($full_file_path);
-        if (!is_dir($file_info['dirname']))
-        {
-            $dir_created = mkdir($file_info['dirname'],(int) 0777,TRUE);//@todo fix server issues at server level
-        }   
-        $saved = file_put_contents($full_file_path,$file_contents);
-        return $saved;
-    }
-
-    //generate and return the class name to be used for this trait
-    public function get_class_name()
-    {      
-        return 'Trait_'.Supermodlr::get_name_case($this->name);
-    }
+	public function get_class_name()
+	{
+		return 'Trait_'.Supermodlr::get_name_case($this->name);
+	}
 
 }
 
