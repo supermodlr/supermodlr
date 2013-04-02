@@ -1,4 +1,4 @@
-<?php
+<?php defined('SYSPATH') or die('No direct script access.');
 /**
 * Supermodlr_Core
 *
@@ -32,61 +32,83 @@ abstract class Supermodlr_Core implements ArrayAccess {
     * @param array $data = NULL
     * @return NULL
     */
-    public function __construct($id = NULL, $data = NULL)
-    {
-        //init framework
-        $this->init_framework();
+	public function __construct($id = NULL, $data = NULL)
+	{
+		// Initialize the framework
+		$this->init_framework();
 
-        //init config
-        $this->init_cfg();
+		// Initialize the config
+		$this->init_cfg();
 
-        //get primary id field
-        $pk_name = $this->cfg('pk_name');
+		// Get primary id field
+		$pk_name = $this->cfg('pk_name');
 
-        //if an id was sent
-        if (!is_null($id))
-        {
-            //set primary key column
-            $this->$pk_name = $id;
-        }
+		// If the $id contains a where clause, consider this an "upsert"
+		if (is_array($id) && isset($id['where']))
+		{
+			// Look for an existing model using the where clause
+			$r = $this->query($id);
 
-        //call construct event
-        $this->model_event('construct',$this);
-        //if we are loading an existing object
-        if ($id !== NULL)
-        {
-            //create an object by numeric id
-            if ($data === NULL)
-            {
-                $data = $this->select_by_id($id);
-            }
-            
-            //if we found this object in the database
-            if ($data)
-            {
-                //load column values and field values
-                $this->load($data);
+			// @todo Review this logic. What if the query returns multiple results?
+			// Assume first match for now.
+			// If a match is found, this is an update. Get the pk value and update $id.
+			if ($r && count($r) > 0)
+			{
+				$existing = reset($r);
+				$id = $existing->pk_value();
+			}
+			// If a match is not found, this is an insert.
+			else
+			{
+				$id = NULL;
+			}
+		}
 
-                // Mark this model as loaded from the primary source
-                $this->model_loaded();
-            }
-            else
-            {
-                $this->cfg('loaded',FALSE);
-                //@todo create custom Supermodlr exceptions
-                //throw new Exception('Cannot load object using Id: '.var_export($id,TRUE));
-            }
-        }
-        //we are creating a new entry for this object
-        else
-        {
-            $this->cfg('loaded',FALSE);
-            $this->cfg('new_object',TRUE);
-        }
+		// If an id was sent
+		if (!is_null($id))
+		{
+			// Set primary key column
+			$this->$pk_name = $id;
+		}
 
-        //call event for construct end
-        $this->model_event('construct_end',$this);
-    }
+		// Call construct event
+		$this->model_event('construct',$this);
+
+		// If we are loading an existing object
+		if ($id !== NULL)
+		{
+			// Create an object by numeric id
+			if ($data === NULL)
+			{
+				$data = $this->select_by_id($id);
+			}
+
+			// If we found this object in the database
+			if ($data)
+			{
+				// Load column values and field values
+				$this->load($data);
+
+				// Mark this model as loaded from the primary source
+				$this->model_loaded();
+			}
+			else
+			{
+			$this->cfg('loaded',FALSE);
+			//@todo create custom Supermodlr exceptions
+			//throw new Exception('Cannot load object using Id: '.var_export($id,TRUE));
+			}
+		}
+		// We are creating a new entry for this object
+		else
+		{
+			$this->cfg('loaded',FALSE);
+			$this->cfg('new_object',TRUE);
+		}
+
+		//call event for construct end
+		$this->model_event('construct_end',$this);
+	}
 
     /**
      * post_load sets all config values and runs 'loaded' event
@@ -150,16 +172,15 @@ abstract class Supermodlr_Core implements ArrayAccess {
           
         //static::model_event('init_cfg');
 
-        //get framework
+        // Get framework
         $Framework = static::get_framework();
-
 
         $name = static::get_name();
 
-        //setup default name config
+        // Setup default name config
         static::scfg('name',$name);
 
-        // loop through class tree (skipping this class)
+        // Loop through class tree (skipping this class)
         $class_tree = static::get_class_tree();
         $called = get_called_class();
         foreach ($class_tree as $class)
@@ -194,7 +215,8 @@ abstract class Supermodlr_Core implements ArrayAccess {
                         else if (is_array(static::$__scfg[$trait_scfg_key]) && is_array($trait_scfg_value))
                         {
                             // static::$__scfg should override any values set in $trait_scfg_value
-                            static::$__scfg[$trait_scfg_key] = array_merge_recursive($trait_scfg_value,static::$__scfg[$trait_scfg_key]);
+                            static::$__scfg[$trait_scfg_key] = array_merge_recursive($trait_scfg_value, static::$__scfg[$trait_scfg_key]);
+                            //static::$__scfg[$trait_scfg_key] = array_merge_recursive_distinct($trait_scfg_value, static::$__scfg[$trait_scfg_key]);
                         }
                     }
                 }
@@ -344,18 +366,18 @@ abstract class Supermodlr_Core implements ArrayAccess {
     /**
      * gets or sets static config. used to store variables that are static and apply to all objects
      */
-    public static function scfg($key,$value = NULL)
+    public static function scfg($key, $value = NULL)
     {
         //if we are not setting a value, retrieve it
         if ($value === NULL)
         {
             //init config if it hasn't been init yet
             if (!isset(static::$__scfg['init_cfg']))
-            { 
+            {
                 static::init_cfg();
             }
             if (isset(static::$__scfg[$key]))
-            { 
+            {
                  return static::$__scfg[$key];
             }
             else
@@ -369,33 +391,34 @@ abstract class Supermodlr_Core implements ArrayAccess {
         }
     }
     
-    /**
-     * returns a scfg value, checks all classes in the tree
-     */
-    public static function get_scfg_value($key)
-    {
-    //init config if it hasn't been init yet
-        if (!isset(static::$__scfg['init_cfg']))
-        {
-            static::init_cfg();
-        }        
-        //get all classes in extension tree
-        $classes = static::get_class_tree();
+	/**
+	 * returns a scfg value, checks all classes in the tree
+	 */
+	public static function get_scfg_value($key)
+	{
+		// Init config if it hasn't been init yet
+		if (!isset(static::$__scfg['init_cfg']))
+		{
+			static::init_cfg();
+		}
 
-        //loop through all classes
-        foreach ($classes as $class)
-        {
-            // Skip self
-            if ($class === get_called_class()) continue;
+		// Get all classes in extension tree
+		$classes = static::get_class_tree();
 
-            //check scfg for this class
-            if (isset($class::$__scfg[$key]))
-            {
-                 return $class::$__scfg[$key];
-            }
-        }
-        return NULL;
-    }
+		// Loop through all classes
+		foreach ($classes as $class)
+		{
+			// Skip self
+			if ($class === get_called_class()) continue;
+
+			// Check scfg for this class
+			if (isset($class::$__scfg[$key]))
+			{
+				return $class::$__scfg[$key];
+			}
+		}
+		return NULL;
+	}
 
     // loads config for connected database(s) and framework specific functions
     public static function init_framework() {
@@ -526,137 +549,130 @@ abstract class Supermodlr_Core implements ArrayAccess {
         return $drivers[0];
     }
 
-    /**
-     *
-     */
-    public static function get_fields(Supermodlr $Model = NULL)
-    {
+	/**
+	*
+	*/
+	public static function get_fields(Supermodlr $Model = NULL, $debug = FALSE)
+	{
 
-        // Get class name as called
-        $called_class = get_called_class();
+		// Get class name as called
+		$called_class = get_called_class();
 
-        if ($Model === NULL)
-        {
-            $Model = $called_class::factory();
-        }
+		if ($Model === NULL)
+		{
+			$Model = $called_class::factory();
+		}
 
-        //get model name
-        $model_name = $called_class::get_name();
+		// Get model name
+		$model_name = $called_class::get_name();
 
-        //return fields if already loaded
-        if (isset(static::$__scfg['fields']) && static::$__scfg['fields'] !== NULL)
-        {
-            return static::$__scfg['fields'];
+		// Return fields if already loaded
+		if (isset(static::$__scfg['fields']) && static::$__scfg['fields'] !== NULL)
+		{
+			return static::$__scfg['fields'];
 
-        //load fields listed in field_keys
-        }
-        else if (static::scfg('field_keys') !== NULL)
-        {
+		// Load fields listed in field_keys
+		}
+		else if (static::scfg('field_keys') !== NULL)
+		{
 
-            //look on this model for any field keys
-            $field_keys = static::scfg('field_keys');
+			// Look on this model for any field keys
+			$field_keys = static::scfg('field_keys', NULL, TRUE);
 
-            $fields = array();
+			$fields = array();
 
-            $traits = static::get_traits();
+			$traits = static::get_traits();
 
-            //loop through all field keys
-            foreach ($field_keys as $field_name)
-            {
-                // Detect field class name
-                $field_class_name = static::get_name_case($field_name);
+			// Loop through all field keys
+			foreach ($field_keys as $field_name)
+			{
+				// Detect field class name
+				$field_class_name = static::get_name_case($field_name);
 
-                // Detect model class name
-                $model_class_name = static::get_name_case($model_name);
+				// Detect model class name
+				$model_class_name = static::get_name_case($model_name);
 
-                // Build full field class name @todo move this to a central function
-                $fieldclass = 'Field_'.$model_class_name.'_'.$field_class_name;
+				// Build full field class name @todo move this to a central function
+				$fieldclass = 'Field_'.$model_class_name.'_'.$field_class_name;
 
-                $corefieldclass = 'Field_Supermodlrcore_'.$field_class_name;
+				$corefieldclass = 'Field_Supermodlrcore_'.$field_class_name;
 
-                // Ensure the class exists.  If it doesn't exist, we assume a child model has a class for this field
-                if (class_exists($fieldclass))
-                {
-                    // Assign the instantiated field to the array of fields.  Create the field with $for_model's context
-                    $fields[$field_name] = $fieldclass::factory($Model);
-                }
-                //try all direct traits or core
-                else 
-                {
-                    $found_in_traits = FALSE;
+				// Ensure the class exists.  If it doesn't exist, we assume a child model has a class for this field
+				if (class_exists($fieldclass))
+				{
+					// Assign the instantiated field to the array of fields.  Create the field with $for_model's context
+					$fields[$field_name] = $fieldclass::factory($Model);
+				}
+				// Try all direct traits or core
+				else 
+				{
+					$found_in_traits = FALSE;
 
-                    //loop through all traits
-                    foreach ($traits as $trait)
-                    {
-                        //get the trait name
-                        $trait_class_name = static::get_name_case(static::get_trait_name($trait));
+					// Loop through all traits
+					foreach ($traits as $trait)
+					{
+						// Get the trait name
+						$trait_class_name = static::get_name_case(static::get_trait_name($trait));
 
-                        // create expected trait field class name
-                        $traitfieldclass = 'Field_'.$trait_class_name.'_'.$field_class_name;
+						// Create expected trait field class name
+						$traitfieldclass = 'Field_'.$trait_class_name.'_'.$field_class_name;
 
-                        // if the trait field class exists and is a valid supermodlr field
-                        if (class_exists($traitfieldclass) && is_subclass_of($traitfieldclass,'Field'))                          
-                        {
+						// If the trait field class exists and is a valid supermodlr field
+						if (class_exists($traitfieldclass) && is_subclass_of($traitfieldclass,'Field'))                          
+						{
+							// Assign the field
+							$fields[$field_name] = $traitfieldclass::factory($Model);
 
-                            // assign the field
-                            $fields[$field_name] = $traitfieldclass::factory($Model);
+							// Mark it as found
+							$found_in_traits = TRUE;
 
-                            // mark it as found
-                            $found_in_traits = TRUE;
+							// Don't look for field in the rest of the traits (if any)
+							break ;
+						}
+					}
 
-                            // don't look for field in the rest of the traits (if any)
-                            break ;
-                        }
-                    }
+					// If this field was not found on direct traits or their traits and the core version exists
+					if ( ! $found_in_traits && class_exists($corefieldclass))
+					{
+						// Use the core version of the field
+						$fields[$field_name] = $corefieldclass::factory($Model);
+					}
+				}
 
-                    // if this field was not found on direct traits or their traits and the core version exists
-                    if (!$found_in_traits && class_exists($corefieldclass))
-                    {
-                        // use the core version of the field
-                        $fields[$field_name] = $corefieldclass::factory($Model);
-                    }
-                    //could not find a valid field
-                    else
-                    {
-                        //fbl($fieldclass .' class not found');
-                    }
-                }
+				// If we found the field
+				if (isset($fields[$field_name]))
+				{
+					$fields[$field_name] = static::load_submodel($Model,$fields[$field_name]);
+				}
+			}
 
-                // if we found the field
-                if (isset($fields[$field_name]))
-                {
+			// Get the direct parent of this class
+			$parent_class = get_parent_class($called_class);
 
-                	$fields[$field_name] = static::load_submodel($Model,$fields[$field_name]);
-                }
-            }
+			// If there is a parent
+			if ($parent_class !== FALSE)
+			{
+				// Call get_fields on the parent (which will call it on it's parent, if any)
+				$parent_fields = $parent_class::get_fields($Model);
 
-            // Get the direct parent of this class
-            $parent_class = get_parent_class($called_class);
+				// Merge in results, with the current fields overriding any below it
+				$fields = array_merge($parent_fields,$fields);                
+			}
 
-            // If there is a parent
-            if ($parent_class !== FALSE)
-            {
-                // Call get_fields on the parent (which will call it on it's parent, if any)
-                $parent_fields = $parent_class::get_fields($Model);
-
-                // Merge in results, with the current fields overriding any below it
-                $fields = array_merge($parent_fields,$fields);                
-            }
-
-            //look at all traits for fields @todo figure out if traits should be before or after parents and how they can be ordered in case of conflicts
-            //store created fields once for each model
-            static::scfg('fields',$fields);
-            return $fields;
-        } 
-        else 
-        {
-            return array();
-        }
-    }
+			// Look at all traits for fields @todo figure out if traits should be before or after parents and how they can be ordered in case of conflicts
+			// Store created fields once for each model
+			static::scfg('fields', $fields);
+			return $fields;
+		} 
+		else 
+		{
+			return array();
+		}
+	}
 
 
     /**
-	 * load_submodels on a field that implements the get_submodel call
+	  * load_submodels on a field that implements the get_submodel call
      * 
      * @param mixed $Model Description.
      * @param mixed $Field Description.
@@ -2785,7 +2801,7 @@ abstract class Supermodlr_Core implements ArrayAccess {
         // If no class was sent
         if ($class === NULL)
         {
-            //get class name called
+            // Get class name called
             $class = get_called_class();            
         }
 
@@ -2812,55 +2828,117 @@ abstract class Supermodlr_Core implements ArrayAccess {
    
     }
 
+	/**
+	 * get_all_traits returns an array of trait class names assigned to this model, all parent models, and all traits on parent models
+	 * 
+	 * @access public
+	 * @static
+	 *
+	 * @return mixed Value.
+	 */
+	public static function get_all_traits($class = NULL)
+	{
+		// If no class was sent
+		if ($class === NULL)
+		{
+			// Get class name called
+			$class = get_called_class();
+		}        
+		$class_tree = $class::get_class_tree();
+
+		$all_traits = array();
+		foreach ($class_tree as $class)
+		{
+			$traits = Supermodlr::get_traits($class);
+			$all_traits = array_merge($traits,$all_traits);
+		}
+		return $all_traits;
+	}
+
+	public static function get_trait_class($trait, $class = NULL)
+	{
+		// If no class was sent
+		if ($class === NULL)
+		{
+			// Get class name called
+			$class = get_called_class();            
+		}
+
+		$class_tree = $class::get_class_tree();
+
+		// Walk through the class tree to find the trait
+		foreach ($class_tree as $class)
+		{
+			$traits = Supermodlr::get_traits($class);
+			foreach ($traits as $trait_name)
+			{
+				// If the current name matches the one sent, return the class
+				if ($trait == $trait_name) return $class;
+			}
+		}
+
+		// If the class does not have this trait, return FALSE
+		return FALSE;
+	}
+    
+	public static function get_trait_name($trait = NULL)
+	{
+		return preg_replace('/^Trait_/','',$trait);
+	}
+
+
     /**
-     * get_all_traits returns an array of trait class names assigned to this model, all parent models, and all traits on parent models
+     * save_class_file
      * 
+     * @param mixed $full_file_path The full file path (including the file name).
+     * @param mixed $file_contents  The file contents to be written.
+     *
      * @access public
-     * @static
      *
      * @return mixed Value.
      */
-    public static function get_all_traits($class = NULL)
-    {
-        // If no class was sent
-        if ($class === NULL)
-        {
-            //get class name called
-            $class = get_called_class();            
-        }        
-        $class_tree = $class::get_class_tree();
-        $called = get_called_class();
-        $all_traits = array();
-        foreach ($class_tree as $class)
-        {
-            $traits = Supermodlr::get_traits($class);
-            $all_traits = array_merge($traits,$all_traits);
-        }
-        return $all_traits;
-    }
-    
-    public static function get_trait_name($trait = NULL)
-    {
-        return preg_replace('/^Trait_/','',$trait);
-    }     
+	public function save_class_file($full_file_path, $file_contents)
+	{
+		$file_info = pathinfo($full_file_path);
+
+		$old_umask = umask(0);
+
+		if (!is_dir($file_info['dirname']))
+		{
+			$dir_created = mkdir($file_info['dirname'], 0777, TRUE);
+		}
+
+		$saved = file_put_contents($full_file_path, $file_contents);
+
+		chmod($full_file_path, 0777);
+
+		$temp = umask($old_umask);
+
+		if (!$saved)
+		{
+			throw new Exception('save_class_file "'.$full_file_path.'" FAILED ');
+		}
+
+		return $saved;
+	}
 
 	public function offsetSet($offset, $value) 
 	{
 		$this->$offset = $value;
 	}
 
-    public function offsetExists($var) 
-    {
-    	return isset($this->$var);
-    }
+	public function offsetExists($var) 
+	{
+		return isset($this->$var);
+	}
 
-    public function offsetUnset($var) 
-    {
-        unset($this->$var);
-    }
+	public function offsetUnset($var) 
+	{
+		unset($this->$var);
+	}
 
-    public function offsetGet($var) 
-    {
-    	return $this->$var;
-    }    
+	public function offsetGet($var) 
+	{
+		return $this->$var;
+	}    
 }
