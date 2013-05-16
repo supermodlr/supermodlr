@@ -190,12 +190,10 @@ abstract class Supermodlr_Core implements ArrayAccess {
 
             // Loop through all traits and traits of traits 
             foreach ($traits as $trait)
-            {
+            { 
                 // Get the name of this trait
                 $trait_name = Supermodlr::get_trait_name($trait);
-
-                // Get the name of the property that we expect to find scfg values on
-                $scfg_prop = '__'.$trait_name.'__scfg';
+                $scfg_prop = Supermodlr::get_trait_key($trait);
 
                 // If scfg property is set and is an array
                 if (isset($trait::$$scfg_prop) && is_array($trait::$$scfg_prop))
@@ -2886,7 +2884,15 @@ abstract class Supermodlr_Core implements ArrayAccess {
 		return preg_replace('/^Trait_/','',$trait);
 	}
 
+    public static function get_trait_key($trait = NULL)
+    {
+        $name = static::get_trait_name($trait);
+        return strtolower('__'.$name.'__scfg');
+    }
 
+
+                // Get the name of the property that we expect to find scfg values on
+                
     /**
      * save_class_file
      * 

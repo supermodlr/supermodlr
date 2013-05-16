@@ -2,7 +2,7 @@
 
 trait Trait_FieldStorage_Array {
 
-    public function validate_storage($value = NULL) {
+    public function validate_storage($value) {
         return (is_array($value) && !$this->is_assoc($value));
 
     }
