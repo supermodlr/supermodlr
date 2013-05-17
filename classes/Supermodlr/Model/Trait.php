@@ -171,9 +171,9 @@ EOF;
         $quoted_name = Field::generate_php_value($this->name);
         $quoted_label = Field::generate_php_value($this->label);
         $quoted_desc = Field::generate_php_value($this->description);
-        $lower_name = Supermodlr::get_trait_key($trait_class);
+        $trait_key = Supermodlr::get_trait_key($trait_class);
         $file_contents .= <<<EOF
-	public static \$__{$lower_name}__scfg = array(
+	public static \${$trait_key} = array(
 		'traits__{$this->name}__name' => {$quoted_name},
 		'traits__{$this->name}__label' => {$quoted_label},
 		'traits__{$this->name}__description' => {$quoted_desc},            
